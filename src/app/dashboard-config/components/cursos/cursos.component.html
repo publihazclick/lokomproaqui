@@ -1,0 +1,21 @@
+<div class="content fondo">
+    <div class="row" >
+        <div class="col-3" *ngFor="let item of listCursos" (click)="selectCurso( item )">
+            <div routerLink="/cursosView/{{ item.id}}" class="card pb-2">
+                <img [src]="item.img" class="rounded" alt="" style="width: 100%;">
+                <div  class="card-body">
+                    <!--  -->
+                    <div class="row">
+                        <div class="col-2">
+                            <img src="../../../../assets/logo.png" class="rounded" alt="" style="width: 120%;">
+                        </div>
+                        <div class="col-10">
+                            <h5>{{ item.titulo }}</h5>
+                            <p>{{ item.descripcion.substr(0,50) }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
