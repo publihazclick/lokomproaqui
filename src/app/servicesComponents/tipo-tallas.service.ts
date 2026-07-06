@@ -35,21 +35,49 @@ export class TipoTallasService {
     return from(run());
   }
 
-  create(query:any){
-    return this._model.querys('tbltipotalla',query, 'post');
+  create(data: any) {
+    const run = async (): Promise<any> => {
+      const { data: inserted, error } = await supabase.from('size_types').insert({
+        name: data.tit_descripcion, active: data.tit_sw_activo === undefined || Number(data.tit_sw_activo) === 0, sort_order: data.ordenar || 0,
+      }).select().single();
+      if (error || !inserted) return { success: false };
+      return { success: true, id: inserted.id };
+    };
+    return from(run());
   }
 
-  createTallas(query:any){
-    return this._model.querys('tbltallas',query, 'post');
+  createTallas(data: any) {
+    const run = async (): Promise<any> => {
+      const { data: inserted, error } = await supabase.from('sizes').insert({
+        name: data.tal_descripcion, size_type_id: data.tal_tipo, active: data.tal_sw_activo === undefined || Number(data.tal_sw_activo) === 0, sort_order: data.ordenar || 0,
+      }).select().single();
+      if (error || !inserted) return { success: false };
+      return { success: true, id: inserted.id };
+    };
+    return from(run());
   }
 
-  update(query:any){
-    return this._model.querys('tbltipotalla/'+query.id, query, 'put');
+  update(data: any) {
+    const run = async (): Promise<any> => {
+      const patch: any = {};
+      if (data.tit_descripcion !== undefined) patch.name = data.tit_descripcion;
+      if (data.tit_sw_activo !== undefined) patch.active = Number(data.tit_sw_activo) === 0;
+      if (data.ordenar !== undefined) patch.sort_order = data.ordenar;
+      const { error } = await supabase.from('size_types').update(patch).eq('id', data.id);
+      return { success: !error };
+    };
+    return from(run());
   }
-  updateTalla(query:any){
-    return this._model.querys('tbltallas/'+query.id, query, 'put');
-  }
-  delete(query:any){
-    return this._model.querys('tbltipotalla/'+query.id, query, 'delete');
+
+  updateTalla(data: any) {
+    const run = async (): Promise<any> => {
+      const patch: any = {};
+      if (data.tal_descripcion !== undefined) patch.name = data.tal_descripcion;
+      if (data.tal_sw_activo !== undefined) patch.active = Number(data.tal_sw_activo) === 0;
+      if (data.ordenar !== undefined) patch.sort_order = data.ordenar;
+      const { error } = await supabase.from('sizes').update(patch).eq('id', data.id);
+      return { success: !error };
+    };
+    return from(run());
   }
 }

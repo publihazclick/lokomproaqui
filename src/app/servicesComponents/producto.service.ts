@@ -46,6 +46,14 @@ function mapProductToLegacy(product: any, computedPrice?: number) {
 }
 
 const PRODUCT_SELECT = '*, categories:categories!products_category_id_fkey(id, name), product_variants(*, sizes(name))';
+const PRODUCT_WITH_OWNER_SELECT = '*, profiles!products_owner_profile_id_fkey(full_name, avatar_url)';
+
+// Banners estaticos del home (nunca dependieron de datos, eran hardcodeados igual en el backend viejo).
+const HOME_BANNERS = [
+  { id: 0, title: '', image: './assets/imagenes/banner2.png', thumbImage: './assets/imagenes/banner2.png' },
+  { id: 1, title: '', image: './assets/imagenes/banner3.png', thumbImage: './assets/imagenes/banner3.png' },
+  { id: 2, title: '', image: './assets/imagenes/banner4.png', thumbImage: './assets/imagenes/banner4.png' },
+];
 
 // Reemplaza todas las variantes de un producto a partir del `listColor` que arma el formulario admin.
 // El tamaño se resuelve por NOMBRE (tal_descripcion) contra `sizes`, no por id, porque el mismo campo
@@ -109,6 +117,8 @@ export class ProductoService {
       }
       if (typeof query.sort === 'string' && query.sort.indexOf('createdAt') === 0) {
         q = q.order('created_at', { ascending: query.sort.toUpperCase().indexOf('ASC') > -1 });
+      } else {
+        q = q.order('position', { ascending: true });
       }
 
       q = q.range(page * limit, page * limit + limit - 1);
@@ -233,80 +243,327 @@ export class ProductoService {
     };
     return from(run());
   }
-  getListInit(query:any){
-    return this._model.querys('tblproductos/getInit',query, 'post');
+  // "Ultimas publicaciones de proveedores" en el home: un producto activo por tarjeta con el
+  // nombre/foto del dueño. `_feedOffset` trackea la paginacion de "ver mas" (el componente llama
+  // siempre con `{}`, sin cursor, igual que hacia el backend viejo).
+  private _feedOffset = 0;
+
+  private async _productFeed(offset: number, limit: number) {
+    const { data, error } = await supabase
+      .from('products')
+      .select(PRODUCT_WITH_OWNER_SELECT)
+      .eq('active', true)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+    if (error || !data) return [];
+    return data.map((p: any) => ({
+      title: 'Productos Nuevos con alto margen de ganancia',
+      article: [{ id: p.id, foto: p.image_url, title: p.name }],
+      user: { usu_usuario: p.profiles ? p.profiles.full_name : '', usu_imagen: p.profiles ? p.profiles.avatar_url : '' },
+    }));
   }
-  getListgetNews(query:any){
-    return this._model.querys('tblproductos/getNews',query, 'post');
+
+  getListInit(query: any) {
+    this._feedOffset = 20;
+    const run = async (): Promise<any> => ({ data: await this._productFeed(0, 20) });
+    return from(run());
   }
-  getListgeMore(query:any){
-    return this._model.querys('tblproductos/getMore',query, 'post');
+
+  getListgeMore(query: any) {
+    const run = async (): Promise<any> => {
+      const data = await this._productFeed(this._feedOffset, 20);
+      this._feedOffset += 20;
+      return { data };
+    };
+    return from(run());
   }
-  getListgetBanner(query:any){
-    return this._model.querys('tblproductos/getBanners',query, 'post');
+
+  // "Novedades": los productos activos mas recientes.
+  getListgetNews(query: any) {
+    const run = async (): Promise<any> => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, name, image_url')
+        .eq('active', true)
+        .order('created_at', { ascending: false })
+        .limit(6);
+      if (error || !data) return { data: [] };
+      return { data: data.map((p: any) => ({ tipe: 1, title: p.name, article: [{ id: p.id, foto: p.image_url, title: p.name }] })) };
+    };
+    return from(run());
   }
-  ordenar(query:any){
-    return this._model.querys('tblproductos/ordenar', query, 'post');
+
+  getListgetBanner(query: any) {
+    return from(Promise.resolve({ data: HOME_BANNERS }));
   }
-  getVenta(query:any){
-    return this._model.querys('tblventasproducto/querys',query, 'post');
+
+  // Reordenamiento manual (drag&drop) del catalogo admin, usa la columna `position` de products.
+  ordenar(query: any) {
+    const run = async (): Promise<any> => {
+      const lista = (query && query.lista) || [];
+      for (let i = 0; i < lista.length; i++) {
+        await supabase.from('products').update({ position: i }).eq('id', lista[i].id);
+      }
+      return { success: true };
+    };
+    return from(run());
   }
-  // Reemplaza el calculo viejo de "dinero pendiente por cobrar" del proveedor (validateMoneySupplier):
-  // en el sistema nuevo el pago al proveedor se acredita al instante en su billetera al aprobar el
-  // pedido (ver approve_order), asi que el "recaudo" ahora es simplemente su saldo de billetera tipo supplier.
-  getVentaComplete(query:any){
+  // Panel "mis despacho": listado de items de pedidos de un proveedor agrupados por estado de la
+  // guia. Reemplaza validateMoneySupplier (que distinguia "aprobado pero no pagado al proveedor" vs
+  // "ya pagado"): en el sistema nuevo esa distincion no existe, el pago se acredita al instante al
+  // aprobar (approve_order), asi que ya no hay un estado intermedio "aprobado sin pagar".
+  private static readonly ORDER_STATUS_TO_LEGACY: any = { pending: 0, success: 1, rejected: 2, dispatched: 3, invoiced: 4, deleted: 5, preparing: 6 };
+
+  private async _supplierOrderItems(profileId: any, statuses: string[], extra?: (q: any) => any) {
+    if (!profileId) return { data: [], total: 0 };
+    let q = supabase
+      .from('order_items')
+      .select('*, products!inner(name, owner_profile_id), orders!inner(*)')
+      .eq('products.owner_profile_id', profileId);
+    if (statuses.length) q = q.in('orders.status', statuses);
+    if (extra) q = extra(q);
+
+    const { data, error } = await q;
+    if (error || !data) return { data: [], total: 0 };
+
+    const rows = data.map((item: any) => ({
+      id: item.id,
+      ventas: {
+        id: item.orders.id,
+        ven_estado: ProductoService.ORDER_STATUS_TO_LEGACY[item.orders.status] != null ? ProductoService.ORDER_STATUS_TO_LEGACY[item.orders.status] : 0,
+        ven_numero_guia: item.orders.tracking_number,
+        transportadoraSelect: item.orders.carrier,
+        ven_telefono_cliente: item.orders.buyer_phone,
+        ven_nombre_cliente: item.orders.buyer_name,
+        ven_subVendedor: 0,
+      },
+      producto: { pro_nombre: item.products ? item.products.name : item.title },
+      tallaSelect: item.size,
+      colorSelect: item.color,
+      cantidad: item.quantity,
+      createdAt: item.orders.created_at,
+      precioVendedor: item.total_cost || 0,
+      pricePlatform: 0, // el RPC actual acredita el 100% de total_cost al proveedor, sin descuento de plataforma
+    }));
+    const total = rows.reduce((s: number, r: any) => s + (r.precioVendedor - r.pricePlatform), 0);
+    return { data: rows, total, count: rows.length };
+  }
+
+  // Detalle de un item puntual (usado al abrir el dialogo de una guia especifica).
+  getVenta(query: any) {
+    const where = (query && query.where) || {};
+    const run = async (): Promise<any> => {
+      if (!where.id) return { success: false, data: [] };
+      const { data, error } = await supabase
+        .from('order_items')
+        .select('*, products(name), orders(*)')
+        .eq('id', where.id)
+        .maybeSingle();
+      if (error || !data) return { success: false, data: [] };
+      const row = {
+        id: data.id,
+        ventas: {
+          id: data.orders ? data.orders.id : null,
+          ven_estado: data.orders ? (ProductoService.ORDER_STATUS_TO_LEGACY[data.orders.status] != null ? ProductoService.ORDER_STATUS_TO_LEGACY[data.orders.status] : 0) : 0,
+          ven_numero_guia: data.orders ? data.orders.tracking_number : null,
+          transportadoraSelect: data.orders ? data.orders.carrier : null,
+          ven_telefono_cliente: data.orders ? data.orders.buyer_phone : null,
+          ven_nombre_cliente: data.orders ? data.orders.buyer_name : null,
+          ven_subVendedor: 0,
+        },
+        producto: { pro_nombre: data.products ? data.products.name : data.title },
+        tallaSelect: data.size,
+        colorSelect: data.color,
+        cantidad: data.quantity,
+        createdAt: data.orders ? data.orders.created_at : null,
+        precioVendedor: data.total_cost || 0,
+        pricePlatform: 0,
+      };
+      return { success: true, data: [row] };
+    };
+    return from(run());
+  }
+
+  // "Reacaudo pendiente para pagar": saldo de billetera tipo supplier (se acredita al instante al
+  // aprobar el pedido). Ya no existe un bucket "aprobado sin pagar" (data siempre vacio).
+  getVentaComplete(query: any) {
     const profileId = query && query.where && query.where.creacion;
     const run = async (): Promise<any> => {
-      if (!profileId) return { total: 0 };
+      if (!profileId) return { total: 0, data: [], count: 0 };
       const { data, error } = await supabase
         .from('wallet_balances')
         .select('balance')
         .eq('profile_id', profileId)
         .eq('wallet_type', 'supplier')
         .maybeSingle();
-      if (error || !data) return { total: 0 };
-      return { total: data.balance || 0 };
+      if (error || !data) return { total: 0, data: [], count: 0 };
+      return { total: data.balance || 0, data: [], count: 0 };
     };
     return from(run());
   }
-  getVentaCompleteEarningBuy(query:any){
-    return this._model.querys('tblventas/getTransactionsEarringBuyTrasnport',query, 'post');
+
+  // Ganancia por flete cuando la tienda paga el transporte de compra; concepto muy especifico del
+  // backend viejo sin dato equivalente todavia en el esquema nuevo. Se deja en 0 documentado.
+  getVentaCompleteEarningBuy(query: any) {
+    return from(Promise.resolve({ total: 0, data: [], count: 0 }));
   }
-  getVentaCompleteEarring(query:any){
-    return this._model.querys('tblventas/getTransactionsEarring',query, 'post');
+
+  // "GUIAS DESPACHADAS"
+  getVentaCompleteEarring(query: any) {
+    const profileId = query && query.where && query.where.creacion;
+    const run = async (): Promise<any> => this._supplierOrderItems(profileId, ['dispatched']);
+    return from(run());
   }
-  getVentaCompletePendients(query:any){
-    return this._model.querys('tblventas/getTransactionsPendients',query, 'post');
+
+  // "GUIAS POR IMPRIMIR": aprobadas, sin guia generada todavia.
+  getVentaCompletePendients(query: any) {
+    const profileId = query && query.where && query.where.creacion;
+    const run = async (): Promise<any> => this._supplierOrderItems(profileId, ['success'], (q: any) => q.is('orders.tracking_number', null));
+    return from(run());
   }
-  getVentaCompleteComplete(query:any){
-    return this._model.querys('tblventas/getTransactionsComplete',query, 'post');
+
+  // "GUIAS COMPLETADAS" / "GUIAS PAGADAS AL PROVEEDOR": aprobadas (con guia o sin ella, ya pagadas
+  // al proveedor siempre, sea cual sea el estado de la guia).
+  getVentaCompleteComplete(query: any) {
+    const profileId = query && query.where && query.where.creacion;
+    const run = async (): Promise<any> => this._supplierOrderItems(profileId, ['success']);
+    return from(run());
   }
-  getVentaCompletePago(query:any){
-    return this._model.querys('tblventas/getTransactionsPagados',query, 'post');
+
+  // Items ya incluidos en un pago especifico a proveedor (reemplaza getPaymentBuy, ahora via la
+  // columna real order_items.supplier_payout_id que ya usa supplier-accountant.service).
+  getVentaCompletePago(query: any) {
+    const payoutId = query && query.checkPaySupplier;
+    const run = async (): Promise<any> => {
+      if (!payoutId) return { success: true, data: [] };
+      const { data, error } = await supabase
+        .from('order_items')
+        .select('*, products(name), orders(*)')
+        .eq('supplier_payout_id', payoutId);
+      if (error || !data) return { success: false, data: [] };
+      const rows = data.map((item: any) => ({
+        id: item.id,
+        producto: { pro_nombre: item.products ? item.products.name : item.title },
+        tallaSelect: item.size,
+        colorSelect: item.color,
+        cantidad: item.quantity,
+        precioVendedor: item.total_cost || 0,
+        pricePlatform: 0,
+      }));
+      return { success: true, data: rows };
+    };
+    return from(run());
   }
-  getVentaDevolution(query:any){
-    return this._model.querys('tblventas/getTransactionsDevolution',query, 'post');
+
+  // "GUIAS EN DEVOLUCION"
+  getVentaDevolution(query: any) {
+    const profileId = query && query.where && query.where.creacion;
+    const run = async (): Promise<any> => this._supplierOrderItems(profileId, ['rejected']);
+    return from(run());
   }
-  getTransactionsPreparacion(query:any){
-    return this._model.querys('tblventas/getTransactionsPreparacion',query, 'post');
+
+  // "GUÍAS EN PREPARACIÓN"
+  getTransactionsPreparacion(query: any) {
+    const profileId = query && query.where && query.where.creacion;
+    const run = async (): Promise<any> => this._supplierOrderItems(profileId, ['preparing']);
+    return from(run());
   }
-  createTestimonio(query:any){
-    return this._model.querys('tbltestimonio',query, 'post');
+  // Pendiente: comentario publico (anonimo, con nombre/email libres) sobre un producto especifico.
+  // Necesita una tabla nueva (`testimonials` no sirve: es por profile_id, sin product_id/nombre/email
+  // libres) — requiere autorizacion explicita del usuario para la migracion de esquema, pendiente.
+  createTestimonio(query: any) {
+    return from(Promise.resolve({ success: false, data: null }));
   }
-  createPrice( query:any ){
-    return this._model.querys('priceArticle',query, 'post');
+
+  // Agrega/reactiva un producto en la tienda propia del revendedor con su precio de venta
+  // (reemplaza PriceArticle por `price_overrides`, mismo esquema que ya usan get()/getStore()).
+  createPrice(data: any) {
+    const run = async (): Promise<any> => {
+      if (!data.user) return { success: false, data: 'Error userId no indeficate' };
+      const { data: existing } = await supabase.from('price_overrides').select('id')
+        .eq('product_id', data.article).eq('profile_id', data.user).maybeSingle();
+      if (existing) {
+        await supabase.from('price_overrides').update({ price: data.price, active: true }).eq('id', existing.id);
+      } else {
+        await supabase.from('price_overrides').insert({ product_id: data.article, profile_id: data.user, price: data.price, active: true });
+      }
+      return { success: true, data: 'Creado exitoso' };
+    };
+    return from(run());
   }
-  getPrice( query:any ){
-    return this._model.querys('priceArticle/querys',query, 'post');
+
+  // Consulta puntual: ¿el usuario ya tiene este articulo en su tienda? (usado al abrir la vista de un producto)
+  getPrice(query: any) {
+    const where = (query && query.where) || {};
+    const run = async (): Promise<any> => {
+      let q = supabase.from('price_overrides').select('*');
+      if (where.article) q = q.eq('product_id', where.article);
+      if (where.user) q = q.eq('profile_id', where.user);
+      if (where.state !== undefined) q = q.eq('active', where.state === 0);
+      const { data, error } = await q;
+      if (error || !data) return { success: false, data: [] };
+      return { success: true, data: data.map((r: any) => ({ id: r.id, price: r.price, article: r.product_id, user: r.profile_id })) };
+    };
+    return from(run());
   }
-  getPriceArticle( query:any ){
-    return this._model.querys('priceArticle/querysProducts',query, 'post');
+
+  // Listado paginado de "mis productos" (tienda del revendedor), con el producto completo embebido
+  // (reemplaza querysProducts, que poblaba `article` con el producto).
+  getPriceArticle(query: any) {
+    const where = (query && query.where) || {};
+    const page = query.page || 0;
+    const limit = query.limit || 10;
+    const run = async (): Promise<any> => {
+      if (where.id) {
+        const { data, error } = await supabase.from('price_overrides').select(`*, products(${PRODUCT_SELECT})`).eq('id', where.id).maybeSingle();
+        if (error || !data) return { success: false, data: [] };
+        return { success: true, data: [{ id: data.id, price: data.price, article: data.products ? mapProductToLegacy(data.products, data.price) : null }] };
+      }
+
+      let q = supabase.from('price_overrides').select(`*, products(${PRODUCT_SELECT})`, { count: 'exact' });
+      if (where.user) q = q.eq('profile_id', where.user);
+      if (where.state !== undefined) q = q.eq('active', where.state === 0);
+      q = q.range(page * limit, page * limit + limit - 1);
+
+      const { data, error, count } = await q;
+      if (error || !data) return { success: false, data: [], count: 0 };
+      const mapped = data.filter((r: any) => r.products).map((r: any) => ({ id: r.id, price: r.price, article: mapProductToLegacy(r.products, r.price) }));
+      return { success: true, data: mapped, count: count != null ? count : mapped.length };
+    };
+    return from(run());
   }
-  updatePriceArticle( query:any ){
-    return this._model.querys('priceArticle/'+query.id,query, 'put');
+
+  // Editar precio o desactivar/reactivar un articulo de la tienda propia (state 0 activo, 1 inactivo).
+  updatePriceArticle(query: any) {
+    const run = async (): Promise<any> => {
+      const patch: any = {};
+      if (query.state !== undefined) patch.active = query.state === 0;
+      if (query.price !== undefined) patch.price = query.price;
+      const { error } = await supabase.from('price_overrides').update(patch).eq('id', query.id);
+      return { success: !error };
+    };
+    return from(run());
   }
-  createPriceArticleFull( query:any ){
-    return this._model.querys('priceArticle/createTotalProduct',query, 'post');
+
+  // Agrega de una vez TODOS los productos activos de una bodega/proveedor (`data.create`) a la
+  // tienda del usuario, saltando los que ya tiene (botón "agregar todos" al ver una bodega).
+  createPriceArticleFull(data: any) {
+    const run = async (): Promise<any> => {
+      if (!data.user) return { success: false, data: 'Error userId no indeficate' };
+      const { data: products } = await supabase.from('products').select('id, client_sale_price').eq('owner_profile_id', data.create).eq('active', true);
+      if (!products || !products.length) return { success: true, data: 'Creado exitoso' };
+
+      const { data: existing } = await supabase.from('price_overrides').select('product_id')
+        .eq('profile_id', data.user).in('product_id', products.map((p: any) => p.id));
+      const existingIds = new Set((existing || []).map((e: any) => e.product_id));
+
+      const rows = products.filter((p: any) => !existingIds.has(p.id))
+        .map((p: any) => ({ product_id: p.id, profile_id: data.user, price: p.client_sale_price || 0, active: true }));
+      if (rows.length) await supabase.from('price_overrides').insert(rows);
+
+      return { success: true, data: 'Creado exitoso' };
+    };
+    return from(run());
   }
 
 }

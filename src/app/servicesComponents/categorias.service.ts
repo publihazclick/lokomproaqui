@@ -92,10 +92,28 @@ export class CategoriasService {
     };
     return from(run());
   }
-  createUser(query:any){
-    return this._model.querys('tblusuarioCategoria',query, 'post');
+  // Asigna categorias a un usuario/revendedor (checkboxes marcados en su perfil).
+  createUser(query: any) {
+    const run = async (): Promise<any> => {
+      const rows = ((query && query.listCategory) || []).filter((r: any) => r.check === true)
+        .map((r: any) => ({ profile_id: r.cat_usu, category_id: r.cat_categoria }));
+      if (!rows.length) return { success: true, data: [] };
+      const { data, error } = await supabase.from('user_categories').upsert(rows, { onConflict: 'profile_id,category_id', ignoreDuplicates: true }).select();
+      if (error) return { success: false, data: [] };
+      return { success: true, data: data || [] };
+    };
+    return from(run());
   }
-  getUser(query:any){
-    return this._model.querys('tblusuarioCategoria/querys',query, 'post');
+
+  getUser(query: any) {
+    const where = (query && query.where) || {};
+    const run = async (): Promise<any> => {
+      let q = supabase.from('user_categories').select('*');
+      if (where.cat_usu) q = q.eq('profile_id', where.cat_usu);
+      const { data, error } = await q;
+      if (error || !data) return { success: false, data: [] };
+      return { success: true, data: data.map((r: any) => ({ cat_categoria: r.category_id, cat_usu: r.profile_id })) };
+    };
+    return from(run());
   }
 }

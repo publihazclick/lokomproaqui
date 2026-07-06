@@ -51,36 +51,111 @@ export class UsuariosService {
     return from(run());
   }
 
-  getOn(query:any){
-    return this._model.querys('tblusuario/querysOn',query, 'post');
+  // Listado generico de usuarios (ej. dropdown de vendedores), con filtro opcional por rol.
+  getOn(query: any) {
+    const where = (query && query.where) || {};
+    const run = async (): Promise<any> => {
+      let q = supabase.from('profiles').select('*, roles!inner(name)');
+      if (where.rolName) q = q.eq('roles.name', where.rolName);
+      const { data, error } = await q;
+      if (error || !data) return { success: false, data: [] };
+      return { success: true, data: data.map((p: any) => mapProfileToLegacyUser(p, null)) };
+    };
+    return from(run());
   }
 
-  getStore(query:any){
-    return this._model.querys('tblusuario/querysStore',query, 'post');
+  // Directorio de usuarios filtrado por rol (ej. "proveedor") y opcionalmente solo los que tienen
+  // al menos un producto activo (proValidate) — usado para listar bodegas/proveedores.
+  getStore(query: any) {
+    const where = (query && query.where) || {};
+    const page = query.page || 0;
+    const limit = query.limit || 10;
+
+    const run = async (): Promise<any> => {
+      let q = supabase.from('profiles').select('*, roles!inner(name)', { count: 'exact' });
+      if (where.rol) q = q.eq('roles.name', where.rol);
+      if (where.pro_usu_creacion) q = q.eq('id', where.pro_usu_creacion);
+      if (where.estado !== undefined) q = q.eq('status', where.estado);
+
+      if (where.proValidate) {
+        const { data: withProducts } = await supabase.from('products').select('owner_profile_id').eq('active', true);
+        const ids = Array.from(new Set((withProducts || []).map((p: any) => p.owner_profile_id).filter(Boolean)));
+        if (!ids.length) return { success: true, data: [], count: 0 };
+        q = q.in('id', ids);
+      }
+
+      q = q.range(page * limit, page * limit + limit - 1);
+
+      const { data, error, count } = await q;
+      if (error || !data) return { success: false, data: [], count: 0 };
+      const mapped = data.map((p: any) => mapProfileToLegacyUser(p, null));
+      return { success: true, data: mapped, count: count != null ? count : mapped.length };
+    };
+
+    return from(run());
   }
 
-  getStores(query:any){
-    return this._model.querys('tblusuario/queryStores',query, 'post');
+  // Igual que getStore pero devuelve el arreglo directo (sin envoltorio {success,data}), como
+  // esperaba el backend viejo.
+  getStores(query: any) {
+    const run = async (): Promise<any> => {
+      const result: any = await this.getStore(query).toPromise();
+      return (result && result.data) || [];
+    };
+    return from(run());
   }
 
   recuperacion(query:any){
     return this._model.querys('tblusuario/resetiar',query, 'post');
   }
 
-  getInfo(query:any){
-    return this._model.querys('tblusuario/infoUser',query, 'post');
+  // El backend viejo calculaba muchos totales (ganancias, cobrado, pagado, devoluciones...) pero
+  // en toda la app solo se lee `porcobrado` ("dinero pendiente por cobrar"). En el sistema nuevo
+  // eso es directamente el saldo de la billetera tipo "referral" (se acredita al instante al
+  // aprobar un pedido, ver approve_order), igual que se hizo para el proveedor en producto.service.
+  getInfo(query: any) {
+    const profileId = query && query.where && query.where.id;
+    const run = async (): Promise<any> => {
+      if (!profileId) return { data: { porcobrado: 0 } };
+      const { data, error } = await supabase
+        .from('wallet_balances')
+        .select('balance')
+        .eq('profile_id', profileId)
+        .eq('wallet_type', 'referral')
+        .maybeSingle();
+      if (error || !data) return { data: { porcobrado: 0 } };
+      return { data: { porcobrado: data.balance || 0 } };
+    };
+    return from(run());
   }
 
-  darPuntos(query:any){
-    return this._model.querys('tblusuario/guardarPunto',query, 'post');
+  // Bonificacion manual de puntos/ganancias por el admin: se acredita directo a la billetera de
+  // referidos del usuario (reemplaza NivelServices.procesoGanacias).
+  darPuntos(query: any) {
+    const run = async (): Promise<any> => {
+      if (!query.user || !query.ganancias) return { success: false };
+      const { error } = await supabase.rpc('credit_wallet', {
+        p_profile_id: query.user, p_wallet_type: 'referral', p_amount: Number(query.ganancias), p_order_id: null, p_pct: null,
+      });
+      return { success: !error };
+    };
+    return from(run());
   }
 
-  getNivel(query:any){
-    return this._model.querys('tblusuario/nivelUser',query, 'post');
-  }
-
-  cambioPass(query:any){
-    return this._model.querys('tblusuario/cambioPass',query, 'post');
+  // Cambio de clave. Solo funciona para la clave PROPIA (auth.updateUser opera sobre la sesion
+  // actual) — el panel admin cambiando la clave de OTRO usuario necesitaria una funcion con
+  // service_role que no existe todavia, se deja documentado como pendiente.
+  cambioPass(data: any) {
+    const run = async (): Promise<any> => {
+      const { data: session } = await supabase.auth.getUser();
+      if (!session || !session.user || session.user.id !== data.id) {
+        return { success: false, data: 'No se puede cambiar la clave de otro usuario desde aqui todavia' };
+      }
+      const { error } = await supabase.auth.updateUser({ password: data.password });
+      if (error) return { success: false, data: error.message };
+      return { success: true, data: 'ok' };
+    };
+    return from(run());
   }
 
   login(query: any) {
@@ -148,16 +223,41 @@ export class UsuariosService {
     return from(run());
   }
 
-  update(query:any){
-    return this._model.querys('tblusuario/'+query.id, query, 'put');
+  // Autoservicio de perfil (y edicion admin de otro usuario). Devuelve el perfil completo mapeado
+  // (no solo {success}) porque el store de Redux REEMPLAZA el objeto `user` entero con esta
+  // respuesta (ver reducer app.ts case 'put') — hay que preservar email/token que no vienen en el patch.
+  update(data: any) {
+    const run = async (): Promise<any> => {
+      const patch: any = {};
+      if (data.usu_nombre !== undefined) patch.full_name = data.usu_nombre;
+      if (data.usu_apellido !== undefined) patch.last_name = data.usu_apellido;
+      if (data.usu_telefono !== undefined) patch.phone = data.usu_telefono;
+      if (data.usu_documento !== undefined) patch.document_id = data.usu_documento;
+      if (data.usu_ciudad !== undefined) patch.city = data.usu_ciudad;
+      if (data.usu_direccion !== undefined) patch.address = data.usu_direccion;
+      if (data.usu_imagen !== undefined) patch.avatar_url = data.usu_imagen;
+
+      const { data: updated, error } = await supabase.from('profiles').update(patch).eq('id', data.id).select('*, roles(name)').single();
+      if (error || !updated) return { success: false };
+      return mapProfileToLegacyUser(updated, data.usu_email, data.tokens);
+    };
+    return from(run());
   }
 
-  updatePlatform(query:any){
-    return this._model.querys('tblusuario/updatePlatform', query, 'post');
+  // La tabla vieja `Platform` (datos de contacto duplicados por transportadora) se elimino a
+  // proposito en el Hito 7 al pasar a Mipaquete; no tiene equivalente nuevo, se deja no-op.
+  updatePlatform(query: any) {
+    return from(Promise.resolve({ success: true, data: 'ok' }));
   }
 
-  delete(query:any){
-    return this._model.querys('tblusuario/'+query.id, query, 'delete');
+  // Desactiva la cuenta (no hay forma de borrar auth.users desde el cliente sin service_role).
+  delete(query: any) {
+    const id = query && (query.id || query);
+    const run = async (): Promise<any> => {
+      const { error } = await supabase.from('profiles').update({ status: 0 }).eq('id', id);
+      return { success: !error };
+    };
+    return from(run());
   }
 
   createSolicitud(data: any) {
@@ -189,14 +289,43 @@ export class UsuariosService {
     };
     return from(run());
   }
-  getRecaudo(query:any){
-    return this._model.querys('platadistribuidor/querys',query, 'post');
+  // Total de dinero recaudado por un distribuidor: saldo de su billetera de referidos.
+  getRecaudo(query: any) {
+    const profileId = query && query.where && query.where.usuario;
+    const run = async (): Promise<any> => {
+      if (!profileId) return { data: [{ valor: 0 }] };
+      const { data, error } = await supabase.from('wallet_balances').select('balance').eq('profile_id', profileId).eq('wallet_type', 'referral').maybeSingle();
+      if (error || !data) return { data: [{ valor: 0 }] };
+      return { data: [{ valor: data.balance || 0 }] };
+    };
+    return from(run());
   }
-  getPerfiles(query:any){
-    return this._model.querys('tblcategoriaperfil/querys',query, 'post');
+
+  // Categorias de perfil de vendedor con su porcentaje (mismo dato que seller_tiers, ya usado por
+  // perfil.service.getCategoria).
+  getPerfiles(query: any) {
+    const run = async (): Promise<any> => {
+      const { data, error } = await supabase.from('seller_tiers').select('*').order('id');
+      if (error || !data) return { success: false, data: [] };
+      return { success: true, data: data.map((t: any) => ({ id: t.id, categoria: t.name, precioPorcentaje: t.markup_pct })) };
+    };
+    return from(run());
   }
-  olvidoPass(query:any){
-    return this._model.querys('tblusuario/olvidopass',query, 'post');
+  // Envia el correo real de recuperacion via Supabase Auth. Nota: no existe todavia una pagina en
+  // la app que reciba el link de recuperacion y llame a auth.updateUser({password}) — el correo se
+  // manda bien, pero falta esa pantalla para completar el cambio de clave (pendiente, fuera del
+  // alcance de "arreglar la llamada rota").
+  olvidoPass(query: any) {
+    const email = query && query.usu_email;
+    const run = async (): Promise<any> => {
+      if (!email) return { success: false, data: 'Falta el correo electronico' };
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/login`,
+      });
+      if (error) return { success: false, data: error.message };
+      return { success: true, data: 'Correo de recuperacion enviado' };
+    };
+    return from(run());
   }
     async initProcess( data:any ){
     return new Promise( async ( resolve ) =>{

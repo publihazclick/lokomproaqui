@@ -250,9 +250,6 @@ export class VentasService {
   updateDBI(query: any) {
     return this.update(query);
   }
-  delete(query:any){
-    return this._model.querys('tblventas/'+query.id, query, 'delete');
-  }
   // Genera la guia real en Mipaquete (reemplaza el createFlete viejo especifico de Coordinadora).
   // `query` es el pedido completo cargado en el formulario admin: query.id = order id,
   // query.transportadoraSelect = delivery_company_id (ver mapeo en getFleteValor, el campo "slug"
