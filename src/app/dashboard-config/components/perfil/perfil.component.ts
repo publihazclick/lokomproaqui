@@ -22,7 +22,7 @@ import { DANEGROUP } from 'src/app/JSON/dane-nogroup';
 import { VentasService } from 'src/app/servicesComponents/ventas.service';
 import { OpenIframeComponent } from 'src/app/extra/open-iframe/open-iframe.component';
 
-pdfMake.vfs = pdfFonts.pdfMake.vfs;
+pdfMake.vfs = (pdfFonts as any).pdfMake ? (pdfFonts as any).pdfMake.vfs : pdfFonts;
 
 @Component({
   selector: 'app-perfil',
