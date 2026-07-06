@@ -28,6 +28,11 @@ box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5); /* Aumenta la sombra al pasar el mo
 
 /* Estilos para hacerlo responsive */
 @media screen and (max-width: 768px) {
+.iphone-menu {
+    margin-top: 18px;
+    display: block;
+}
+
 .iphone-menu ul {
     display: grid;
     grid-template-columns: 1fr 1fr;
