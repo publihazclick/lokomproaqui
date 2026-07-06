@@ -38,7 +38,9 @@ export class VentasService {
     private _model: ServiciosService
   ) { }
 
-  // Panel admin: listado de pedidos con filtros basicos (vendedor, estado, busqueda por telefono/guia).
+  // Panel admin: listado de pedidos con filtros basicos (vendedor, estado, busqueda por telefono/guia/id).
+  // Fuente unica para TODOS los canales de venta (carrito normal, compra rapida whatsapp, registro manual
+  // de un distribuidor): todos terminan siendo una fila en `orders`, distinguidos solo por order_type.
   get(query: any) {
     const where = (query && query.where) || {};
     const page = query.page || 0;
@@ -53,8 +55,17 @@ export class VentasService {
       }
       if (where.id) q = q.eq('id', where.id);
 
-      const term = where.ven_telefono_cliente || where.ven_numero_guia || (where.slug && where.slug.contains) || null;
-      if (term) q = q.or(`buyer_phone.ilike.%${term}%,tracking_number.ilike.%${term}%`);
+      // El termino de busqueda puede venir plano (ven_telefono_cliente/ven_numero_guia/slug) o como
+      // `where.or` (array de objetos { campo: { contains } } ), usado por las pantallas con buscador.
+      const orTerm = Array.isArray(where.or)
+        ? where.or.map((o: any) => (o.slug && o.slug.contains) || (o.ven_telefono_cliente && o.ven_telefono_cliente.contains) || (o.ven_numero_guia && o.ven_numero_guia.contains)).find((v: any) => v)
+        : null;
+      const term = orTerm || where.ven_telefono_cliente || where.ven_numero_guia || (where.slug && where.slug.contains) || null;
+      if (term) {
+        const parts = [`buyer_phone.ilike.%${term}%`, `tracking_number.ilike.%${term}%`];
+        if (/^\d+$/.test(term)) parts.push(`id.eq.${term}`);
+        q = q.or(parts.join(','));
+      }
 
       q = q.order('created_at', { ascending: false });
       q = q.range(page * limit, page * limit + limit - 1);
@@ -67,36 +78,42 @@ export class VentasService {
     return from(run());
   }
 
+  // Resuelve el product_variant_id por nombre de talla (igual que syncVariants en producto.service)
+  // y arma el arreglo de items que espera el RPC create_order.
+  private async _buildOrderItems(cartItems: any[]) {
+    const items: any[] = [];
+    for (const item of cartItems) {
+      let variantId: any = null;
+      if (item.talla) {
+        const { data: variant } = await supabase
+          .from('product_variants')
+          .select('id, sizes!inner(name)')
+          .eq('product_id', item.articulo)
+          .eq('sizes.name', item.talla)
+          .maybeSingle();
+        if (variant) variantId = variant.id;
+      }
+
+      items.push({
+        product_id: item.articulo,
+        product_variant_id: variantId,
+        title: item.titulo,
+        unit_price: item.costo,
+        quantity: item.cantidad,
+        size: item.talla || null,
+        color: item.color || null,
+        seller_cost: null,
+        total_cost: item.costoTotal,
+      });
+    }
+    return items;
+  }
+
   // Checkout nuevo: un pedido con todas las lineas del carrito, decremento atomico de stock via RPC.
   // cartItems: [{ articulo(product id), talla, color, cantidad, costo, costoTotal, titulo, foto }]
   createOrder(orderInfo: any, cartItems: any[]) {
     const run = async (): Promise<any> => {
-      const items: any[] = [];
-
-      for (const item of cartItems) {
-        let variantId: any = null;
-        if (item.talla) {
-          const { data: variant } = await supabase
-            .from('product_variants')
-            .select('id, sizes!inner(name)')
-            .eq('product_id', item.articulo)
-            .eq('sizes.name', item.talla)
-            .maybeSingle();
-          if (variant) variantId = variant.id;
-        }
-
-        items.push({
-          product_id: item.articulo,
-          product_variant_id: variantId,
-          title: item.titulo,
-          unit_price: item.costo,
-          quantity: item.cantidad,
-          size: item.talla || null,
-          color: item.color || null,
-          seller_cost: null,
-          total_cost: item.costoTotal,
-        });
-      }
+      const items = await this._buildOrderItems(cartItems);
 
       const { data: orderId, error } = await supabase.rpc('create_order', {
         order_data: {
@@ -106,7 +123,7 @@ export class VentasService {
           buyer_address: orderInfo.buyer_address,
           buyer_city: orderInfo.buyer_city,
           buyer_neighborhood: orderInfo.buyer_neighborhood,
-          order_type: 'contraentrega',
+          order_type: orderInfo.order_type || 'contraentrega',
           freight_payer: 'cliente',
         },
         items,
@@ -124,11 +141,89 @@ export class VentasService {
 
     return from(run());
   }
-  create(query:any){
-    return this._model.querys('tblventas',query, 'post');
+
+  // Registro manual de una venta completa por un distribuidor/admin (formulario "posible venta" o
+  // "registrar venta"), con su propio carrito y cotizacion de envio. Mismo RPC create_order que el
+  // checkout normal (misma logica de comisiones), solo cambia el canal (order_type: "manual").
+  create(data: any) {
+    const run = async (): Promise<any> => {
+      const rawItems = data.listaArticulo || [];
+      const cartItems = rawItems.map((it: any) => {
+        const unitPrice = it.loVendio != null ? Number(it.loVendio) : Number(it.costoTotal) || 0;
+        return {
+          articulo: it.id,
+          talla: it.tallaSelect || it.talla || null,
+          color: it.colorSelect || it.color || null,
+          cantidad: it.cantidad || 1,
+          costo: unitPrice,
+          costoTotal: unitPrice * (it.cantidad || 1),
+          titulo: it.codigoImg || it.nombreProducto || it.pro_nombre,
+        };
+      });
+
+      const items = await this._buildOrderItems(cartItems);
+      const { data: orderId, error } = await supabase.rpc('create_order', {
+        order_data: {
+          seller_id: data.usu_clave_int || null,
+          buyer_name: data.ven_nombre_cliente,
+          buyer_phone: data.ven_telefono_cliente,
+          buyer_address: data.ven_direccion_cliente,
+          buyer_city: data.ven_ciudad,
+          buyer_neighborhood: data.ven_barrio,
+          order_type: data.ven_tipo || 'manual',
+          freight_payer: 'tienda',
+        },
+        items,
+      });
+
+      if (error || !orderId) return { success: false };
+
+      if (data.flteTotal || data.fleteValor || data.transportadoraSelect) {
+        await supabase.from('orders').update({
+          freight_value: data.flteTotal || data.fleteValor || null,
+          carrier: data.transportadoraSelect || null,
+        }).eq('id', orderId);
+      }
+
+      return { success: true, id: orderId, ven_nombre_cliente: data.ven_nombre_cliente, usu_clave_int: { id: data.usu_clave_int } };
+    };
+    return from(run());
   }
-  create2(query:any){
-    return this._model.querys('ventasDBI',query, 'post');
+
+  // Compra rapida de un solo articulo via WhatsApp (boton "comprar ya" en producto/catalogo, sin
+  // pasar por el carrito). Mismo RPC create_order, order_type: "whatsapp".
+  create2(data: any) {
+    const run = async (): Promise<any> => {
+      const unitPrice = Number(data.ven_precio) || 0;
+      const cartItems = [{
+        articulo: data.pro_clave_int,
+        talla: data.ven_tallas || null,
+        color: data.ven_observacion || null,
+        cantidad: data.ven_cantidad || 1,
+        costo: unitPrice,
+        costoTotal: data.ven_total != null ? Number(data.ven_total) : unitPrice * (data.ven_cantidad || 1),
+        titulo: data.nombreProducto,
+      }];
+      const items = await this._buildOrderItems(cartItems);
+
+      const { data: orderId, error } = await supabase.rpc('create_order', {
+        order_data: {
+          seller_id: data.usu_clave_int || null,
+          buyer_name: data.ven_nombre_cliente,
+          buyer_phone: data.ven_telefono_cliente,
+          buyer_address: data.ven_direccion_cliente,
+          buyer_city: data.ven_ciudad,
+          buyer_neighborhood: data.ven_barrio,
+          order_type: data.ven_tipo || 'whatsapp',
+          freight_payer: 'cliente',
+        },
+        items,
+      });
+
+      if (error || !orderId) return { success: false, id: null };
+      return { success: true, id: orderId };
+    };
+    return from(run());
   }
 
   // Cambia el estado del pedido (usado por el panel admin). Al aprobar (ven_estado:1, "exitosa")
@@ -151,8 +246,9 @@ export class VentasService {
     return from(run());
   }
 
-  updateDBI(query:any){
-    return this._model.querys('ventasDBI/'+query.id, query, 'put');
+  // Mismo pedido (orders), solo cambia la puerta de entrada historica (formulario de "posible venta").
+  updateDBI(query: any) {
+    return this.update(query);
   }
   delete(query:any){
     return this._model.querys('tblventas/'+query.id, query, 'delete');
@@ -175,8 +271,20 @@ export class VentasService {
     return from(run());
   }
 
-  getMontos(query:any){
-    return this._model.querys('tblventas/getDineroDetalle',query, 'post');
+  // Suma de ganancias (earnings_total) de un vendedor filtrado por estado (reemplaza getDineroDetalle).
+  getMontos(query: any) {
+    const where = (query && query.where) || {};
+    const run = async (): Promise<any> => {
+      let q = supabase.from('orders').select('earnings_total').eq('seller_id', where.user);
+      if (where.estado !== undefined && where.estado !== null) {
+        q = q.eq('status', LEGACY_TO_STATUS[where.estado] || 'pending');
+      }
+      const { data, error } = await q;
+      if (error || !data) return { success: false, data: { pagado: 0 } };
+      const pagado = data.reduce((sum: number, r: any) => sum + (Number(r.earnings_total) || 0), 0);
+      return { success: true, data: { pagado } };
+    };
+    return from(run());
   }
 
   // Cotiza con Mipaquete (reemplaza el getFleteValor viejo especifico de Coordinadora).
@@ -242,13 +350,29 @@ export class VentasService {
     };
     return from(run());
   }
-  // "Posibles ventas" (VentasDBI) es una funcionalidad separada del checkout normal que nunca se
-  // migro a Supabase (tabla vieja sin equivalente nuevo). Se deja sin datos para no seguir pegandole
-  // al backend muerto; el badge del header simplemente muestra 0 hasta que se decida si se migra.
-  getPossibleSales( query:any ){
-    return from(Promise.resolve({ success: true, data: [], count: 0 }));
+  // "Posibles ventas" (antes tabla separada VentasDBI) ahora son pedidos normales en `orders`
+  // (order_type "whatsapp"/"manual"): misma fuente y mismos filtros que el listado admin de `get()`.
+  getPossibleSales(query: any) {
+    return this.get(query);
   }
-  getVentasProveedores( query:any ){
-    return this._model.querys('tblventas/ventasProveedoresView',query, 'post');
+
+  // Listado completo para el panel de proveedor/admin, con nombre del vendedor incluido
+  // (reemplaza la vista SQL vieja Vventas).
+  getVentasProveedores(query: any) {
+    const run = async (): Promise<any> => {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*, profiles!orders_seller_id_fkey(full_name)')
+        .neq('status', 'deleted')
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (error || !data) return [];
+      return data.map((o: any) => ({
+        ...mapOrderToLegacy(o),
+        ven_updatedA: o.updated_at,
+        usu_nombre: o.profiles ? o.profiles.full_name : '',
+      }));
+    };
+    return from(run());
   }
 }
