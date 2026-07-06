@@ -251,8 +251,23 @@ export class ProductoService {
   getVenta(query:any){
     return this._model.querys('tblventasproducto/querys',query, 'post');
   }
+  // Reemplaza el calculo viejo de "dinero pendiente por cobrar" del proveedor (validateMoneySupplier):
+  // en el sistema nuevo el pago al proveedor se acredita al instante en su billetera al aprobar el
+  // pedido (ver approve_order), asi que el "recaudo" ahora es simplemente su saldo de billetera tipo supplier.
   getVentaComplete(query:any){
-    return this._model.querys('tblventas/getTransactions',query, 'post');
+    const profileId = query && query.where && query.where.creacion;
+    const run = async (): Promise<any> => {
+      if (!profileId) return { total: 0 };
+      const { data, error } = await supabase
+        .from('wallet_balances')
+        .select('balance')
+        .eq('profile_id', profileId)
+        .eq('wallet_type', 'supplier')
+        .maybeSingle();
+      if (error || !data) return { total: 0 };
+      return { total: data.balance || 0 };
+    };
+    return from(run());
   }
   getVentaCompleteEarningBuy(query:any){
     return this._model.querys('tblventas/getTransactionsEarringBuyTrasnport',query, 'post');

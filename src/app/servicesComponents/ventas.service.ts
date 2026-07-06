@@ -242,8 +242,11 @@ export class VentasService {
     };
     return from(run());
   }
+  // "Posibles ventas" (VentasDBI) es una funcionalidad separada del checkout normal que nunca se
+  // migro a Supabase (tabla vieja sin equivalente nuevo). Se deja sin datos para no seguir pegandole
+  // al backend muerto; el badge del header simplemente muestra 0 hasta que se decida si se migra.
   getPossibleSales( query:any ){
-    return this._model.querys('ventasDBI/querys',query, 'post');
+    return from(Promise.resolve({ success: true, data: [], count: 0 }));
   }
   getVentasProveedores( query:any ){
     return this._model.querys('tblventas/ventasProveedoresView',query, 'post');
