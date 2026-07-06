@@ -172,26 +172,26 @@
     <nav class="navbar navbar-expand-lg navbar-light headerColor" #toolbar *ngIf="( routName !== 'login' ) &&  (routName !== 'singUp' )">
       <div class="row" style="width: 100%;">
         <div class="col-12">
-          <div class="d-flex bd-highlight">
+          <div class="d-flex bd-highlight header-top-row">
             <div class="p-2 bd-highlight">
               <button mat-icon-button (click)="drawer.toggle()" translate="no">
                 <i class="material-icons icoss">menu</i>
               </button>
 
             </div>
-            <div class="p-2 bd-highlight">
+            <div class="p-2 bd-highlight logo-wrap">
               <a [routerLink]="[ '/articulo' ]">
-                <img src="./assets/logo.svg" style="width: 177px; height: 55px;">
+                <img src="./assets/logo.svg" class="site-logo">
               </a>
             </div>
-            <div *ngIf="!dataUser.id" class="ms-auto p-2 bd-highlight">
-              <div class="d-flex bd-highlight">
+            <div *ngIf="!dataUser.id" class="ms-auto p-2 bd-highlight auth-buttons-outer">
+              <div class="d-flex bd-highlight auth-buttons">
                 <div class="p-2 bd-highlight">
-                  <button type="button" class="btn btn-dark" (click)="login()" style="font-size: 10px; margin-bottom: 5px;">Iniciar Sesion</button>
-                  <button type="button" *ngIf="breakpoint == 1" class="btn btn-dark" style="font-size: 10px; " (click)="registrar()">Registrarse</button>
+                  <button type="button" class="btn btn-dark auth-btn" (click)="login()">Iniciar Sesion</button>
+                  <button type="button" *ngIf="breakpoint == 1" class="btn btn-dark auth-btn" (click)="registrar()">Registrarse</button>
                 </div>
                 <div class="p-2 bd-highlight" *ngIf="breakpoint == 6">
-                  <button type="button" class="btn btn-dark" (click)="registrar()" style="font-size: 10px;">Registrarse</button>
+                  <button type="button" class="btn btn-dark auth-btn" (click)="registrar()">Registrarse</button>
                 </div>
               </div>
             </div>

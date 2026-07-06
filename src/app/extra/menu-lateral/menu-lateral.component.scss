@@ -9,6 +9,15 @@
 	align-items: flex-end;
 	z-index: 100;
 }
+
+// En celular esta barra quedaba encima del menu/hero (se monta sobre "Quiero Vender" y la imagen
+// del banner). Ya existe el boton flotante de WhatsApp fijo abajo a la derecha (.whatsapp-button),
+// asi que en pantallas chicas se oculta esta barra vertical para no duplicar y no tapar contenido.
+@media only screen and (max-width: 600px) {
+	.social-bar {
+		display: none;
+	}
+}
 .anchos1{
 	width: 100%;
 	margin: 2px 0;

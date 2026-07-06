@@ -4,6 +4,68 @@
   border: 1px solid rgba(0, 0, 0, 0.5);
 }
 
+// Logo y botones de la barra superior: el ancho fijo del logo (177px) mas los botones sin encoger
+// causaba que "Registrarse" quedara cortado fuera de pantalla en celulares chicos (320-400px).
+.header-top-row {
+  flex-wrap: nowrap;
+  align-items: center;
+}
+@media only screen and (max-width: 340px) {
+  .header-top-row {
+    flex-wrap: wrap;
+  }
+}
+.logo-wrap {
+  min-width: 0;
+  flex-shrink: 1;
+}
+.site-logo {
+  width: 177px;
+  height: 55px;
+  max-width: 100%;
+}
+.auth-buttons-outer {
+  min-width: 0;
+  flex-shrink: 0;
+}
+.auth-buttons {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.auth-btn {
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+@media only screen and (max-width: 500px) {
+  .site-logo {
+    width: 130px;
+    height: auto;
+  }
+  .auth-buttons > .p-2 {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    padding: 4px !important;
+  }
+  .auth-btn {
+    font-size: 10px;
+    padding: 4px 10px;
+    margin-bottom: 0 !important;
+  }
+}
+
+@media only screen and (max-width: 360px) {
+  .site-logo {
+    width: 100px;
+  }
+  .auth-btn {
+    font-size: 9px;
+    padding: 3px 8px;
+  }
+}
+
 .example-sidenav-content {
   display: flex;
   height: 100%;
