@@ -1,0 +1,12 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/locomproAqui/browser",
+  "build": {
+    "env": {
+      "NODE_OPTIONS": "--openssl-legacy-provider --max-old-space-size=6144"
+    }
+  },
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

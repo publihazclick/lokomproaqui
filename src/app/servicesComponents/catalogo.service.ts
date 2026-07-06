@@ -1,9 +1,15 @@
 import { Injectable } from '@angular/core';
 import { ServiciosService } from '../services/servicios.service';
-import { map } from 'rxjs/operators';
-// import * as base64Img from 'base64-img';
-// var base64Img = require('base64-img');
-declare var base64Img:any;
+import { supabase } from '../services/supabase.client';
+import { from } from 'rxjs';
+
+function mapCatalogToLegacy(c: any) {
+  return { id: c.id, titulo: c.title, estado: c.status, precio: c.price, preciomayor: c.wholesale_price };
+}
+
+function mapCatalogItemToLegacy(i: any) {
+  return { id: i.id, catalago: i.catalog_id, producto: i.product_id, foto: i.image_url };
+}
 
 @Injectable({
   providedIn: 'root'
@@ -14,42 +20,93 @@ export class CatalogoService {
     private _model: ServiciosService
   ) { }
 
-  get(query:any){
-    return this._model.querys('catalago/querys',query, 'post');
+  get(query: any) {
+    const where = (query && query.where) || {};
+    const run = async (): Promise<any> => {
+      let q = supabase.from('catalogs').select('*');
+      if (where.id) q = q.eq('id', where.id);
+      if (where.estado !== undefined) q = q.eq('status', where.estado);
+      const { data, error } = await q;
+      if (error || !data) return { success: false, data: [] };
+      return { success: true, data: data.map(mapCatalogToLegacy) };
+    };
+    return from(run());
   }
-  create(query:any){
-    return this._model.querys('catalago',query, 'post');
+
+  create(data: any) {
+    const run = async (): Promise<any> => {
+      const { data: inserted, error } = await supabase.from('catalogs').insert({
+        title: data.titulo, status: data.estado !== undefined ? data.estado : 1, price: data.precio, wholesale_price: data.preciomayor,
+      }).select().single();
+      if (error || !inserted) return { success: false };
+      return { success: true, data: mapCatalogToLegacy(inserted) };
+    };
+    return from(run());
   }
-  update(query:any){
-    return this._model.querys('catalago/'+query.id, query, 'put');
+
+  update(data: any) {
+    const run = async (): Promise<any> => {
+      const patch: any = {};
+      if (data.titulo !== undefined) patch.title = data.titulo;
+      if (data.estado !== undefined) patch.status = data.estado;
+      if (data.precio !== undefined) patch.price = data.precio;
+      if (data.preciomayor !== undefined) patch.wholesale_price = data.preciomayor;
+      const { error } = await supabase.from('catalogs').update(patch).eq('id', data.id);
+      return { success: !error };
+    };
+    return from(run());
   }
-  delete(query:any){
-    return this._model.querys('catalago/'+query.id, query, 'delete');
+
+  delete(data: any) {
+    const run = async (): Promise<any> => {
+      const { error } = await supabase.from('catalogs').delete().eq('id', data.id);
+      return { success: !error };
+    };
+    return from(run());
   }
-  getDetallado(query:any){
-    return this._model.querys('catalagodetallado/querys',query, 'post');
-    /*.pipe(
-      map(async (res: any) => {
-        console.log(res);
-        for( let row of res.data ){
-          let base = await this.FormatoBase64( row.producto.foto );
-				  row.base64 = base;
-        }
-        return res;
-      }));*/
+
+  getDetallado(query: any) {
+    const where = (query && query.where) || {};
+    const run = async (): Promise<any> => {
+      let q = supabase.from('catalog_items').select('*, products(id, name, image_url, client_sale_price)');
+      if (where.catalago) q = q.eq('catalog_id', where.catalago);
+      const { data, error } = await q;
+      if (error || !data) return { success: false, data: [] };
+      return { success: true, data: data.map((i: any) => ({ ...mapCatalogItemToLegacy(i), producto: i.products })) };
+    };
+    return from(run());
   }
-  createDetallado(query:any){
-    return this._model.querys('catalagodetallado',query, 'post');
+
+  createDetallado(data: any) {
+    const run = async (): Promise<any> => {
+      const { data: inserted, error } = await supabase.from('catalog_items').insert({
+        catalog_id: data.catalago, product_id: data.producto, image_url: data.foto,
+      }).select().single();
+      if (error || !inserted) return { success: false };
+      return { success: true, data: mapCatalogItemToLegacy(inserted) };
+    };
+    return from(run());
   }
-  updateDetallado(query:any){
-    return this._model.querys('catalagodetallado/'+query.id, query, 'put');
+
+  updateDetallado(data: any) {
+    const run = async (): Promise<any> => {
+      const patch: any = {};
+      if (data.foto !== undefined) patch.image_url = data.foto;
+      const { error } = await supabase.from('catalog_items').update(patch).eq('id', data.id);
+      return { success: !error };
+    };
+    return from(run());
   }
-  deleteDetallado(query:any){
-    return this._model.querys('catalagodetallado/'+query.id, query, 'delete');
+
+  deleteDetallado(data: any) {
+    const run = async (): Promise<any> => {
+      const { error } = await supabase.from('catalog_items').delete().eq('id', data.id);
+      return { success: !error };
+    };
+    return from(run());
   }
-  FormatoBase64( foto ){
-    return new Promise( resolve=>{
-      return this._model.querys('catalagodetallado/FormatoBase64',{ foto: foto }, 'post').subscribe((res:any)=>resolve( res.data ), (error:any)=> resolve(false));
-    });
+
+  FormatoBase64(foto: any) {
+    return Promise.resolve(foto);
   }
 }

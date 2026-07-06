@@ -1,0 +1,42 @@
+diff --git a/node_modules/@supabase/supabase-js/dist/main/index.d.ts b/node_modules/@supabase/supabase-js/dist/main/index.d.ts
+index fdf2c27..8e2473f 100644
+--- a/node_modules/@supabase/supabase-js/dist/main/index.d.ts
++++ b/node_modules/@supabase/supabase-js/dist/main/index.d.ts
+@@ -1,12 +1,12 @@
+ import SupabaseClient from './SupabaseClient';
+-import type { GenericSchema, SupabaseClientOptions } from './lib/types';
++import { GenericSchema, SupabaseClientOptions } from './lib/types';
+ export * from '@supabase/gotrue-js';
+-export type { User as AuthUser, Session as AuthSession } from '@supabase/gotrue-js';
+-export type { PostgrestResponse, PostgrestSingleResponse, PostgrestMaybeSingleResponse, PostgrestError, } from '@supabase/postgrest-js';
++export { User as AuthUser, Session as AuthSession } from '@supabase/gotrue-js';
++export { PostgrestResponse, PostgrestSingleResponse, PostgrestMaybeSingleResponse, PostgrestError, } from '@supabase/postgrest-js';
+ export { FunctionsHttpError, FunctionsFetchError, FunctionsRelayError, FunctionsError, } from '@supabase/functions-js';
+ export * from '@supabase/realtime-js';
+ export { default as SupabaseClient } from './SupabaseClient';
+-export type { SupabaseClientOptions, QueryResult, QueryData, QueryError } from './lib/types';
++export { SupabaseClientOptions, QueryResult, QueryData, QueryError } from './lib/types';
+ /**
+  * Creates a new Supabase Client.
+  */
+diff --git a/node_modules/@supabase/supabase-js/dist/module/index.d.ts b/node_modules/@supabase/supabase-js/dist/module/index.d.ts
+index fdf2c27..8e2473f 100644
+--- a/node_modules/@supabase/supabase-js/dist/module/index.d.ts
++++ b/node_modules/@supabase/supabase-js/dist/module/index.d.ts
+@@ -1,12 +1,12 @@
+ import SupabaseClient from './SupabaseClient';
+-import type { GenericSchema, SupabaseClientOptions } from './lib/types';
++import { GenericSchema, SupabaseClientOptions } from './lib/types';
+ export * from '@supabase/gotrue-js';
+-export type { User as AuthUser, Session as AuthSession } from '@supabase/gotrue-js';
+-export type { PostgrestResponse, PostgrestSingleResponse, PostgrestMaybeSingleResponse, PostgrestError, } from '@supabase/postgrest-js';
++export { User as AuthUser, Session as AuthSession } from '@supabase/gotrue-js';
++export { PostgrestResponse, PostgrestSingleResponse, PostgrestMaybeSingleResponse, PostgrestError, } from '@supabase/postgrest-js';
+ export { FunctionsHttpError, FunctionsFetchError, FunctionsRelayError, FunctionsError, } from '@supabase/functions-js';
+ export * from '@supabase/realtime-js';
+ export { default as SupabaseClient } from './SupabaseClient';
+-export type { SupabaseClientOptions, QueryResult, QueryData, QueryError } from './lib/types';
++export { SupabaseClientOptions, QueryResult, QueryData, QueryError } from './lib/types';
+ /**
+  * Creates a new Supabase Client.
+  */

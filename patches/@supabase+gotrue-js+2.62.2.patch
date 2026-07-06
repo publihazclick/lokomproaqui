@@ -1,0 +1,26 @@
+diff --git a/node_modules/@supabase/gotrue-js/dist/main/GoTrueClient.d.ts b/node_modules/@supabase/gotrue-js/dist/main/GoTrueClient.d.ts
+index d4d51bf..3649acf 100644
+--- a/node_modules/@supabase/gotrue-js/dist/main/GoTrueClient.d.ts
++++ b/node_modules/@supabase/gotrue-js/dist/main/GoTrueClient.d.ts
+@@ -2,7 +2,7 @@ import GoTrueAdminApi from './GoTrueAdminApi';
+ import { AuthError } from './lib/errors';
+ import { Fetch } from './lib/fetch';
+ import { Deferred } from './lib/helpers';
+-import type { AuthChangeEvent, AuthResponse, AuthTokenResponse, AuthTokenResponsePassword, AuthOtpResponse, CallRefreshTokenResult, GoTrueClientOptions, InitializeResult, OAuthResponse, SSOResponse, Session, SignInWithIdTokenCredentials, SignInWithOAuthCredentials, SignInWithPasswordCredentials, SignInWithPasswordlessCredentials, SignUpWithPasswordCredentials, SignInWithSSO, SignOut, Subscription, SupportedStorage, UserAttributes, UserResponse, VerifyOtpParams, GoTrueMFAApi, ResendParams, AuthFlowType, LockFunc, UserIdentity } from './lib/types';
++import { AuthChangeEvent, AuthResponse, AuthTokenResponse, AuthTokenResponsePassword, AuthOtpResponse, CallRefreshTokenResult, GoTrueClientOptions, InitializeResult, OAuthResponse, SSOResponse, Session, SignInWithIdTokenCredentials, SignInWithOAuthCredentials, SignInWithPasswordCredentials, SignInWithPasswordlessCredentials, SignUpWithPasswordCredentials, SignInWithSSO, SignOut, Subscription, SupportedStorage, UserAttributes, UserResponse, VerifyOtpParams, GoTrueMFAApi, ResendParams, AuthFlowType, LockFunc, UserIdentity } from './lib/types';
+ export default class GoTrueClient {
+     private static nextInstanceID;
+     private instanceID;
+diff --git a/node_modules/@supabase/gotrue-js/dist/module/GoTrueClient.d.ts b/node_modules/@supabase/gotrue-js/dist/module/GoTrueClient.d.ts
+index d4d51bf..3649acf 100644
+--- a/node_modules/@supabase/gotrue-js/dist/module/GoTrueClient.d.ts
++++ b/node_modules/@supabase/gotrue-js/dist/module/GoTrueClient.d.ts
+@@ -2,7 +2,7 @@ import GoTrueAdminApi from './GoTrueAdminApi';
+ import { AuthError } from './lib/errors';
+ import { Fetch } from './lib/fetch';
+ import { Deferred } from './lib/helpers';
+-import type { AuthChangeEvent, AuthResponse, AuthTokenResponse, AuthTokenResponsePassword, AuthOtpResponse, CallRefreshTokenResult, GoTrueClientOptions, InitializeResult, OAuthResponse, SSOResponse, Session, SignInWithIdTokenCredentials, SignInWithOAuthCredentials, SignInWithPasswordCredentials, SignInWithPasswordlessCredentials, SignUpWithPasswordCredentials, SignInWithSSO, SignOut, Subscription, SupportedStorage, UserAttributes, UserResponse, VerifyOtpParams, GoTrueMFAApi, ResendParams, AuthFlowType, LockFunc, UserIdentity } from './lib/types';
++import { AuthChangeEvent, AuthResponse, AuthTokenResponse, AuthTokenResponsePassword, AuthOtpResponse, CallRefreshTokenResult, GoTrueClientOptions, InitializeResult, OAuthResponse, SSOResponse, Session, SignInWithIdTokenCredentials, SignInWithOAuthCredentials, SignInWithPasswordCredentials, SignInWithPasswordlessCredentials, SignUpWithPasswordCredentials, SignInWithSSO, SignOut, Subscription, SupportedStorage, UserAttributes, UserResponse, VerifyOtpParams, GoTrueMFAApi, ResendParams, AuthFlowType, LockFunc, UserIdentity } from './lib/types';
+ export default class GoTrueClient {
+     private static nextInstanceID;
+     private instanceID;

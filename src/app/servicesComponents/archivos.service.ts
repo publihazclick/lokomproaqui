@@ -1,7 +1,20 @@
 import { Injectable } from '@angular/core';
 import { ServiciosService } from '../services/servicios.service';
-import * as firebase from "firebase/app";
-import 'firebase/storage';
+import { supabase } from '../services/supabase.client';
+import { from } from 'rxjs';
+
+const BUCKET = 'lokomproaqui-media';
+
+async function uploadFile(form: FormData): Promise<any> {
+  const file: any = form.get('file');
+  if (!file) return { success: false, files: null };
+  const ext = (file.name || 'jpg').split('.').pop();
+  const path = `uploads/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const { error } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: true });
+  if (error) return { success: false, files: null };
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return { success: true, files: data.publicUrl };
+}
 
 @Injectable({
   providedIn: 'root'
@@ -12,14 +25,12 @@ export class ArchivosService {
     private _model: ServiciosService
   ) { }
 
-  create(query:any){
-    //this.FileFirebase( query );
-    return this._model.querys('archivos/file',query, 'post');
+  create(form: any) {
+    return from(uploadFile(form));
   }
 
-  createFile(query:any){
-    //this.FileFirebase( query );
-    return this._model.querys('archivos/fileTotal',query, 'post');
+  createFile(form: any) {
+    return from(uploadFile(form));
   }
 
   getBase64(file) {
@@ -30,22 +41,5 @@ export class ArchivosService {
       reader.onerror = error => reject(error);
     });
   }
-
-  FileFirebase( ev:any ){
-    var firebaseConfig = {
-      apiKey: "AIzaSyB5D8M8DRxmHU_Awwo7Yk41ei_Me0RU5Io",
-      authDomain: "locomproaqui-e5fb7.firebaseapp.com",
-      databaseURL: "https://locomproaqui-e5fb7.firebaseapp.com/",
-      storageBucket: "locomproaqui-e5fb7.appspot.com"
-    };
-    firebase.initializeApp(firebaseConfig);
-    let storageRef = firebase.storage().ref('images/'+ev.name || 'pruebas');
-
-    let task = storageRef.put(ev).then(res=>console.log(res));
-
-
-  }
-
-
 
 }

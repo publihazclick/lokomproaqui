@@ -4,13 +4,11 @@
 
 export const environment = {
   production: false,
-  //url: "https://lokomproaqui.herokuapp.com",
-  //url: "https://apilokomprojs-7681dc4951e1.herokuapp.com",
-  url: "http://localhost:1337",
-  //url: "https://apilokomprojs-46c477c2e9f6.herokuapp.com",
-  //url: "https://backlocompro.herokuapp.com",
-  //urlEnvios: "http://localhost:1338",
-  urlEnvios: "https://apienviosrapidos-ce1b900c1c5b.herokuapp.com",
+  supabaseUrl: "https://enajheqrfbglcpsqglnb.supabase.co",
+  supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVuYWpoZXFyZmJnbGNwc3FnbG5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyNzU5MjksImV4cCI6MjA5ODg1MTkyOX0.makt-0qQctq5ZhrNIayuraLA2TKHxssnWbdYQA-pakg",
+  // Recursos aun no migrados a Supabase (hitos 2+) siguen referenciando esto; se irán quitando por hito.
+  url: "",
+  urlEnvios: "",
   urlFront: "http://localhost:4200",
   keyEpayco: "fd1fee1f6f008ddf010440f8c092a2cb",
   estadoPruebaPagos: true

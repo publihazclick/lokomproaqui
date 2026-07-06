@@ -91,17 +91,8 @@ export class AuthService implements CanActivate {
     }
     canActivate() {
       const identity = this.dataUser || {};
-      //console.log(identity)
       if (Object.keys(identity).length >0) {
-        //this.validandoUser();
         this.validandoConfig();
-        (async ()=>{
-          while (true){
-            await this.sleep(300);
-           // this.validandoUser();
-            this.validandoConfig();
-          }
-        });
         return true;
       } else {
         this.router.navigate(['login']);

@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
-import * as moment from 'moment';
 import { CART } from 'src/app/interfaces/sotarage';
 import { departamento } from 'src/app/JSON/departamentos';
 import { CartAction } from 'src/app/redux/app.actions';
@@ -24,17 +23,20 @@ export class ChecktComponent implements OnInit {
   disabled:boolean = false;
   vista1:string = "inicial";
 
+  tiendaInfo:any = {};
+
   constructor(
     private _store: Store<CART>,
     public _tools: ToolsService,
     private _ventas: VentasService,
     private _router: Router
-  ) { 
+  ) {
     this._store.subscribe((store: any) => {
       //console.log(store);
       store = store.name;
       if(!store) return false;
       this.listCarrito = store.cart || [];
+      this.tiendaInfo = store.usercabeza || {};
       this.suma();
     });
   }
@@ -66,49 +68,30 @@ export class ChecktComponent implements OnInit {
   async finalizando(){
     if( this.disabled ) return false;
     this.disabled = true;
-    for( let row of this.listCarrito ){
-      let data:any = {
-        "ven_tipo": "whatsapp",
-        "usu_clave_int": 1,
-        "ven_usu_creacion": "joseeduar147@gmail.com",
-        "ven_fecha_venta": moment().format("DD/MM/YYYY"),
-        "cob_num_cedula_cliente": "0",
-        "ven_nombre_cliente": this.data.nombre,
-        "ven_telefono_cliente": this.data.telefono,
-        "ven_ciudad": this.data.ciudad,
-        "ven_barrio": this.data.barrio,
-        "ven_direccion_cliente": this.data.direccion,
-        "ven_cantidad": row.cantidad,
-        "ven_tallas": "0",
-        "ven_precio": row.costo,
-        "ven_total": row.costoTotal,
-        "ven_ganancias": 0,
-        "prv_observacion": "ok",
-        "ven_estado": 0,
-        "create": moment().format("DD/MM/YYYY"),
-        "apartamento": this.data.apartamento,
-        "departamento": this.data.departamento,
-        "ven_imagen_producto": row.foto
-      };
-      await this.nexCompra( data );
-    }
-    this.disabled = false;
-    this._tools.presentToast("Exitoso Tu pedido esta en proceso. un accesor se pondra en contacto contigo!");
-    this.vista1 = "segunda";
-    this.data = {};
-    this.listCarrito = [];
-    let accion = new CartAction( { }, 'drop');
-    this._store.dispatch( accion );
-  }
 
-  async nexCompra( data:any ){
-    return new Promise( resolve =>{
-      this._ventas.create( data ).subscribe(( res:any )=>{
-        resolve( true );
-      },( error:any )=> {
-        //this._tools.presentToast("Error de servidor")
-        resolve( false );
-      });
-    })
+    const orderInfo = {
+      seller_id: this.tiendaInfo.id || null,
+      buyer_name: this.data.nombre,
+      buyer_phone: this.data.telefono,
+      buyer_address: this.data.direccion + (this.data.apartamento ? ' Apto ' + this.data.apartamento : ''),
+      buyer_city: this.data.ciudad,
+      buyer_neighborhood: this.data.barrio,
+    };
+
+    this._ventas.createOrder(orderInfo, this.listCarrito).subscribe((res: any) => {
+      this.disabled = false;
+      if (!res.success) {
+        return this._tools.presentToast(res.message || 'No pudimos procesar tu pedido');
+      }
+      this._tools.presentToast("Exitoso Tu pedido esta en proceso. un accesor se pondra en contacto contigo!");
+      this.vista1 = "segunda";
+      this.data = {};
+      this.listCarrito = [];
+      let accion = new CartAction( { }, 'drop');
+      this._store.dispatch( accion );
+    }, () => {
+      this.disabled = false;
+      this._tools.presentToast('Error de servidor, intenta de nuevo');
+    });
   }
 }

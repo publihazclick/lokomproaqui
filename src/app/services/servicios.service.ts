@@ -6,6 +6,8 @@ import { Store } from '@ngrx/store';
 import { Router } from '@angular/router';
 import { ConfiguracionAction, UserAction } from '../redux/app.actions';
 import { ToolsService } from './tools.service';
+import { supabase } from './supabase.client';
+import { from } from 'rxjs';
 
 declare var io: any;
 const headers = new HttpHeaders({
@@ -49,13 +51,14 @@ export class ServiciosService {
     this.getConfig();
   }
   getConfig(){
-    this.querys('admin/querys',{
-      where:{}
-    }, 'post').subscribe((res:any)=>{
-      res = res.data[0];
+    from(
+      supabase.from('site_config').select('*').limit(1).single()
+    ).subscribe((res: any) => {
+      if (!res.data) return;
+      const mapped = { id: res.data.id, banners: res.data.banners, ...res.data.info_text };
       let opcion:string = "post";
       if( this.dataConfig.id ) opcion = "put";
-      let accion = new ConfiguracionAction( res, opcion )
+      let accion = new ConfiguracionAction( mapped, opcion )
       this._store.dispatch(accion);
     });
   }
@@ -66,24 +69,19 @@ export class ServiciosService {
       this.dataUser = store.user || {};
     });
     if(Object.keys(this.dataUser).length >0 ){
-      this.querys('tblusuario/querys',{
-        where:{
-           id: this.dataUser.id
-          //id: 1016
-        }
-      }, 'post').subscribe((res:any)=>{
-        res = res.data[0];
+      from(
+        supabase.from('profiles').select('*, roles(name)').eq('id', this.dataUser.id).maybeSingle()
+      ).subscribe((res:any)=>{
         localStorage.removeItem('user');
-        if(!res) {
+        if(!res.data) {
           let accion = new UserAction(this.dataUser,'delete')
           this._store.dispatch(accion);
           this._tools.presentToast("Tu sesión ha expirado")
           this.Router.navigate(['/login']);
           setTimeout(function(){ location.reload(); }, 3000);
         }else{
-          let accion = new UserAction( res, 'post');
+          let accion = new UserAction( { ...this.dataUser, usu_nombre: res.data.full_name, usu_perfil: { prf_descripcion: res.data.roles ? res.data.roles.name : 'vendedor' } }, 'post');
           this._store.dispatch( accion );
-          //localStorage.setItem('user', JSON.stringify(res));
         }
       });
     }

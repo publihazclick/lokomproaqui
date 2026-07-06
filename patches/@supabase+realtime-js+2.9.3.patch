@@ -1,0 +1,356 @@
+diff --git a/node_modules/@supabase/realtime-js/dist/main/RealtimeChannel.d.ts b/node_modules/@supabase/realtime-js/dist/main/RealtimeChannel.d.ts
+index ea16af1..b2de741 100644
+--- a/node_modules/@supabase/realtime-js/dist/main/RealtimeChannel.d.ts
++++ b/node_modules/@supabase/realtime-js/dist/main/RealtimeChannel.d.ts
+@@ -1,9 +1,9 @@
+ import { CHANNEL_STATES } from './lib/constants';
+ import Push from './lib/push';
+-import type RealtimeClient from './RealtimeClient';
++import RealtimeClient from './RealtimeClient';
+ import Timer from './lib/timer';
+ import RealtimePresence, { REALTIME_PRESENCE_LISTEN_EVENTS } from './RealtimePresence';
+-import type { RealtimePresenceJoinPayload, RealtimePresenceLeavePayload, RealtimePresenceState } from './RealtimePresence';
++import { RealtimePresenceJoinPayload, RealtimePresenceLeavePayload, RealtimePresenceState } from './RealtimePresence';
+ export declare type RealtimeChannelOptions = {
+     config: {
+         /**
+@@ -31,28 +31,28 @@ declare type RealtimePostgresChangesPayloadBase = {
+ export declare type RealtimePostgresInsertPayload<T extends {
+     [key: string]: any;
+ }> = RealtimePostgresChangesPayloadBase & {
+-    eventType: `${REALTIME_POSTGRES_CHANGES_LISTEN_EVENT.INSERT}`;
++    eventType: string;
+     new: T;
+     old: {};
+ };
+ export declare type RealtimePostgresUpdatePayload<T extends {
+     [key: string]: any;
+ }> = RealtimePostgresChangesPayloadBase & {
+-    eventType: `${REALTIME_POSTGRES_CHANGES_LISTEN_EVENT.UPDATE}`;
++    eventType: string;
+     new: T;
+     old: Partial<T>;
+ };
+ export declare type RealtimePostgresDeletePayload<T extends {
+     [key: string]: any;
+ }> = RealtimePostgresChangesPayloadBase & {
+-    eventType: `${REALTIME_POSTGRES_CHANGES_LISTEN_EVENT.DELETE}`;
++    eventType: string;
+     new: {};
+     old: Partial<T>;
+ };
+ export declare type RealtimePostgresChangesPayload<T extends {
+     [key: string]: any;
+ }> = RealtimePostgresInsertPayload<T> | RealtimePostgresUpdatePayload<T> | RealtimePostgresDeletePayload<T>;
+-export declare type RealtimePostgresChangesFilter<T extends `${REALTIME_POSTGRES_CHANGES_LISTEN_EVENT}`> = {
++export declare type RealtimePostgresChangesFilter<T extends string> = {
+     /**
+      * The type of database change to listen to.
+      */
+@@ -125,7 +125,7 @@ export default class RealtimeChannel {
+     /** Topic name can be any string. */
+     topic: string, params: RealtimeChannelOptions, socket: RealtimeClient);
+     /** Subscribe registers your client with the server */
+-    subscribe(callback?: (status: `${REALTIME_SUBSCRIBE_STATES}`, err?: Error) => void, timeout?: number): RealtimeChannel;
++    subscribe(callback?: (status: string, err?: Error) => void, timeout?: number): RealtimeChannel;
+     presenceState<T extends {
+         [key: string]: any;
+     } = {}>(): RealtimePresenceState<T>;
+@@ -140,50 +140,50 @@ export default class RealtimeChannel {
+     /**
+      * Creates an event handler that listens to changes.
+      */
+-    on(type: `${REALTIME_LISTEN_TYPES.PRESENCE}`, filter: {
+-        event: `${REALTIME_PRESENCE_LISTEN_EVENTS.SYNC}`;
++    on(type: string, filter: {
++        event: string;
+     }, callback: () => void): RealtimeChannel;
+     on<T extends {
+         [key: string]: any;
+-    }>(type: `${REALTIME_LISTEN_TYPES.PRESENCE}`, filter: {
+-        event: `${REALTIME_PRESENCE_LISTEN_EVENTS.JOIN}`;
++    }>(type: string, filter: {
++        event: string;
+     }, callback: (payload: RealtimePresenceJoinPayload<T>) => void): RealtimeChannel;
+     on<T extends {
+         [key: string]: any;
+-    }>(type: `${REALTIME_LISTEN_TYPES.PRESENCE}`, filter: {
+-        event: `${REALTIME_PRESENCE_LISTEN_EVENTS.LEAVE}`;
++    }>(type: string, filter: {
++        event: string;
+     }, callback: (payload: RealtimePresenceLeavePayload<T>) => void): RealtimeChannel;
+     on<T extends {
+         [key: string]: any;
+-    }>(type: `${REALTIME_LISTEN_TYPES.POSTGRES_CHANGES}`, filter: RealtimePostgresChangesFilter<`${REALTIME_POSTGRES_CHANGES_LISTEN_EVENT.ALL}`>, callback: (payload: RealtimePostgresChangesPayload<T>) => void): RealtimeChannel;
++    }>(type: string, filter: RealtimePostgresChangesFilter<string>, callback: (payload: RealtimePostgresChangesPayload<T>) => void): RealtimeChannel;
+     on<T extends {
+         [key: string]: any;
+-    }>(type: `${REALTIME_LISTEN_TYPES.POSTGRES_CHANGES}`, filter: RealtimePostgresChangesFilter<`${REALTIME_POSTGRES_CHANGES_LISTEN_EVENT.INSERT}`>, callback: (payload: RealtimePostgresInsertPayload<T>) => void): RealtimeChannel;
++    }>(type: string, filter: RealtimePostgresChangesFilter<string>, callback: (payload: RealtimePostgresInsertPayload<T>) => void): RealtimeChannel;
+     on<T extends {
+         [key: string]: any;
+-    }>(type: `${REALTIME_LISTEN_TYPES.POSTGRES_CHANGES}`, filter: RealtimePostgresChangesFilter<`${REALTIME_POSTGRES_CHANGES_LISTEN_EVENT.UPDATE}`>, callback: (payload: RealtimePostgresUpdatePayload<T>) => void): RealtimeChannel;
++    }>(type: string, filter: RealtimePostgresChangesFilter<string>, callback: (payload: RealtimePostgresUpdatePayload<T>) => void): RealtimeChannel;
+     on<T extends {
+         [key: string]: any;
+-    }>(type: `${REALTIME_LISTEN_TYPES.POSTGRES_CHANGES}`, filter: RealtimePostgresChangesFilter<`${REALTIME_POSTGRES_CHANGES_LISTEN_EVENT.DELETE}`>, callback: (payload: RealtimePostgresDeletePayload<T>) => void): RealtimeChannel;
++    }>(type: string, filter: RealtimePostgresChangesFilter<string>, callback: (payload: RealtimePostgresDeletePayload<T>) => void): RealtimeChannel;
+     /**
+      * The following is placed here to display on supabase.com/docs/reference/javascript/subscribe.
+      * @param type One of "broadcast", "presence", or "postgres_changes".
+      * @param filter Custom object specific to the Realtime feature detailing which payloads to receive.
+      * @param callback Function to be invoked when event handler is triggered.
+      */
+-    on(type: `${REALTIME_LISTEN_TYPES.BROADCAST}`, filter: {
++    on(type: string, filter: {
+         event: string;
+     }, callback: (payload: {
+-        type: `${REALTIME_LISTEN_TYPES.BROADCAST}`;
++        type: string;
+         event: string;
+         [key: string]: any;
+     }) => void): RealtimeChannel;
+     on<T extends {
+         [key: string]: any;
+-    }>(type: `${REALTIME_LISTEN_TYPES.BROADCAST}`, filter: {
++    }>(type: string, filter: {
+         event: string;
+     }, callback: (payload: {
+-        type: `${REALTIME_LISTEN_TYPES.BROADCAST}`;
++        type: string;
+         event: string;
+         payload: T;
+     }) => void): RealtimeChannel;
+diff --git a/node_modules/@supabase/realtime-js/dist/main/RealtimeClient.d.ts b/node_modules/@supabase/realtime-js/dist/main/RealtimeClient.d.ts
+index 61b7ff8..160b83a 100644
+--- a/node_modules/@supabase/realtime-js/dist/main/RealtimeClient.d.ts
++++ b/node_modules/@supabase/realtime-js/dist/main/RealtimeClient.d.ts
+@@ -2,8 +2,8 @@ import { CONNECTION_STATE } from './lib/constants';
+ import Timer from './lib/timer';
+ import Serializer from './lib/serializer';
+ import RealtimeChannel from './RealtimeChannel';
+-import type { RealtimeChannelOptions } from './RealtimeChannel';
+-import type { WebSocket as WSWebSocket } from 'ws';
++import { RealtimeChannelOptions } from './RealtimeChannel';
++import { WebSocket as WSWebSocket } from 'ws';
+ declare type Fetch = typeof fetch;
+ export declare type RealtimeClientOptions = {
+     transport?: WebSocketLikeConstructor;
+diff --git a/node_modules/@supabase/realtime-js/dist/main/RealtimePresence.d.ts b/node_modules/@supabase/realtime-js/dist/main/RealtimePresence.d.ts
+index 2972a4c..0345caa 100644
+--- a/node_modules/@supabase/realtime-js/dist/main/RealtimePresence.d.ts
++++ b/node_modules/@supabase/realtime-js/dist/main/RealtimePresence.d.ts
+@@ -1,5 +1,5 @@
+-import type { PresenceOpts, PresenceOnJoinCallback, PresenceOnLeaveCallback } from 'phoenix';
+-import type RealtimeChannel from './RealtimeChannel';
++import { PresenceOpts, PresenceOnJoinCallback, PresenceOnLeaveCallback } from 'phoenix';
++import RealtimeChannel from './RealtimeChannel';
+ declare type Presence<T extends {
+     [key: string]: any;
+ } = {}> = {
+@@ -13,7 +13,7 @@ export declare type RealtimePresenceState<T extends {
+ export declare type RealtimePresenceJoinPayload<T extends {
+     [key: string]: any;
+ }> = {
+-    event: `${REALTIME_PRESENCE_LISTEN_EVENTS.JOIN}`;
++    event: string;
+     key: string;
+     currentPresences: Presence<T>[];
+     newPresences: Presence<T>[];
+@@ -21,7 +21,7 @@ export declare type RealtimePresenceJoinPayload<T extends {
+ export declare type RealtimePresenceLeavePayload<T extends {
+     [key: string]: any;
+ }> = {
+-    event: `${REALTIME_PRESENCE_LISTEN_EVENTS.LEAVE}`;
++    event: string;
+     key: string;
+     currentPresences: Presence<T>[];
+     leftPresences: Presence<T>[];
+diff --git a/node_modules/@supabase/realtime-js/dist/main/lib/push.d.ts b/node_modules/@supabase/realtime-js/dist/main/lib/push.d.ts
+index 604c4f7..4d94513 100644
+--- a/node_modules/@supabase/realtime-js/dist/main/lib/push.d.ts
++++ b/node_modules/@supabase/realtime-js/dist/main/lib/push.d.ts
+@@ -1,4 +1,4 @@
+-import type RealtimeChannel from '../RealtimeChannel';
++import RealtimeChannel from '../RealtimeChannel';
+ export default class Push {
+     channel: RealtimeChannel;
+     event: string;
+diff --git a/node_modules/@supabase/realtime-js/dist/module/RealtimeChannel.d.ts b/node_modules/@supabase/realtime-js/dist/module/RealtimeChannel.d.ts
+index ea16af1..b2de741 100644
+--- a/node_modules/@supabase/realtime-js/dist/module/RealtimeChannel.d.ts
++++ b/node_modules/@supabase/realtime-js/dist/module/RealtimeChannel.d.ts
+@@ -1,9 +1,9 @@
+ import { CHANNEL_STATES } from './lib/constants';
+ import Push from './lib/push';
+-import type RealtimeClient from './RealtimeClient';
++import RealtimeClient from './RealtimeClient';
+ import Timer from './lib/timer';
+ import RealtimePresence, { REALTIME_PRESENCE_LISTEN_EVENTS } from './RealtimePresence';
+-import type { RealtimePresenceJoinPayload, RealtimePresenceLeavePayload, RealtimePresenceState } from './RealtimePresence';
++import { RealtimePresenceJoinPayload, RealtimePresenceLeavePayload, RealtimePresenceState } from './RealtimePresence';
+ export declare type RealtimeChannelOptions = {
+     config: {
+         /**
+@@ -31,28 +31,28 @@ declare type RealtimePostgresChangesPayloadBase = {
+ export declare type RealtimePostgresInsertPayload<T extends {
+     [key: string]: any;
+ }> = RealtimePostgresChangesPayloadBase & {
+-    eventType: `${REALTIME_POSTGRES_CHANGES_LISTEN_EVENT.INSERT}`;
++    eventType: string;
+     new: T;
+     old: {};
+ };
+ export declare type RealtimePostgresUpdatePayload<T extends {
+     [key: string]: any;
+ }> = RealtimePostgresChangesPayloadBase & {
+-    eventType: `${REALTIME_POSTGRES_CHANGES_LISTEN_EVENT.UPDATE}`;
++    eventType: string;
+     new: T;
+     old: Partial<T>;
+ };
+ export declare type RealtimePostgresDeletePayload<T extends {
+     [key: string]: any;
+ }> = RealtimePostgresChangesPayloadBase & {
+-    eventType: `${REALTIME_POSTGRES_CHANGES_LISTEN_EVENT.DELETE}`;
++    eventType: string;
+     new: {};
+     old: Partial<T>;
+ };
+ export declare type RealtimePostgresChangesPayload<T extends {
+     [key: string]: any;
+ }> = RealtimePostgresInsertPayload<T> | RealtimePostgresUpdatePayload<T> | RealtimePostgresDeletePayload<T>;
+-export declare type RealtimePostgresChangesFilter<T extends `${REALTIME_POSTGRES_CHANGES_LISTEN_EVENT}`> = {
++export declare type RealtimePostgresChangesFilter<T extends string> = {
+     /**
+      * The type of database change to listen to.
+      */
+@@ -125,7 +125,7 @@ export default class RealtimeChannel {
+     /** Topic name can be any string. */
+     topic: string, params: RealtimeChannelOptions, socket: RealtimeClient);
+     /** Subscribe registers your client with the server */
+-    subscribe(callback?: (status: `${REALTIME_SUBSCRIBE_STATES}`, err?: Error) => void, timeout?: number): RealtimeChannel;
++    subscribe(callback?: (status: string, err?: Error) => void, timeout?: number): RealtimeChannel;
+     presenceState<T extends {
+         [key: string]: any;
+     } = {}>(): RealtimePresenceState<T>;
+@@ -140,50 +140,50 @@ export default class RealtimeChannel {
+     /**
+      * Creates an event handler that listens to changes.
+      */
+-    on(type: `${REALTIME_LISTEN_TYPES.PRESENCE}`, filter: {
+-        event: `${REALTIME_PRESENCE_LISTEN_EVENTS.SYNC}`;
++    on(type: string, filter: {
++        event: string;
+     }, callback: () => void): RealtimeChannel;
+     on<T extends {
+         [key: string]: any;
+-    }>(type: `${REALTIME_LISTEN_TYPES.PRESENCE}`, filter: {
+-        event: `${REALTIME_PRESENCE_LISTEN_EVENTS.JOIN}`;
++    }>(type: string, filter: {
++        event: string;
+     }, callback: (payload: RealtimePresenceJoinPayload<T>) => void): RealtimeChannel;
+     on<T extends {
+         [key: string]: any;
+-    }>(type: `${REALTIME_LISTEN_TYPES.PRESENCE}`, filter: {
+-        event: `${REALTIME_PRESENCE_LISTEN_EVENTS.LEAVE}`;
++    }>(type: string, filter: {
++        event: string;
+     }, callback: (payload: RealtimePresenceLeavePayload<T>) => void): RealtimeChannel;
+     on<T extends {
+         [key: string]: any;
+-    }>(type: `${REALTIME_LISTEN_TYPES.POSTGRES_CHANGES}`, filter: RealtimePostgresChangesFilter<`${REALTIME_POSTGRES_CHANGES_LISTEN_EVENT.ALL}`>, callback: (payload: RealtimePostgresChangesPayload<T>) => void): RealtimeChannel;
++    }>(type: string, filter: RealtimePostgresChangesFilter<string>, callback: (payload: RealtimePostgresChangesPayload<T>) => void): RealtimeChannel;
+     on<T extends {
+         [key: string]: any;
+-    }>(type: `${REALTIME_LISTEN_TYPES.POSTGRES_CHANGES}`, filter: RealtimePostgresChangesFilter<`${REALTIME_POSTGRES_CHANGES_LISTEN_EVENT.INSERT}`>, callback: (payload: RealtimePostgresInsertPayload<T>) => void): RealtimeChannel;
++    }>(type: string, filter: RealtimePostgresChangesFilter<string>, callback: (payload: RealtimePostgresInsertPayload<T>) => void): RealtimeChannel;
+     on<T extends {
+         [key: string]: any;
+-    }>(type: `${REALTIME_LISTEN_TYPES.POSTGRES_CHANGES}`, filter: RealtimePostgresChangesFilter<`${REALTIME_POSTGRES_CHANGES_LISTEN_EVENT.UPDATE}`>, callback: (payload: RealtimePostgresUpdatePayload<T>) => void): RealtimeChannel;
++    }>(type: string, filter: RealtimePostgresChangesFilter<string>, callback: (payload: RealtimePostgresUpdatePayload<T>) => void): RealtimeChannel;
+     on<T extends {
+         [key: string]: any;
+-    }>(type: `${REALTIME_LISTEN_TYPES.POSTGRES_CHANGES}`, filter: RealtimePostgresChangesFilter<`${REALTIME_POSTGRES_CHANGES_LISTEN_EVENT.DELETE}`>, callback: (payload: RealtimePostgresDeletePayload<T>) => void): RealtimeChannel;
++    }>(type: string, filter: RealtimePostgresChangesFilter<string>, callback: (payload: RealtimePostgresDeletePayload<T>) => void): RealtimeChannel;
+     /**
+      * The following is placed here to display on supabase.com/docs/reference/javascript/subscribe.
+      * @param type One of "broadcast", "presence", or "postgres_changes".
+      * @param filter Custom object specific to the Realtime feature detailing which payloads to receive.
+      * @param callback Function to be invoked when event handler is triggered.
+      */
+-    on(type: `${REALTIME_LISTEN_TYPES.BROADCAST}`, filter: {
++    on(type: string, filter: {
+         event: string;
+     }, callback: (payload: {
+-        type: `${REALTIME_LISTEN_TYPES.BROADCAST}`;
++        type: string;
+         event: string;
+         [key: string]: any;
+     }) => void): RealtimeChannel;
+     on<T extends {
+         [key: string]: any;
+-    }>(type: `${REALTIME_LISTEN_TYPES.BROADCAST}`, filter: {
++    }>(type: string, filter: {
+         event: string;
+     }, callback: (payload: {
+-        type: `${REALTIME_LISTEN_TYPES.BROADCAST}`;
++        type: string;
+         event: string;
+         payload: T;
+     }) => void): RealtimeChannel;
+diff --git a/node_modules/@supabase/realtime-js/dist/module/RealtimeClient.d.ts b/node_modules/@supabase/realtime-js/dist/module/RealtimeClient.d.ts
+index 61b7ff8..160b83a 100644
+--- a/node_modules/@supabase/realtime-js/dist/module/RealtimeClient.d.ts
++++ b/node_modules/@supabase/realtime-js/dist/module/RealtimeClient.d.ts
+@@ -2,8 +2,8 @@ import { CONNECTION_STATE } from './lib/constants';
+ import Timer from './lib/timer';
+ import Serializer from './lib/serializer';
+ import RealtimeChannel from './RealtimeChannel';
+-import type { RealtimeChannelOptions } from './RealtimeChannel';
+-import type { WebSocket as WSWebSocket } from 'ws';
++import { RealtimeChannelOptions } from './RealtimeChannel';
++import { WebSocket as WSWebSocket } from 'ws';
+ declare type Fetch = typeof fetch;
+ export declare type RealtimeClientOptions = {
+     transport?: WebSocketLikeConstructor;
+diff --git a/node_modules/@supabase/realtime-js/dist/module/RealtimePresence.d.ts b/node_modules/@supabase/realtime-js/dist/module/RealtimePresence.d.ts
+index 2972a4c..0345caa 100644
+--- a/node_modules/@supabase/realtime-js/dist/module/RealtimePresence.d.ts
++++ b/node_modules/@supabase/realtime-js/dist/module/RealtimePresence.d.ts
+@@ -1,5 +1,5 @@
+-import type { PresenceOpts, PresenceOnJoinCallback, PresenceOnLeaveCallback } from 'phoenix';
+-import type RealtimeChannel from './RealtimeChannel';
++import { PresenceOpts, PresenceOnJoinCallback, PresenceOnLeaveCallback } from 'phoenix';
++import RealtimeChannel from './RealtimeChannel';
+ declare type Presence<T extends {
+     [key: string]: any;
+ } = {}> = {
+@@ -13,7 +13,7 @@ export declare type RealtimePresenceState<T extends {
+ export declare type RealtimePresenceJoinPayload<T extends {
+     [key: string]: any;
+ }> = {
+-    event: `${REALTIME_PRESENCE_LISTEN_EVENTS.JOIN}`;
++    event: string;
+     key: string;
+     currentPresences: Presence<T>[];
+     newPresences: Presence<T>[];
+@@ -21,7 +21,7 @@ export declare type RealtimePresenceJoinPayload<T extends {
+ export declare type RealtimePresenceLeavePayload<T extends {
+     [key: string]: any;
+ }> = {
+-    event: `${REALTIME_PRESENCE_LISTEN_EVENTS.LEAVE}`;
++    event: string;
+     key: string;
+     currentPresences: Presence<T>[];
+     leftPresences: Presence<T>[];
+diff --git a/node_modules/@supabase/realtime-js/dist/module/lib/push.d.ts b/node_modules/@supabase/realtime-js/dist/module/lib/push.d.ts
+index 604c4f7..4d94513 100644
+--- a/node_modules/@supabase/realtime-js/dist/module/lib/push.d.ts
++++ b/node_modules/@supabase/realtime-js/dist/module/lib/push.d.ts
+@@ -1,4 +1,4 @@
+-import type RealtimeChannel from '../RealtimeChannel';
++import RealtimeChannel from '../RealtimeChannel';
+ export default class Push {
+     channel: RealtimeChannel;
+     event: string;
