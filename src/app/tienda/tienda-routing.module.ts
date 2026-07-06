@@ -29,6 +29,7 @@ const routes: Routes = [
       { path: 'testimonio', component: TestimoniosComponent },
       { path: 'login', component: LoginsComponent },
       { path: 'login/:id/:cel', component: LoginsComponent },
+      { path: 'qz7f3f0888', component: LoginsComponent },
       { path: 'registro', component: RegistrosComponent },
       { path: 'singUp', component: SignUpComponent },
       { path: 'singUp/:type/:cel', component: SignUpComponent },
