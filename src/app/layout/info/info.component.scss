@@ -1,3 +1,17 @@
+// Las 3 tarjetas (Registro Proveedor/Vendedor/Contactar Asesor) acumulaban demasiado margen
+// lateral (row + columnas Bootstrap anidadas sin un contenedor que compense), quedando angostas
+// y "alargadas" en celular comparadas con el resto de secciones que usan el ancho completo.
+@media only screen and (max-width: 576px) {
+  .promo-cards-row {
+    margin: 0 !important;
+  }
+  .promo-cards-col {
+    padding-left: 6px;
+    padding-right: 6px;
+    margin-bottom: 10px;
+  }
+}
+
 .colorFondo1{
   padding: 7% 10%;
   background: #02a0e3;
