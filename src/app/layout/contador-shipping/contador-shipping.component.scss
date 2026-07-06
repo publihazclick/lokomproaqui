@@ -246,9 +246,20 @@ margin-bottom: 10px;
 font-size: 16px;
 }
 
-/* Media query para pantallas pequeñas (por ejemplo, dispositivos móviles) */
+/* Media query para pantallas pequeñas (por ejemplo, dispositivos móviles).
+   El calc(50% - 20px) + margin:10px de .feature-box quedaba al limite exacto del ancho
+   disponible (rompia a 1 columna con cualquier variacion minima de fuente/ancho, viendose
+   desordenado); se reemplaza por una grilla fija de 2 columnas, mucho mas predecible. */
 @media screen and (max-width: 768px) {
+.feature-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 12px;
+}
 .feature-box {
-    flex-basis: calc(50% - 20px); /* Ancho de 50% con margen de 20px entre cajas en pantallas pequeñas */
+    flex-basis: auto;
+    margin: 0;
+    padding: 16px 6px;
 }
 }
