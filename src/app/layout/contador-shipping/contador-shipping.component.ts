@@ -9,7 +9,7 @@ import { ToolsService } from 'src/app/services/tools.service';
 export class ContadorShippingComponent implements OnInit {
   contect = {
     contadorC: 0,
-    titleC: "Comercio <br> Registrados",
+    titleC: "Comercios <br> Registrados",
     contadorD: 0,
     titleD: "Proveedores <br> dropshipping",
     contadorE: 0,
