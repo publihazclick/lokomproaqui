@@ -390,14 +390,22 @@ p {
 @media screen and (max-width: 768px) {
   .seccion-dos-cajas {
     flex-direction: column;
+    margin: 10px 0;
+    padding: 12px;
+    box-sizing: border-box;
+    width: 100%;
   }
 
   ul{
       width: 100%;
+      box-sizing: border-box;
     }
 
   .caja {
-    flex: 0 0 calc(100% - 20px);
+    flex: 0 0 100%;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
   }
 
   .contenido-caja {
