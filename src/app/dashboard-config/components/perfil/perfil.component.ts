@@ -84,8 +84,10 @@ export class PerfilComponent implements OnInit {
     this.getCiudades();
     //this.data = this._model.dataUser || {};
     if (this.data.usu_fec_nacimiento) this.data.usu_fec_nacimiento = moment(this.data.usu_fec_nacimiento).format('DD/MM/YYYY');
-    this.urlTienda += this.data.usu_telefono;
-    this.urlRegistro += this.data.usu_telefono;
+    if (this.data.usu_telefono) {
+      this.urlTienda += this.data.usu_telefono;
+      this.urlRegistro += this.data.usu_telefono;
+    }
     this.getCategorias();
     for (let row of this.listDepartamento) for (let item of row.ciudades) this.listCiudad.push({ departamento: row.departamento, ciudad: item });
     this.listCiudad = _.orderBy( this.listCiudad, ['ciudad'], ['asc']);
@@ -288,10 +290,18 @@ export class PerfilComponent implements OnInit {
   }
 
   abrrirTienda() {
+    if (!this.data.usu_telefono) {
+      this._tools.openSnack('Debe registrar un número de teléfono en su perfil antes de compartir su tienda', 'error', false);
+      return;
+    }
     window.open(this.urlTienda);
   }
 
   copiarLink() {
+    if (!this.data.usu_telefono) {
+      this._tools.openSnack('Debe registrar un número de teléfono en su perfil antes de compartir su tienda', 'error', false);
+      return;
+    }
     const selBox = document.createElement('textarea');
     selBox.style.position = 'fixed';
     selBox.style.left = '0';
@@ -307,6 +317,10 @@ export class PerfilComponent implements OnInit {
   }
 
   copiarLinkRegistro() {
+    if (!this.data.usu_telefono) {
+      this._tools.openSnack('Debe registrar un número de teléfono en su perfil antes de compartir su link de registro', 'error', false);
+      return;
+    }
     const selBox = document.createElement('textarea');
     selBox.style.position = 'fixed';
     selBox.style.left = '0';
