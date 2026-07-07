@@ -230,7 +230,7 @@ export class ProductosViewComponent implements OnInit {
   categoriasVer(){
     let accion = new SeleccionCategoriaAction( this.data.pro_categoria, 'post');
     this._store.dispatch(accion);
-    this.Router.navigate(['/tienda/productos']);
+    this.Router.navigate(['/front/productos']);
   }
 
   AgregarCart(){

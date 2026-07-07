@@ -114,7 +114,7 @@ export class MenuComponent implements OnInit {
 
     let accion = new BuscadorAction( data, 'post');
     this._store.dispatch( accion );
-    this.Router.navigate( ['/tienda/productos'] );
+    this.Router.navigate( ['/front/productos'] );
   }
 
   openEpayco(){

@@ -42,7 +42,7 @@ export class ChecktComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if( this.listCarrito.length == 0 ) this._router.navigate(['/tienda/productos']);
+    if( this.listCarrito.length == 0 ) this._router.navigate(['/front/productos']);
   }
 
   suma(){
