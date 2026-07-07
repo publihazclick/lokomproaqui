@@ -631,7 +631,7 @@ export class HeaderComponent implements OnInit {
       {
         icons: 'sync',
         nombre: 'Integracion Shopify',
-        disable: this.rolUser == 'administrador' || this.rolUser == 'proveedor',
+        disable: this.rolUser == 'vendedor',
         url: '/config/shopify',
         submenus:[
           {
