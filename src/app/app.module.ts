@@ -19,6 +19,8 @@ import { NgxSpinnerModule } from "ngx-spinner";
 import { ServiceWorkerModule } from '@angular/service-worker';
 
 import { NgxImageZoomModule } from 'ngx-image-zoom';
+import { TiendaModule } from './tienda/tienda.module';
+import { PublicoModule } from './publico/publico.module';
 import { IntroduccionComponent } from './components/introduccion/introduccion.component';
 import { MatVideoModule } from 'mat-video';
 import { RegistroComponent } from './components/registro/registro.component';
@@ -39,6 +41,7 @@ import { ExtraModule } from './extra/extra.module';
     registerLocaleData(localePt, 'pt');
     registerLocaleData(localeEn, 'en')
     import  { FacebookLoginProvider, GoogleLoginProvider, SocialLoginModule, SocialAuthServiceConfig } from 'angularx-social-login';
+import { PortadaModule } from './portada/portada.module';
 import { SwiperModule } from 'swiper/angular';
 @NgModule({
   entryComponents:[],
@@ -66,6 +69,9 @@ import { SwiperModule } from 'swiper/angular';
       logOnly: environment.production, // Restrict extension to log-only mode
     }),
     ServiceWorkerModule.register('ngsw-worker.js', { enabled: environment.production }),
+    TiendaModule,
+    PortadaModule,
+    PublicoModule,
     MatVideoModule,
     NgxCurrencyModule,
     ExtraModule,
