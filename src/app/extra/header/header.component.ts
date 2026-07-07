@@ -807,6 +807,7 @@ export class HeaderComponent implements OnInit {
     item.check = true;
     if( obj ) obj.check = true;
     if( item.url == 'handleShop()' ) return this.handleShop();
+    if( item.url == 'handleRechargeNalance()' ) return this.handleRechargeNalance();
     if( item.submenus ) if( item.submenus.length >0 ) return false;
     if( item.opt ) this.router.navigate(item.url);
     else this.router.navigate([ item.url ]);
