@@ -470,7 +470,7 @@ export class HeaderComponent implements OnInit {
         submenus:[]
       },
       {
-        icons: 'menu_book',
+        icons: 'category',
         nombre: 'Productos',
         disable: ( this.rolUser != 'proveedor' ),
         disabled: true,
@@ -478,42 +478,42 @@ export class HeaderComponent implements OnInit {
         submenus: submenus
       },
       {
-        icons: 'menu_book',
+        icons: 'shopping_cart',
         nombre: 'Hacer Compra',
         disable: ( this.dataUser.id ) && ( this.rolUser != 'proveedor' ),
         url: 'handleShop()',
         submenus:[]
       },
       {
-        icons: 'menu_book',
+        icons: 'sell',
         nombre: 'Realizar Venta',
         disable: ( this.dataUser.id ) && ( this.rolUser != 'proveedor' ),
         url: '/realizarventa',
         submenus:[]
       },
       {
-        icons: 'menu_book',
+        icons: 'storefront',
         nombre: 'Mis Producto En la Tienda',
         disable: this.rolUser == 'administrador' || this.rolUser == 'proveedor',
         url: '/storeProductActivated/'+this.dataUser.id,
         submenus: []
       },
       {
-        icons: 'local_grocery_store',
+        icons: 'fact_check',
         nombre: 'Autorizar Despacho',
         disable: ( this.rolUser !== 'visitante' ) && ( this.rolUser != 'proveedor' ),
         url: '/config/ventasPosibles',
         submenus:[]
       },
       {
-        icons: 'local_grocery_store',
+        icons: 'history',
         nombre: 'Historial de Ventas',
         disable: ( this.rolUser !== 'visitante' ) && ( this.rolUser != 'proveedor' ),
         url: '/config/ventas',
         submenus:[]
       },
       {
-        icons: 'shop',
+        icons: 'payments',
         nombre: 'Mis Cobros',
         disable: ( this.rolUser !== 'visitante' ) && ( this.rolUser != 'proveedor' ),
         url: '/config/cobros',
@@ -533,42 +533,42 @@ export class HeaderComponent implements OnInit {
         submenus:[]
       },*/
       {
-        icons: 'local_grocery_store',
+        icons: 'store',
         nombre: 'Ventas Proveedor',
         disable: this.rolUser == 'administrador',
         url: '/config/ventasProveedor',
         submenus:[]
       },
       {
-        icons: 'local_grocery_store',
+        icons: 'groups',
         nombre: 'Ventas de Subvendedor',
         disable: this.rolUser == 'administrador',
         url: '/config/ventasLider',
         submenus:[]
       },
       {
-        icons: 'people_alt',
+        icons: 'group_add',
         nombre: 'Mis Referidos',
         disable: this.rolUser == 'administrador' || this.rolUser == 'subAdministrador' || this.rolUser == 'lider' || this.rolUser == 'vendedor',
         url: '/config/referidos',
         submenus:[]
       },
       {
-        icons: 'people_alt',
+        icons: 'inventory',
         nombre: 'Control Inventario',
         disable: this.rolUser == 'administrador' || this.rolUser == 'proveedor',
         url: '/config/controlInventario',
         submenus:[]
       },
       {
-        icons: 'people_alt',
+        icons: 'local_shipping',
         nombre: 'Activar Transportadoras',
         disable: this.rolUser == 'administrador' || this.rolUser == 'proveedor',
         url: '/config/listaPlatform',
         submenus:[]
       },
       {
-        icons: 'people_alt',
+        icons: 'warehouse',
         nombre: 'Explorar Bodegas',
         disable: this.rolUser == 'administrador' || this.rolUser == 'vendedor',
         url: '/config/controlInventario',
@@ -596,7 +596,7 @@ export class HeaderComponent implements OnInit {
         ]
       },
       {
-        icons: 'people_alt',
+        icons: 'account_balance',
         nombre: 'Modulo Contable',
         disable: this.rolUser == 'administrador' || this.rolUser == 'proveedor',
         url: '/config/controlInventario',
