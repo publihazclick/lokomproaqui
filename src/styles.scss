@@ -993,3 +993,14 @@ footer {
 .contenedor::-webkit-scrollbar-track {
   border-radius: 10px;
 }
+
+/* Si la fuente Material Icons tarda o falla en cargar, el navegador muestra el
+   nombre del icono como texto (ej: "add_circle_outline"), deformando botones
+   redondos y encabezados de tarjetas. Se reserva el tamaño del glifo (1em) y se
+   recorta el sobrante para que el diseño no se rompa en ese escenario. */
+.material-icons {
+  width: 1em;
+  height: 1em;
+  overflow: hidden;
+  vertical-align: middle;
+}
