@@ -4,13 +4,6 @@ import { IntroduccionComponent } from './components/introduccion/introduccion.co
 import { ImprimirTarjetaComponent } from './extra/imprimir-tarjeta/imprimir-tarjeta.component';
 
 const routes: Routes = [
-  { path: '',
-    children: [{
-      path: '',
-      loadChildren: () => import('./tienda/tienda.module').then(m => m.TiendaModule)
-    }],
-    pathMatch: 'full'
-  },
   {
     path: 'front',
     children: [{
@@ -47,7 +40,15 @@ const routes: Routes = [
     path: "imprimirTarjeta",
     component: ImprimirTarjetaComponent
   },
-  { path: '', redirectTo: "pedidos", pathMatch: 'full' },
+  // Catch-all: cualquier ruta que no sea front/publico/introduccion/imprimirTarjeta
+  // se delega a TiendaModule (sin pathMatch:'full' para permitir deep-linking a
+  // sus rutas internas, ej. /pedidos, /articulo, /qz7f3f0888, /config/**).
+  { path: '',
+    children: [{
+      path: '',
+      loadChildren: () => import('./tienda/tienda.module').then(m => m.TiendaModule)
+    }]
+  },
 ];
 
 @NgModule({
