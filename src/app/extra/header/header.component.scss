@@ -4,6 +4,24 @@
   border: 1px solid rgba(0, 0, 0, 0.5);
 }
 
+// Si la fuente "Material Icons" tarda en cargar (conexion lenta) o falla, el navegador muestra
+// el nombre del icono como texto plano ("home", "category", etc). Sin un ancho fijo reservado
+// para el icono, cada fila del menu lateral reflowaba distinto y se veia desordenado. Con un
+// ancho/alineacion fijos, la fila queda igual de prolija se muestre el icono real o el texto.
+.example-sidenav .titulo3 .material-icons {
+  display: inline-block;
+  width: 24px;
+  overflow: hidden;
+  white-space: nowrap;
+  vertical-align: middle;
+  text-align: center;
+}
+.example-sidenav .titulo3 {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+}
+
 // Logo y botones de la barra superior: el ancho fijo del logo (177px) mas los botones sin encoger
 // causaba que "Registrarse" quedara cortado fuera de pantalla en celulares chicos (320-400px).
 .header-top-row {
