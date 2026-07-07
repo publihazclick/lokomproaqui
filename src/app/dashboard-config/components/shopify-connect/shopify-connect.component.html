@@ -1,0 +1,70 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <br>
+          <br>
+          <div class="card-header card-header-primary card-header-icon">
+            <div class="card-icon">
+              <i class="material-icons">store</i>
+            </div>
+            <h4 class="card-title">Conectar Shopify</h4>
+          </div>
+          <div class="card-body">
+
+            <div *ngIf="loader" class="loader">
+              <ngx-spinner bdOpacity=0.9 bdColor="" size="default" color="#581f87" type="ball-pulse-sync" [fullScreen]="false"></ngx-spinner>
+            </div>
+
+            <div *ngIf="!loader && connection" class="row">
+              <div class="col-12">
+                <div class="alert alert-success">
+                  <strong>Tu tienda ya esta conectada</strong><br>
+                  Tienda: <b>{{ connection.shop_domain }}</b><br>
+                  Conectada desde: {{ connection.connected_at | date:'dd/MM/yyyy HH:mm' }}
+                </div>
+                <p>Los pedidos nuevos de esta tienda van a aparecer automaticamente en <b>Autorizar Despacho</b>. Si algun producto no se puede identificar, te va a aparecer un aviso en <b>Pedidos Shopify por Revisar</b> para que lo relaciones una sola vez.</p>
+                <button class="btn btn-danger" [disabled]="saving" (click)="desconectar()">Desconectar tienda</button>
+              </div>
+            </div>
+
+            <div *ngIf="!loader && !connection" class="row">
+              <div class="col-12 col-md-6">
+                <h5>Como conectar tu tienda</h5>
+                <ol>
+                  <li>Entra al panel de administracion de tu tienda de Shopify.</li>
+                  <li>Ve a <b>Configuracion &gt; Aplicaciones y canales de venta &gt; Desarrollar aplicaciones</b>.</li>
+                  <li>Crea una aplicacion personalizada (dale cualquier nombre, por ejemplo "LokomproAqui").</li>
+                  <li>En permisos de la API Admin, activa <b>lectura y escritura</b> de <b>Pedidos (orders)</b> y <b>lectura</b> de <b>Productos (products)</b>.</li>
+                  <li>Instala la aplicacion en tu tienda.</li>
+                  <li>Copia el <b>token de acceso de la API Admin</b> (empieza con "shpat_") y el <b>Client secret</b> (secreto de la API) que te muestra Shopify, y pegalos aqui abajo junto con el dominio de tu tienda.</li>
+                </ol>
+                <p><i>Importante: en cada producto de tu tienda de Shopify, en el campo "SKU" de la variante, pon el mismo codigo que tiene el producto en LokomproAqui, para que los pedidos se relacionen solos.</i></p>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="form-group">
+                  <label>Dominio de tu tienda</label>
+                  <input type="text" class="form-control" placeholder="mitienda.myshopify.com" [(ngModel)]="form.shop_domain">
+                </div>
+                <div class="form-group">
+                  <label>Token de acceso de la API Admin</label>
+                  <input type="text" class="form-control" placeholder="shpat_..." [(ngModel)]="form.access_token">
+                </div>
+                <div class="form-group">
+                  <label>Client secret (secreto de la API)</label>
+                  <input type="text" class="form-control" placeholder="shpss_..." [(ngModel)]="form.api_secret">
+                </div>
+                <button class="btn btn-primary" [disabled]="saving" (click)="conectar()">
+                  {{ saving ? 'Conectando...' : 'Conectar tienda' }}
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <br><br><br><br>
+  </div>
+</div>

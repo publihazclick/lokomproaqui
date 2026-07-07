@@ -1,0 +1,87 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <br>
+          <br>
+          <div class="card-header card-header-primary card-header-icon">
+            <div class="card-icon">
+              <i class="material-icons">store</i>
+            </div>
+            <h4 class="card-title">Pedidos Shopify por Revisar</h4>
+          </div>
+          <div class="card-body">
+
+            <div *ngIf="loader" class="loader">
+              <ngx-spinner bdOpacity=0.9 bdColor="" size="default" color="#581f87" type="ball-pulse-sync" [fullScreen]="false"></ngx-spinner>
+            </div>
+
+            <div *ngIf="!loader && pendingOrders.length === 0" class="text-center p-5">
+              No hay pedidos de Shopify pendientes por revisar.
+            </div>
+
+            <div *ngFor="let pending of pendingOrders" class="card" style="border: 1px solid #ddd; margin-bottom: 20px;">
+              <div class="card-body">
+                <h5>Pedido Shopify {{ pending.shopify_order_number || pending.shopify_order_id }}</h5>
+                <p>
+                  Cliente: <b>{{ pending.buyer_name }}</b> — Tel: {{ pending.buyer_phone }}<br>
+                  Direccion: {{ pending.buyer_address }}, {{ pending.buyer_city }}
+                </p>
+                <p class="text-danger"><i class="material-icons" style="vertical-align: middle;">warning</i> Algunos productos de este pedido no se pudieron identificar automaticamente. Relacionalos abajo (solo tienes que hacerlo una vez por producto).</p>
+
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Producto (Shopify)</th>
+                      <th>SKU</th>
+                      <th>Cant.</th>
+                      <th>Precio</th>
+                      <th>Producto en LokomproAqui</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let item of pending.items; let i = index">
+                      <td>{{ item.title }}</td>
+                      <td>{{ item.sku || '(sin SKU)' }}</td>
+                      <td>{{ item.quantity }}</td>
+                      <td>$ {{ item.unit_price | number:'1.0-0' }}</td>
+                      <td>
+                        <div *ngIf="item.product_id" class="text-success">
+                          <i class="material-icons" style="vertical-align: middle;">check_circle</i>
+                          {{ item._productoNombre || 'Ya relacionado' }}
+                          <span *ngIf="item._variantes && item._variantes.length">
+                            <select class="form-control" [(ngModel)]="item.product_variant_id">
+                              <option [ngValue]="null">Elige la talla/variante</option>
+                              <option *ngFor="let v of item._variantes" [ngValue]="v.id">{{ v.label }}</option>
+                            </select>
+                          </span>
+                        </div>
+                        <div *ngIf="!item.product_id">
+                          <input type="text" class="form-control" placeholder="Buscar producto por nombre o codigo..."
+                            (input)="buscarProducto($any($event.target).value, pending.id, i)">
+                          <div *ngIf="searchResults[pending.id + '_' + i] && searchResults[pending.id + '_' + i].length" class="list-group" style="max-height: 200px; overflow-y: auto;">
+                            <a class="list-group-item list-group-item-action pointer" *ngFor="let p of searchResults[pending.id + '_' + i]"
+                              (click)="seleccionarProducto(item, pending.id, i, p)">
+                              {{ p.pro_nombre }} <small class="text-muted">({{ p.pro_codigo }})</small>
+                            </a>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <button class="btn btn-primary" [disabled]="saving || !todoListoParaConfirmar(pending)" (click)="confirmarPedido(pending)">
+                  Confirmar y crear pedido
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <br><br><br><br>
+  </div>
+</div>

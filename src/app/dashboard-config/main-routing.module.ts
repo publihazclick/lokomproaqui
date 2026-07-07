@@ -31,6 +31,8 @@ import { ListSizeComponent } from './components/list-size/list-size.component';
 import { ListPlatformComponent } from './components/list-platform/list-platform.component';
 import { RechargeComponent } from './components/recharge/recharge.component';
 import { StoreProductActivatedComponent } from './components/store-product-activated/store-product-activated.component';
+import { ShopifyConnectComponent } from './components/shopify-connect/shopify-connect.component';
+import { ShopifyPendingComponent } from './components/shopify-pending/shopify-pending.component';
 
 const dashboardRoutes: Routes = [
  {
@@ -66,6 +68,8 @@ const dashboardRoutes: Routes = [
      {path: 'ventasPosibles', component: VentasClienteComponent },
      {path: 'storeProductActivated/:idStore', component: StoreProductActivatedComponent},
      {path: 'recharge', component: RechargeComponent },
+     {path: 'shopify', component: ShopifyConnectComponent },
+     {path: 'shopifyPendientes', component: ShopifyPendingComponent },
      {
         path: 'store',
         children: [{

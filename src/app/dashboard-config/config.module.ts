@@ -70,6 +70,8 @@ import { ListPlatformComponent } from './components/list-platform/list-platform.
 import { FormPlatformComponent } from './form/form-platform/form-platform.component';
 import { RechargeComponent } from './components/recharge/recharge.component';
 import { StoreProductActivatedComponent } from './components/store-product-activated/store-product-activated.component';
+import { ShopifyConnectComponent } from './components/shopify-connect/shopify-connect.component';
+import { ShopifyPendingComponent } from './components/shopify-pending/shopify-pending.component';
 
 @NgModule({
   entryComponents: [
@@ -140,7 +142,9 @@ import { StoreProductActivatedComponent } from './components/store-product-activ
     ListPlatformComponent,
     FormPlatformComponent,
     RechargeComponent,
-    StoreProductActivatedComponent
+    StoreProductActivatedComponent,
+    ShopifyConnectComponent,
+    ShopifyPendingComponent
   ],
   imports: [
     CommonModule,

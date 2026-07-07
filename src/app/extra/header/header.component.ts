@@ -17,6 +17,7 @@ import { CategoriasService } from 'src/app/servicesComponents/categorias.service
 import { DialogconfirmarPedidoComponent } from '../dialogconfirmar-pedido/dialogconfirmar-pedido.component';
 import { CobrosService } from 'src/app/servicesComponents/cobros.service';
 import { ProductoService } from 'src/app/servicesComponents/producto.service';
+import { ShopifyService } from 'src/app/servicesComponents/shopify.service';
 
 const URLFRON = location.origin;
 
@@ -97,6 +98,7 @@ export class HeaderComponent implements OnInit {
     private _categorias: CategoriasService,
     private _retiros: CobrosService,
     private _productos: ProductoService,
+    private _shopify: ShopifyService,
 
   ) {
     this._store.subscribe((store: any) => {
@@ -241,7 +243,15 @@ export class HeaderComponent implements OnInit {
     this.getRetirosCount();
     this.getVentasCount();
     this.getVentasPosiblesCount();
+    this.getShopifyPendingCount();
 
+  }
+
+  getShopifyPendingCount(){
+    if( !this.dataUser.id ) return;
+    this._shopify.getPendingOrders( this.dataUser.id ).subscribe(( res:any ) => {
+      this.eventos.shopifyPending = (res && res.data ? res.data.length : 0);
+    });
   }
 
   getRetirosCount(){
@@ -615,6 +625,24 @@ export class HeaderComponent implements OnInit {
             icons: 'settings',
             nombre: 'Mis Bancos',
             url: '/config/bank/bank',
+          },
+        ]
+      },
+      {
+        icons: 'sync',
+        nombre: 'Integracion Shopify',
+        disable: this.rolUser == 'administrador' || this.rolUser == 'proveedor',
+        url: '/config/shopify',
+        submenus:[
+          {
+            icons: 'settings',
+            nombre: 'Conectar Shopify',
+            url: '/config/shopify',
+          },
+          {
+            icons: 'settings',
+            nombre: 'Pedidos Shopify por Revisar',
+            url: '/config/shopifyPendientes',
           },
         ]
       },
