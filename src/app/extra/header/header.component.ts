@@ -73,7 +73,6 @@ export class HeaderComponent implements OnInit {
     ventas: 0
   };
   urlTienda: string = `${ URLFRON }/front/index/`;
-  urlDistribuidor:string =`${ URLFRON }/pedidos/0`;
   activando:boolean = false;
 
   querysSale:any = {
@@ -154,7 +153,6 @@ export class HeaderComponent implements OnInit {
     this.loadCoin();
     this.routName = window.location.pathname;
     this.urlTienda += this.dataUser.usu_telefono;
-    //this.urlDistribuidor +=this.dataUser.usu_telefono;
     this.breakpoint = (window.innerWidth <= 500) ? 1 : 6;
     /*if( this.breakpoint == 1 ) {
       this.isHandset$ = false;
@@ -977,53 +975,6 @@ export class HeaderComponent implements OnInit {
       localStorage.removeItem('APP');
     }
     setTimeout( () => location.reload(), 2000 );
-  }
-
-  openTienda( opt:string ){
-    console.log( opt )
-    if( opt == 'distribuidor') {
-      /*
-      this.router.navigate(['/pedidos' ]);
-      let accion = new UserAction( this.dataUser.id ? this.dataUser : this.userPr, 'post');
-      this._store.dispatch( accion );
-      accion = new UserCabezaAction( {} , 'drop' );
-      this._store.dispatch(accion);
-      setTimeout( ()=> location.reload(), 1000 );
-      */
-     window.open( this.urlDistribuidor, "Ver Como Distribuidor");
-     //this.router.navigate([this.urlTienda]);
-    }
-    else if ( opt == 'proveedor'){
-      this.router.navigate(['/config/misDespacho' ]);
-      let accion = new UserAction( this.userPr, 'post');
-      this._store.dispatch( accion );
-      accion = new UserprAction( {} , 'drop' );
-      this._store.dispatch(accion);
-      setTimeout( ()=> location.reload(), 1000 );
-    }
-    else{
-      let accion = new UserprAction( this.dataUser, 'post' );
-      this._store.dispatch( accion );
-      this.dataUser.usu_perfil = {
-        createdAt: "2021-02-26T18:35:35.893Z",
-        est_clave_int: 0,
-        id: 1,
-        prf_descripcion: "vendedor",
-        prf_fec_actualiz: "",
-        prf_usu_actualiz: "",
-        updatedAt: "2021-02-26T18:35:35.893Z"
-      };
-      console.log( this.dataUser)
-      let clon:any = _.clone( this.dataUser );
-      accion = new UserAction( {}, 'delete');
-      this._store.dispatch( accion );
-      accion = new UserAction( clon, 'post');
-      this._store.dispatch( accion );
-      console.log( clon, this.dataUser)
-      this.router.navigate(['/pedidos' ]);
-      setTimeout( ()=> location.reload(), 1000 );
-      return false;
-    }
   }
 
   articuloSubmit(){
