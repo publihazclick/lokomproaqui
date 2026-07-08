@@ -66,7 +66,6 @@ export class PedidosComponent implements OnInit {
   @ViewChild('toolbar',{static: false} ) private nav: any;
   listProductSlider:any = [];
   listBanner: any = [  ];
-  listNovedades:any = [];
   listGaleria:any = [];
   breakpoint: number;
   urlCategory:string;
@@ -218,13 +217,6 @@ export class PedidosComponent implements OnInit {
     }
   }
 
-  getListInitNews(){
-    this._productos.getListgetNews( { } ).subscribe( res => {
-      console.log("getListInitNews", res.data )
-      this.listNovedades = res.data;
-    })
-  }
-
   getListInitBanner(){
     this._productos.getListgetBanner( { } ).subscribe( res => {
       console.log( res.data )
@@ -242,7 +234,6 @@ export class PedidosComponent implements OnInit {
   nextConsulta() {
     if (this.idCategoria) this.query.where.pro_categoria = this.idCategoria;
     this.getCategorias();
-    this.getListInitNews();
     this.getListInitBanner();
     setTimeout(()=> this.cargarProductos(), 1000 )
   }
