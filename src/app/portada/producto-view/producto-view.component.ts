@@ -171,16 +171,19 @@ export class ProductosViewComponent implements OnInit {
       } catch (error) {}
       this.viewsImagen = this.data.foto;
       if( !this.data.listComentarios ) this.data.listComentarios = [];
-      this.listGaleria = this.data.galeria || [];
       for( let row of this.data.listColor){
         this.listTallas.push( ... ( _.filter( row.tallaSelect, off=> off.check == true ) ) );
         this.listTallas = _.unionBy( this.listTallas || [], this.listTallas, 'id');
       }
-      for( let row of this.data.listColor ) {
-        let filtro = this.listGaleria.find( item => item.pri_imagen == row.foto );
-        if( !filtro ) this.listGaleria.push( { id: this._tools.codigo(), pri_imagen: row.foto } );
+      // Cada color trae su propia galeria (todas las fotos de esa referencia en ese color).
+      // Al entrar se muestra la del primer color; al elegir otro color, handleSelect() la reemplaza.
+      const primerColor = (this.data.listColor || [])[0];
+      if( primerColor && primerColor.galeriaList && primerColor.galeriaList.length ) {
+        this.listGaleria = primerColor.galeriaList.map( ( g:any ) => ({ id: g.id, pri_imagen: g.foto }) );
+        this.viewsImagen = primerColor.galeriaList[0].foto;
+      } else {
+        this.listGaleria = [ { id: this._tools.codigo(), pri_imagen: this.data.foto } ];
       }
-      this.listGaleria.push( { id: this._tools.codigo(), pri_imagen: this.data.foto})
     }, error=> { console.error(error); this._tools.presentToast('Error de servidor'); });
   }
 
@@ -386,10 +389,15 @@ export class ProductosViewComponent implements OnInit {
 
   handleSelect( item ){
     //console.log("***364", item)
-    this.viewsImagen = item.foto;
     this.data.colorSelect = item.talla;
     for( let row of this.data.listColor) row.check1 = false;
     item.check1 = true;
+    if( item.galeriaList && item.galeriaList.length ) {
+      this.listGaleria = item.galeriaList.map( ( g:any ) => ({ id: g.id, pri_imagen: g.foto }) );
+      this.viewsImagen = item.galeriaList[0].foto;
+    } else {
+      this.viewsImagen = item.foto;
+    }
   }
 
   checkTalla( item ){

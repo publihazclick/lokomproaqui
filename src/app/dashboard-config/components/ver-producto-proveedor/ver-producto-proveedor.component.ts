@@ -73,16 +73,25 @@ export class VerProductoProveedorComponent implements OnInit {
   getArticulo(){
   	this._producto.get( { where: { id: this.id } } ).subscribe( ( res:any ) =>{
   		this.data = res.data[0] || {};
-      this.titulo = this.data.pro_usu_creacion.usu_usuario || 'Empresa';
-      this.idProveedor = this.data.pro_usu_creacion.id;
+      this.titulo = 'Empresa';
+      this.idProveedor = this.data.pro_usu_creacion;
       this.urlFoto = this.data.foto;
       console.log( this.data )
       this.data.ganancia = Number( this.data.pro_uni_venta - this.data.pro_vendedor );
       this.data.listColor.filter(( item:any )=> {
         item.tallaSelect = item.tallaSelect.filter(( row:any ) => Number( row.cantidad ) > 0 );
-        if( item.galeriaList ) this.galeria.push( ... item.galeriaList );
         return true;
       } );
+      this.data.listTallas = this.data.listColor || [];
+      // Al entrar se muestran solo las fotos del primer color (no todas las de cada color combinadas).
+      const primerColor = this.data.listColor[0];
+      if( primerColor ) {
+        this.seleccionoColor = primerColor;
+        this.urlFoto = primerColor.foto;
+        this.galeria = ( primerColor.galeriaList && primerColor.galeriaList.length ) ? [ ...primerColor.galeriaList ] : [ { id: this._tools.codigo(), foto: this.data.foto } ];
+      } else {
+        this.galeria = [ { id: this._tools.codigo(), foto: this.data.foto } ];
+      }
       for( let row of this.galeria ) this.imageObject.unshift({
         //image: row.foto,
         thumbImage: row.foto,
@@ -182,15 +191,11 @@ export class VerProductoProveedorComponent implements OnInit {
 
   llenadoGaleria(){
     this.imageObject = [];
-    this.imageObject.push( 
-      {
-        //image: this.seleccionoColor.foto,
-        thumbImage: this.seleccionoColor.foto,
-        alt: '',
-        check: true,
-        id: 0,
-      }
-    );
+    // seleccionoColor.galeriaList ya incluye la foto principal de este color como primer elemento.
+    if( !this.seleccionoColor.galeriaList || !this.seleccionoColor.galeriaList.length ) {
+      this.imageObject.push( { thumbImage: this.seleccionoColor.foto, alt: '', check: true, id: 0 } );
+      return;
+    }
     for( let row of this.seleccionoColor.galeriaList ) this.imageObject.unshift({
       //image: row.foto,
       thumbImage: row.foto,
@@ -220,7 +225,6 @@ export class VerProductoProveedorComponent implements OnInit {
         return true;
       } );
       //this.data.cantidadAdquirir = 1;
-      this.llenandoGaleria();
       for( let row of this.galeria ) this.imageObject.unshift({
         //image: row.foto,
         thumbImage: row.foto,
@@ -228,13 +232,6 @@ export class VerProductoProveedorComponent implements OnInit {
         check: true,
         id: 0,
       });
-  }
-
-  llenandoGaleria(){
-    try {
-      for( let row of this.data.listColor )
-      this.galeria.push({ id: row.id, foto: row.foto });
-    } catch (error) {}
   }
 
 

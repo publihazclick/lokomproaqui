@@ -168,8 +168,11 @@ export class ViewProductosComponent implements OnInit {
         if( item.galeriaList ) this.galeria.push( ... item.galeriaList );
         return true;
       } );
-      //this.data.cantidadAdquirir = 1;
-      this.llenandoGaleria();
+      // Cada foto de cada color ya quedo agregada arriba; solo faltan los nombres, no volver a agregar fotos.
+      this.armarNombres();
+      // Deduplicar por url: la foto principal del producto suele coincidir con la del primer color.
+      this.galeria = _.uniqBy( this.galeria, 'foto' );
+      this.imageObject = [];
       for( let row of this.galeria ) this.imageObject.unshift({
         //image: row.foto,
         thumbImage: row.foto,
@@ -179,14 +182,11 @@ export class ViewProductosComponent implements OnInit {
       });
   }
 
-  llenandoGaleria(){
+  armarNombres(){
     this.data.nameColores = "";
     this.data.nemeTalla = "";
     try {
-      for( let row of this.data.listColor ){
-        this.galeria.push({ id: row.id, foto: row.foto });
-        this.data.nameColores+=row.talla +", "
-      }
+      for( let row of this.data.listColor ) this.data.nameColores += row.talla + ", ";
       for( let key of this.data.listColor[0].tallaSelect ) {
         this.data.nemeTalla+= key.tal_descripcion+ ", ";
       }
@@ -231,7 +231,7 @@ export class ViewProductosComponent implements OnInit {
     }
     let color = this.data.color;
     let cantidad = this.data.cantidadAdquirir || 1;
-    const coinDefault = ( this.data.precio_vendedor || this.data.pro_uni_venta );
+    const coinDefault = ( this.data.pro_vendedor || this.data.pro_uni_venta );
     let precio =  this.coinShop == true ? ( this.data.pro_vendedorCompra || coinDefault ) : ( coinDefault );
     let encuanto:any = this.data.encuanto || this.data.pro_uni_venta;
     //if( this.data.listColor ) { this.data.color = this.data.listColor.find(row=>row.foto == this.data.foto) || {}; color = this.data.color.talla }
@@ -356,15 +356,11 @@ export class ViewProductosComponent implements OnInit {
 
   llenadoGaleria(){
     this.imageObject = [];
-    this.imageObject.push(
-      {
-        //image: this.seleccionoColor.foto,
-        thumbImage: this.seleccionoColor.foto,
-        alt: '',
-        check: true,
-        id: 0,
-      }
-    );
+    // seleccionoColor.galeriaList ya incluye la foto principal de este color como primer elemento.
+    if( !this.seleccionoColor.galeriaList || !this.seleccionoColor.galeriaList.length ) {
+      this.imageObject.push( { thumbImage: this.seleccionoColor.foto, alt: '', check: true, id: 0 } );
+      return;
+    }
     for( let row of this.seleccionoColor.galeriaList ) this.imageObject.unshift({
       //image: row.foto,
       thumbImage: row.foto,

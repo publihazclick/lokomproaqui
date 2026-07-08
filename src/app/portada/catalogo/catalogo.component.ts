@@ -166,6 +166,7 @@ export class CatalogoComponent implements OnInit {
 
   getArticulos(){
     this.imageObject = [];
+    this.listGaleria = [];
     this._producto.get( this.query ).subscribe(( res:any )=>{
       this.data = res.data[0] || {}
       try {
@@ -177,8 +178,9 @@ export class CatalogoComponent implements OnInit {
         if( row.galeriaList)for( let key of row.galeriaList ) this.listGaleria.push( { ... key, name: row.talla } );
       }
       //this.data.listColor = _.orderBy( this.data.listColor, ['tal_descripcion'], ['desc']);
-      if( this.data.galeria ) for( let key of this.data.galeria ) this.listGaleria.push( { ...key, foto:key.pri_imagen  } );
-      if( this.data.listaGaleria ) for( let key of this.data.listaGaleria ) this.listGaleria.push( { ...key, foto:key.foto  } );
+      // this.data.listaGaleria (galeria plana del producto) ya esta cubierta por el galeriaList de cada
+      // color de arriba, agregarla de nuevo aqui repetia cada foto.
+      this.listGaleria = _.uniqBy( this.listGaleria, 'foto' );
       for( let row of this.listGaleria ) this.imageObject.push( {
         image: row.foto,
         thumbImage: row.foto,

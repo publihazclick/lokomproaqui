@@ -10,7 +10,13 @@ function mapProductToLegacy(product: any, computedPrice?: number) {
   for (const v of product.product_variants || []) {
     const color = v.color || 'unico';
     if (!variantsByColor[color]) {
-      variantsByColor[color] = { talla: color, foto: product.image_url, tallaSelect: [], galeriaList: [] };
+      const colorImages = (v.images && v.images.length) ? v.images : [product.image_url];
+      variantsByColor[color] = {
+        talla: color,
+        foto: colorImages[0],
+        tallaSelect: [],
+        galeriaList: colorImages.map((url: string, idx: number) => ({ id: `${v.id}-${idx}`, foto: url })),
+      };
     }
     variantsByColor[color].tallaSelect.push({
       id: v.id,
@@ -65,6 +71,12 @@ async function syncVariants(productId: number, sizeTypeId: any, listColor: any[]
 
   const rows: any[] = [];
   for (const colorGroup of listColor) {
+    // Todas las fotos de este color: la foto principal del color + las de su galeria, sin repetir.
+    const colorImages: string[] = [];
+    if (colorGroup.foto) colorImages.push(colorGroup.foto);
+    for (const g of (colorGroup.galeriaList || [])) {
+      if (g.foto && colorImages.indexOf(g.foto) === -1) colorImages.push(g.foto);
+    }
     for (const size of (colorGroup.tallaSelect || [])) {
       if (!size.check) continue;
       let sizeId: any = null;
@@ -74,7 +86,7 @@ async function syncVariants(productId: number, sizeTypeId: any, listColor: any[]
           .eq('size_type_id', sizeTypeId).eq('name', size.tal_descripcion).maybeSingle();
         sizeId = sizeRow ? sizeRow.id : null;
       }
-      rows.push({ product_id: productId, color: colorGroup.talla || null, size_id: sizeId, stock: Number(size.cantidad) || 0 });
+      rows.push({ product_id: productId, color: colorGroup.talla || null, size_id: sizeId, stock: Number(size.cantidad) || 0, images: colorImages });
     }
   }
   if (rows.length) await supabase.from('product_variants').insert(rows);
