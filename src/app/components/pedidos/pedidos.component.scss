@@ -759,9 +759,13 @@ li {
 .novedades-price {
   text-align: center;
   font-weight: 700;
-  font-size: 15px;
-  margin: 0 8px 10px;
+  font-size: 13px;
+  margin: 0 8px 2px;
   color: #222;
+}
+
+.novedades-price:last-of-type {
+  margin-bottom: 10px;
 }
 
 .novedades-btn {
