@@ -67,7 +67,6 @@ export class PedidosComponent implements OnInit {
   listProductSlider:any = [];
   listBanner: any = [  ];
   listNovedades:any = [];
-  listPublicaciones:any = [];
   listGaleria:any = [];
   breakpoint: number;
   urlCategory:string;
@@ -219,23 +218,10 @@ export class PedidosComponent implements OnInit {
     }
   }
 
-  getListInitProduct(){
-    this._productos.getListInit( { } ).subscribe( res => {
-      console.log("getListInitProduct", res.data )
-      this.listPublicaciones = res.data;
-    })
-  }
-
   getListInitNews(){
     this._productos.getListgetNews( { } ).subscribe( res => {
       console.log("getListInitNews", res.data )
       this.listNovedades = res.data;
-    })
-  }
-
-  getListProductsMore(){
-    this._productos.getListgeMore( { } ).subscribe( res => {
-      this.listPublicaciones = _.unionBy(this.listPublicaciones || [], res.data);
     })
   }
 
@@ -256,7 +242,6 @@ export class PedidosComponent implements OnInit {
   nextConsulta() {
     if (this.idCategoria) this.query.where.pro_categoria = this.idCategoria;
     this.getCategorias();
-    this.getListInitProduct();
     this.getListInitNews();
     this.getListInitBanner();
     setTimeout(()=> this.cargarProductos(), 1000 )
