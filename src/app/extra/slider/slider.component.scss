@@ -14,8 +14,10 @@
 }
 
 .square-image {
-  width: 100%;
-  object-fit: cover; /* Maintain the aspect ratio while covering the area */
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover; /* Maintain the aspect ratio while covering the area, recortada en circulo */
 }
 
 /* Estilos para los botones de navegación */
