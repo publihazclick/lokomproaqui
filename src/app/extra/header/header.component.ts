@@ -981,17 +981,7 @@ export class HeaderComponent implements OnInit {
 
   openTienda( opt:string ){
     console.log( opt )
-    if( opt == 'visitante' )
-    {
-      /*let accion = new UserprAction( this.dataUser, 'post' );
-      this._store.dispatch(accion);
-      this.router.navigate(['/', this.dataUser.usu_usuario ]);
-      setTimeout( () =>{
-        this.salir( true );
-      }, 1000 );*/
-      window.open( this.urlTienda, "Ver Como Visitante");
-    }
-    else if( opt == 'distribuidor') {
+    if( opt == 'distribuidor') {
       /*
       this.router.navigate(['/pedidos' ]);
       let accion = new UserAction( this.dataUser.id ? this.dataUser : this.userPr, 'post');
