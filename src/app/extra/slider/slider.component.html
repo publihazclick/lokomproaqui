@@ -54,7 +54,7 @@
                       <div class="poly-price-current">
                         <label for="">
                           <p class="andes-money-amount andes-money-amount--cents-superscript">
-                              Precio a Distribuidor: {{ _tools.monedaChange( 3,2,( item.pro_vendedorCompra || 0 ) )  }}
+                              Precio a Distribuidor: {{ _tools.monedaChange( 3,2,( item.pro_vendedor || 0 ) )  }}
                           </p>
                           <p class="andes-money-amount andes-money-amount--cents-superscript">
                             Tu lo Vendes: {{ _tools.monedaChange( 3,2,( item.pro_uni_venta || 0 ) )  }}
