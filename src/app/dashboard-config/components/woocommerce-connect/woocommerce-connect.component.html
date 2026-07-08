@@ -1,0 +1,69 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <br>
+          <br>
+          <div class="card-header card-header-primary card-header-icon">
+            <div class="card-icon">
+              <i class="material-icons">store</i>
+            </div>
+            <h4 class="card-title">Conectar WooCommerce</h4>
+          </div>
+          <div class="card-body">
+
+            <div *ngIf="loader" class="loader">
+              <ngx-spinner bdOpacity=0.9 bdColor="" size="default" color="#581f87" type="ball-pulse-sync" [fullScreen]="false"></ngx-spinner>
+            </div>
+
+            <div *ngIf="!loader && connection" class="row">
+              <div class="col-12">
+                <div class="alert alert-success">
+                  <strong>Tu tienda ya esta conectada</strong><br>
+                  Tienda: <b>{{ connection.store_url }}</b><br>
+                  Conectada desde: {{ connection.connected_at | date:'dd/MM/yyyy HH:mm' }}
+                </div>
+                <p>Los pedidos nuevos de esta tienda van a aparecer automaticamente en <b>Autorizar Despacho</b>. Si algun producto no se puede identificar, te va a aparecer un aviso en <b>Pedidos WooCommerce por Revisar</b> para que lo relaciones una sola vez.</p>
+                <button class="btn btn-danger" [disabled]="saving" (click)="desconectar()">Desconectar tienda</button>
+              </div>
+            </div>
+
+            <div *ngIf="!loader && !connection" class="row">
+              <div class="col-12 col-md-6">
+                <h5>Como conectar tu tienda</h5>
+                <ol>
+                  <li>Entra al panel de administracion de tu tienda de WordPress (wp-admin).</li>
+                  <li>Ve a <b>WooCommerce &gt; Ajustes &gt; Avanzado &gt; API REST</b>.</li>
+                  <li>Da clic en <b>Agregar clave</b> (o "Crear una clave de API").</li>
+                  <li>Ponle cualquier descripcion (por ejemplo "LokomproAqui") y en <b>Permisos</b> elige <b>Lectura/Escritura</b>.</li>
+                  <li>Genera la clave y copia el <b>Consumer key</b> (empieza con "ck_") y el <b>Consumer secret</b> (empieza con "cs_") que te muestra WooCommerce, junto con la URL de tu tienda.</li>
+                </ol>
+                <p><i>Importante: en cada producto de tu tienda de WooCommerce, en el campo "SKU" (o el SKU de cada variacion), pon el mismo codigo que tiene el producto en LokomproAqui, para que los pedidos se relacionen solos.</i></p>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="form-group">
+                  <label>URL de tu tienda</label>
+                  <input type="text" class="form-control" placeholder="https://mitienda.com" [(ngModel)]="form.store_url">
+                </div>
+                <div class="form-group">
+                  <label>Consumer key</label>
+                  <input type="text" class="form-control" placeholder="ck_..." [(ngModel)]="form.consumer_key">
+                </div>
+                <div class="form-group">
+                  <label>Consumer secret</label>
+                  <input type="text" class="form-control" placeholder="cs_..." [(ngModel)]="form.consumer_secret">
+                </div>
+                <button class="btn btn-primary" [disabled]="saving" (click)="conectar()">
+                  {{ saving ? 'Conectando...' : 'Conectar tienda' }}
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <br><br><br><br>
+  </div>
+</div>

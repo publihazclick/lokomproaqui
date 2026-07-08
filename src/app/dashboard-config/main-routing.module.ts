@@ -33,6 +33,8 @@ import { RechargeComponent } from './components/recharge/recharge.component';
 import { StoreProductActivatedComponent } from './components/store-product-activated/store-product-activated.component';
 import { ShopifyConnectComponent } from './components/shopify-connect/shopify-connect.component';
 import { ShopifyPendingComponent } from './components/shopify-pending/shopify-pending.component';
+import { WoocommerceConnectComponent } from './components/woocommerce-connect/woocommerce-connect.component';
+import { WoocommercePendingComponent } from './components/woocommerce-pending/woocommerce-pending.component';
 
 const dashboardRoutes: Routes = [
  {
@@ -70,6 +72,8 @@ const dashboardRoutes: Routes = [
      {path: 'recharge', component: RechargeComponent },
      {path: 'shopify', component: ShopifyConnectComponent },
      {path: 'shopifyPendientes', component: ShopifyPendingComponent },
+     {path: 'woocommerce', component: WoocommerceConnectComponent },
+     {path: 'woocommercePendientes', component: WoocommercePendingComponent },
      {
         path: 'store',
         children: [{

@@ -18,6 +18,7 @@ import { DialogconfirmarPedidoComponent } from '../dialogconfirmar-pedido/dialog
 import { CobrosService } from 'src/app/servicesComponents/cobros.service';
 import { ProductoService } from 'src/app/servicesComponents/producto.service';
 import { ShopifyService } from 'src/app/servicesComponents/shopify.service';
+import { WoocommerceService } from 'src/app/servicesComponents/woocommerce.service';
 
 const URLFRON = location.origin;
 
@@ -98,6 +99,7 @@ export class HeaderComponent implements OnInit {
     private _retiros: CobrosService,
     private _productos: ProductoService,
     private _shopify: ShopifyService,
+    private _woocommerce: WoocommerceService,
 
   ) {
     this._store.subscribe((store: any) => {
@@ -242,6 +244,7 @@ export class HeaderComponent implements OnInit {
     this.getVentasCount();
     this.getVentasPosiblesCount();
     this.getShopifyPendingCount();
+    this.getWoocommercePendingCount();
 
   }
 
@@ -249,6 +252,13 @@ export class HeaderComponent implements OnInit {
     if( !this.dataUser.id ) return;
     this._shopify.getPendingOrders( this.dataUser.id ).subscribe(( res:any ) => {
       this.eventos.shopifyPending = (res && res.data ? res.data.length : 0);
+    });
+  }
+
+  getWoocommercePendingCount(){
+    if( !this.dataUser.id ) return;
+    this._woocommerce.getPendingOrders( this.dataUser.id ).subscribe(( res:any ) => {
+      this.eventos.woocommercePending = (res && res.data ? res.data.length : 0);
     });
   }
 
@@ -641,6 +651,24 @@ export class HeaderComponent implements OnInit {
             icons: 'settings',
             nombre: 'Pedidos Shopify por Revisar',
             url: '/config/shopifyPendientes',
+          },
+        ]
+      },
+      {
+        icons: 'sync',
+        nombre: 'Integracion WooCommerce',
+        disable: this.rolUser == 'vendedor',
+        url: '/config/woocommerce',
+        submenus:[
+          {
+            icons: 'settings',
+            nombre: 'Conectar WooCommerce',
+            url: '/config/woocommerce',
+          },
+          {
+            icons: 'settings',
+            nombre: 'Pedidos WooCommerce por Revisar',
+            url: '/config/woocommercePendientes',
           },
         ]
       },

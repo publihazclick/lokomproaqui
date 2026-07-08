@@ -72,6 +72,8 @@ import { RechargeComponent } from './components/recharge/recharge.component';
 import { StoreProductActivatedComponent } from './components/store-product-activated/store-product-activated.component';
 import { ShopifyConnectComponent } from './components/shopify-connect/shopify-connect.component';
 import { ShopifyPendingComponent } from './components/shopify-pending/shopify-pending.component';
+import { WoocommerceConnectComponent } from './components/woocommerce-connect/woocommerce-connect.component';
+import { WoocommercePendingComponent } from './components/woocommerce-pending/woocommerce-pending.component';
 
 @NgModule({
   entryComponents: [
@@ -144,7 +146,9 @@ import { ShopifyPendingComponent } from './components/shopify-pending/shopify-pe
     RechargeComponent,
     StoreProductActivatedComponent,
     ShopifyConnectComponent,
-    ShopifyPendingComponent
+    ShopifyPendingComponent,
+    WoocommerceConnectComponent,
+    WoocommercePendingComponent
   ],
   imports: [
     CommonModule,
