@@ -1,46 +1,71 @@
-<div class="main-content">
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col-md-12">
-          <div class="card" style="overflow-x: scroll;">
-            <br>
-            <br>
-            <div class="card-header card-header-primary card-header-icon">
-              <div class="card-icon">
-                <i class="material-icons">assignment</i>
-              </div>
-              <h4 class="card-title">Lista de Paquetes</h4>
+<div class="main-content recharge-page">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="recharge-panel">
+
+          <div class="recharge-panel__header">
+            <div class="recharge-panel__icon">
+              <i class="material-icons">account_balance_wallet</i>
             </div>
-            <div class="card-body">
-              <div class="toolbar">
-              </div>
-              <div *ngIf="loader" class="loader">
-                <ngx-spinner bdOpacity=0.9 bdColor="" size="default" color="#581f87" type="ball-pulse-sync"
-                  [fullScreen]="false">
-                </ngx-spinner>
-              </div>
-              <div class="row">
-                <div class="col-12">
-                  <div class="row row-cols-2 row-cols-md-5 g-2">
-                    <div class="col" *ngFor="let item of listRecharge" style="    padding: 15px;">
-                      <div class="card h-100" >
-                        <img [src]="item.foto" class="card-img-top" alt="...">
-                        <div class="card-body">
-                          <h5 class="card-title">{{ item.titulo }} {{ _tools.monedaChange( 3,2, ( item.precio || 0 ) ) }} </h5>
-                          <p class="card-text">{{ item.descripcion }} </p>
-                          <p class="card-text">
-                            <button type="button" class="btn btn-success" (click)="handleActivatePackage( item )">Activar Paquete</button>
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div>
+              <h4 class="recharge-panel__title">Recargar Saldo</h4>
+              <p class="recharge-panel__subtitle">Elige el valor que quieres agregar a tu billetera y paga de forma segura con ePayco.</p>
             </div>
           </div>
+
+          <div *ngIf="loader" class="loader">
+            <ngx-spinner bdOpacity=0.9 bdColor="" size="default" color="#581f87" type="ball-pulse-sync"
+              [fullScreen]="false">
+            </ngx-spinner>
+          </div>
+
+          <div *ngIf="!loader && listRecharge.length === 0" class="recharge-empty">
+            <i class="material-icons">info</i>
+            Por ahora no hay valores de recarga disponibles.
+          </div>
+
+          <div class="bank-cards-grid" *ngIf="!loader && listRecharge.length > 0">
+            <div class="bank-card" [ngClass]="'bank-card--' + (i % 4)"
+              [class.bank-card--busy]="disabedPn && selectedId === item.id"
+              *ngFor="let item of listRecharge; let i = index" (click)="handleActivatePackage( item )">
+
+              <div class="bank-card__glow"></div>
+
+              <div class="bank-card__top">
+                <span class="bank-card__brand">LOKOMPROAQUI</span>
+                <i class="material-icons bank-card__contactless">wifi</i>
+              </div>
+
+              <div class="bank-card__chip"></div>
+
+              <div class="bank-card__amount">{{ _tools.monedaChange( 3,2, ( item.precio || 0 ) ) }}</div>
+
+              <div class="bank-card__number">
+                <span>&bull;&bull;&bull;&bull;</span>
+                <span>&bull;&bull;&bull;&bull;</span>
+                <span>&bull;&bull;&bull;&bull;</span>
+                <span>SALDO</span>
+              </div>
+
+              <div class="bank-card__bottom">
+                <div class="bank-card__holder">
+                  <small>TITULAR</small>
+                  <span>{{ dataUser.name || 'MI CUENTA' }} {{ dataUser.lastname }}</span>
+                </div>
+                <div class="bank-card__cta">
+                  <ng-container *ngIf="!(disabedPn && selectedId === item.id); else busy">
+                    Recargar <i class="material-icons">arrow_forward</i>
+                  </ng-container>
+                  <ng-template #busy><span class="bank-card__spinner"></span></ng-template>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
   </div>
-  
+</div>

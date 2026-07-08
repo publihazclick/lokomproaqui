@@ -16,6 +16,7 @@ export class RechargeComponent implements OnInit {
   listRecharge:any = [];
   loader:boolean = false;
   disabedPn:boolean = false;
+  selectedId:any = null;
   dataUser:any = {};
   keyEpayco = environment.keyEpayco;
   estadoPruebaPagos = environment.estadoPruebaPagos;
@@ -48,6 +49,7 @@ export class RechargeComponent implements OnInit {
   handleActivatePackage( item:any ){
     if( this.disabedPn ) return false;
     this.disabedPn = true;
+    this.selectedId = item.id;
     let data = {
       recarga: item.id,
       user: this.dataUser.id,
@@ -56,7 +58,7 @@ export class RechargeComponent implements OnInit {
     };
     this._recharge.createUser( data ).subscribe( res =>{
       this.nextEpayco( item, res );
-    },()=> this.disabedPn = false );
+    },()=> { this.disabedPn = false; this.selectedId = null; } );
   }
 
   nextEpayco( item:any, data ){ 
