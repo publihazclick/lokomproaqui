@@ -33,7 +33,7 @@ function mapProductToLegacy(product: any, computedPrice?: number) {
     pro_activo: product.active ? 0 : 1, // convencion vieja: 0 = activo
     pro_mostrar_agotado: product.show_when_sold_out,
     pro_uni_venta: computedPrice != null ? computedPrice : product.client_sale_price,
-    pro_vendedor: null,
+    pro_vendedor: product.distributor_price,
     pro_usu_creacion: product.owner_profile_id,
     pro_sw_tallas: product.size_type_id,
     listColor: Object.values(variantsByColor),
@@ -184,6 +184,7 @@ export class ProductoService {
         code: data.pro_codigo,
         owner_profile_id: data.pro_usu_creacion || null,
         client_sale_price: data.pro_uni_venta,
+        distributor_price: data.pro_vendedor || null,
         size_type_id: data.pro_sw_tallas || null,
         gallery: data.listaGaleria || [],
         width: data.ancho || null, height: data.alto || null, length: data.largo || null, weight: data.peso || null,
@@ -205,6 +206,7 @@ export class ProductoService {
       if (data.pro_categoria !== undefined) patch.category_id = data.pro_categoria;
       if (data.pro_sub_categoria !== undefined) patch.subcategory_id = data.pro_sub_categoria;
       if (data.pro_uni_venta !== undefined) patch.client_sale_price = data.pro_uni_venta;
+      if (data.pro_vendedor !== undefined) patch.distributor_price = data.pro_vendedor;
       if (data.pro_codigo !== undefined) patch.code = data.pro_codigo;
       if (data.foto !== undefined) patch.image_url = data.foto;
       if (data.pro_sw_tallas !== undefined) patch.size_type_id = data.pro_sw_tallas;
