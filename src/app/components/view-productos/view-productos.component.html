@@ -171,25 +171,6 @@
                         </div>
                       </div>
                     </div>
-                    <div class="col-12 pb-2" *ngIf="data.pro_usu_creacion">
-                      <div class="container">
-                        <div class="row">
-                            <div class="col-12 pt-2">
-                              <h3 class="mb-0">PROVEEDOR:</h3>
-                              <div class="d-flex flex-row bd-highlight mb-1" style="  border-radius: 20px;">
-                                <div class="p-1 bd-highlight" style="margin: 2px;">
-                                  <img [src]="data.pro_usu_creacion.usu_imagen" alt="" class="img-profile" (error)="handleImageError($event)" loading="lazy">
-                                </div>
-                                <div class="p-1 bd-highlight" style="margin: auto; margin-left: 10px;">
-                                  <h4 style="margin: 0 !important;">Nombre: {{ data.pro_usu_creacion.usu_usuario | slice: 0:12 }} </h4>
-                                  <h5 style="margin: 0 !important;">Whatsapp: {{ data.pro_usu_creacion.usu_telefono }} </h5>
-                                  <h5 style="margin: 0 !important;">Ubicación: {{ data.pro_usu_creacion.usu_ciudad | slice: 0:12 }} </h5>
-                                </div>
-                              </div>
-                            </div>
-                        </div>
-                      </div>
-                    </div>
                     <div class="col-12 p-3" style="max-height: 200px; overflow-y: auto;">
                       <div class="container borderBotton">
                         <div class="row">
