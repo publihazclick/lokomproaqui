@@ -62,7 +62,6 @@ export class ViewProductosComponent implements OnInit {
   titleButton:string = "Confirmar pedido";
   disabledView:string = "normal";
   breakpoint: number;
-  trHeight:number = 430;
   listCart = [];
   constructor(
     public dialogRef: MatDialogRef<ViewProductosComponent>,
@@ -121,12 +120,8 @@ export class ViewProductosComponent implements OnInit {
       this.disabledSelect = false;
     }
 
-    // Antes esto corria recien a los 2 segundos: la ventana se veia con el alto chico (430px,
-    // pensado para celular) al abrir en un monitor grande, obligando a scrollear hasta que se
-    // recalculaba solo. Ahora se calcula de inmediato y en base al alto real de la pantalla.
     try {
       this.breakpoint = (window.innerWidth <= 500) ? 1 : 6;
-      if( this.breakpoint === 6 ) this.trHeight = Math.max(window.innerHeight - 180, 430);
     } catch (error) { }
   }
 
