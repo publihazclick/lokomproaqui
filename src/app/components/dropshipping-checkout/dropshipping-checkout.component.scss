@@ -1,17 +1,71 @@
-.border-primary {
-  border-color: #02a0e3 !important;
-  box-shadow: 0 0 0 2px rgba(2, 160, 227, 0.15);
+// ── Paleta y variables locales ────────────────────────────────────────────
+$dsc-primary: #02a0e3;
+$dsc-primary-dark: #0288c2;
+$dsc-text: #1f2937;
+$dsc-muted: #6b7280;
+$dsc-border: #e5e7eb;
+$dsc-bg-soft: #f8fafc;
+$dsc-success: #16a34a;
+$dsc-success-bg: #f0fdf4;
+$dsc-danger: #dc2626;
+$dsc-danger-bg: #fef2f2;
+$dsc-warning-bg: #fffbeb;
+$dsc-radius: 14px;
+$dsc-radius-sm: 10px;
+
+:host {
+  display: block;
+  font-family: inherit;
+  color: $dsc-text;
+}
+
+// ── Header ──────────────────────────────────────────────────────────────
+.dsc-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid $dsc-border;
+}
+
+.dsc-header-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: $dsc-text;
+}
+
+.dsc-header-subtitle {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: $dsc-muted;
+}
+
+.dsc-badge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: rgba(2, 160, 227, 0.12);
+  color: $dsc-primary-dark;
 }
 
 // Boton de cerrar circular con la X dibujada en CSS puro (sin fuente de iconos de por medio):
 // asi nunca depende de que una fuente termine de cargar ni puede parpadear/desaparecer.
 .cerrar-modal-btn {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   padding: 0;
   border: none;
   position: relative;
+  flex-shrink: 0;
+  background: #f1f3f5;
 }
 
 .cerrar-modal-btn::before,
@@ -20,16 +74,432 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 16px;
+  width: 14px;
   height: 2px;
-  background: #fff;
+  background: #6b7280;
   border-radius: 1px;
 }
 
-.cerrar-modal-btn::before {
-  transform: translate(-50%, -50%) rotate(45deg);
+.cerrar-modal-btn::before { transform: translate(-50%, -50%) rotate(45deg); }
+.cerrar-modal-btn::after { transform: translate(-50%, -50%) rotate(-45deg); }
+
+// ── Contenedor general ──────────────────────────────────────────────────
+.dsc-body {
+  padding: 18px 20px 22px;
 }
 
-.cerrar-modal-btn::after {
-  transform: translate(-50%, -50%) rotate(-45deg);
+.dsc-section {
+  margin-bottom: 18px;
+}
+
+.dsc-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $dsc-muted;
+  margin: 0 0 10px;
+}
+
+.dsc-card {
+  background: #fff;
+  border: 1px solid $dsc-border;
+  border-radius: $dsc-radius;
+  padding: 14px 16px;
+}
+
+.dsc-card-soft {
+  background: $dsc-bg-soft;
+  border-radius: $dsc-radius;
+  padding: 14px 16px;
+}
+
+// ── Resumen de producto ─────────────────────────────────────────────────
+.dsc-producto-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: $dsc-bg-soft;
+  border-radius: $dsc-radius;
+  padding: 12px 14px;
+}
+
+.dsc-producto-foto {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #fff;
+  border: 1px solid $dsc-border;
+}
+
+.dsc-producto-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.dsc-producto-nombre {
+  font-weight: 700;
+  font-size: 14px;
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dsc-producto-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 12px;
+  color: $dsc-muted;
+}
+
+.dsc-tag {
+  background: #fff;
+  border: 1px solid $dsc-border;
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+
+.dsc-producto-precio {
+  font-weight: 700;
+  font-size: 15px;
+  color: $dsc-primary-dark;
+  white-space: nowrap;
+}
+
+// ── Formulario ──────────────────────────────────────────────────────────
+.dsc-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dsc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.dsc-field.dsc-field-full {
+  grid-column: 1 / -1;
+}
+
+.dsc-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: $dsc-muted;
+  margin: 0;
+}
+
+.dsc-input {
+  width: 100%;
+  border: 1px solid $dsc-border;
+  border-radius: $dsc-radius-sm;
+  padding: 9px 12px;
+  font-size: 14px;
+  color: $dsc-text;
+  background: #fff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dsc-input:focus {
+  outline: none;
+  border-color: $dsc-primary;
+  box-shadow: 0 0 0 3px rgba(2, 160, 227, 0.15);
+}
+
+.dsc-input:disabled {
+  background: #f3f4f6;
+  color: $dsc-muted;
+}
+
+.dsc-input-cantidad {
+  width: 110px;
+}
+
+// ── Autocompletar ciudad ────────────────────────────────────────────────
+.dsc-ciudad-wrap {
+  position: relative;
+}
+
+.dsc-ciudad-ok {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: $dsc-success;
+  margin: 6px 0 0;
+}
+
+.dsc-ciudad-ok a {
+  color: $dsc-muted;
+  text-decoration: underline;
+}
+
+.dsc-sugerencias {
+  position: absolute;
+  z-index: 30;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  background: #fff;
+  border: 1px solid $dsc-border;
+  border-radius: $dsc-radius-sm;
+  max-height: 220px;
+  overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.dsc-sugerencia-item {
+  padding: 10px 14px;
+  font-size: 14px;
+  border-bottom: 1px solid #f1f3f5;
+  cursor: pointer;
+}
+
+.dsc-sugerencia-item:last-child { border-bottom: none; }
+.dsc-sugerencia-item:hover { background: $dsc-bg-soft; }
+
+// ── Cotizar ─────────────────────────────────────────────────────────────
+.dsc-cotizar-link {
+  background: none;
+  border: none;
+  color: $dsc-primary-dark;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+.dsc-cotizar-link:disabled {
+  color: $dsc-muted;
+  cursor: default;
+}
+
+// ── Resumen de costos ───────────────────────────────────────────────────
+.dsc-resumen-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 14px;
+}
+
+.dsc-resumen-row.dsc-total {
+  border-top: 1px dashed $dsc-border;
+  margin-top: 4px;
+  padding-top: 10px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.dsc-resumen-row .dsc-label-muted {
+  color: $dsc-muted;
+}
+
+.dsc-saldo-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: $dsc-muted;
+  padding-top: 4px;
+}
+
+// ── Transportadoras ─────────────────────────────────────────────────────
+.dsc-transportadora {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1.5px solid $dsc-border;
+  border-radius: $dsc-radius-sm;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  background: #fff;
+}
+
+.dsc-transportadora:hover {
+  border-color: darken($dsc-border, 15%);
+}
+
+.dsc-transportadora.dsc-transportadora-activa {
+  border-color: $dsc-primary;
+  background: rgba(2, 160, 227, 0.06);
+}
+
+.dsc-transportadora-logo {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.dsc-transportadora-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.dsc-transportadora-nombre {
+  font-weight: 700;
+  font-size: 13px;
+  margin: 0;
+}
+
+.dsc-transportadora-tiempo {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: $dsc-muted;
+}
+
+.dsc-transportadora-precio {
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.dsc-transportadora-check {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid $dsc-border;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.dsc-transportadora-activa .dsc-transportadora-check {
+  border-color: $dsc-primary;
+  background: $dsc-primary;
+}
+
+.dsc-transportadora-activa .dsc-transportadora-check::after {
+  content: '';
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  width: 4px;
+  height: 8px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: translate(-50%, -60%) rotate(45deg);
+}
+
+// ── Alertas ─────────────────────────────────────────────────────────────
+.dsc-alert {
+  border-radius: $dsc-radius-sm;
+  padding: 12px 14px;
+  font-size: 13px;
+}
+
+.dsc-alert-danger {
+  background: $dsc-danger-bg;
+  color: $dsc-danger;
+}
+
+.dsc-alert-warning {
+  background: $dsc-warning-bg;
+  color: #92610a;
+}
+
+// ── Botones ─────────────────────────────────────────────────────────────
+.dsc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  border-radius: 999px;
+  padding: 11px 22px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.dsc-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.dsc-btn-primary {
+  background: $dsc-primary;
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(2, 160, 227, 0.3);
+}
+
+.dsc-btn-primary:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(2, 160, 227, 0.35);
+}
+
+.dsc-btn-secondary {
+  background: #f1f3f5;
+  color: $dsc-text;
+}
+
+.dsc-btn-danger {
+  background: $dsc-danger;
+  color: #fff;
+}
+
+.dsc-btn-outline {
+  background: #fff;
+  border: 1.5px solid $dsc-border;
+  color: $dsc-text;
+}
+
+.dsc-btn-outline.dsc-btn-activo {
+  border-color: $dsc-primary;
+  color: $dsc-primary-dark;
+  background: rgba(2, 160, 227, 0.08);
+}
+
+.dsc-btn-sm {
+  padding: 7px 14px;
+  font-size: 12.5px;
+}
+
+.dsc-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+// ── Recarga inline ──────────────────────────────────────────────────────
+.dsc-recarga-montos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+// ── Pantalla de exito ───────────────────────────────────────────────────
+.dsc-exito {
+  text-align: center;
+  padding: 28px 20px;
+}
+
+.dsc-exito-icono {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: $dsc-success-bg;
+  color: $dsc-success;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+  font-size: 28px;
+  font-weight: 700;
 }

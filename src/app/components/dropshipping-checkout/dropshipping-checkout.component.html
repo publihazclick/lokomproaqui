@@ -1,160 +1,188 @@
-<div mat-dialog-title>
-  <div class="d-flex bd-highlight">
-    <div class="p-1 flex-grow-1 bd-highlight">
-      <h4 class="fw-bold" style="margin: 0;">
-        {{ mode === 'muestra' ? 'Pedir muestra' : 'Hacer Dropshipping' }}
-      </h4>
-      <p style="margin: 0; font-size: 12px; color: #666;">{{ producto.pro_nombre | slice: 0:40 }}</p>
-    </div>
-    <div class="p-1 bd-highlight">
-      <button type="button" class="btn btn-danger cerrar-modal-btn" (click)="cerrar()" aria-label="Cerrar"></button>
-    </div>
+<div class="dsc-header" mat-dialog-title>
+  <div>
+    <h4 class="dsc-header-title">{{ mode === 'muestra' ? 'Pedir muestra' : 'Hacer Dropshipping' }}</h4>
+    <p class="dsc-header-subtitle">{{ producto.pro_nombre }}</p>
+    <span class="dsc-badge">{{ mode === 'muestra' ? 'Envío a tu dirección' : 'Envío a tu cliente' }}</span>
   </div>
+  <button type="button" class="cerrar-modal-btn" (click)="cerrar()" aria-label="Cerrar"></button>
 </div>
 
 <mat-dialog-content class="mat-typography">
-  <div class="container">
+  <div class="dsc-body">
 
-    <div *ngIf="paso === 'exito'; else formulario" class="text-center p-3">
-      <h4 class="text-success">¡Pedido #{{ orderId }} creado!</h4>
-      <p>Se debitaron <strong>{{ _tools.monedaChange(3, 2, totalAPagar) }}</strong> de tu billetera.</p>
-      <p *ngIf="guiaGenerada">Guía generada: <strong>{{ guiaGenerada }}</strong></p>
-      <button type="button" class="btn btn-primary m-1" (click)="cerrar()">Cerrar</button>
+    <div *ngIf="paso === 'exito'; else formulario" class="dsc-exito">
+      <div class="dsc-exito-icono">✓</div>
+      <h4 class="dsc-header-title">¡Pedido #{{ orderId }} creado!</h4>
+      <p style="color: #6b7280; margin: 8px 0 0;">
+        Se debitaron <strong style="color:#1f2937;">{{ _tools.monedaChange(3, 2, totalAPagar) }}</strong> de tu billetera.
+      </p>
+      <p *ngIf="guiaGenerada" style="color: #6b7280;">Guía generada: <strong style="color:#1f2937;">{{ guiaGenerada }}</strong></p>
+      <div class="dsc-actions">
+        <button type="button" class="dsc-btn dsc-btn-primary" (click)="cerrar()">Cerrar</button>
+      </div>
     </div>
 
     <ng-template #formulario>
 
-      <!-- Color y talla ya elegidos en la ficha del producto -->
-      <div class="p-2 mb-2" style="background: #f0f7ff; border-radius: 10px;">
-        <span *ngIf="colorProducto">Color: <strong>{{ colorProducto }}</strong></span>
-        <span *ngIf="colorProducto && tallaProducto">&nbsp;·&nbsp;</span>
-        <span *ngIf="tallaProducto">Talla: <strong>{{ tallaProducto }}</strong></span>
+      <!-- Resumen del producto -->
+      <div class="dsc-section">
+        <div class="dsc-producto-card">
+          <img *ngIf="producto.foto" [src]="producto.foto" class="dsc-producto-foto" alt="" />
+          <div class="dsc-producto-info">
+            <p class="dsc-producto-nombre">{{ producto.pro_nombre }}</p>
+            <div class="dsc-producto-tags">
+              <span class="dsc-tag" *ngIf="colorProducto">Color: {{ colorProducto }}</span>
+              <span class="dsc-tag" *ngIf="tallaProducto">Talla: {{ tallaProducto }}</span>
+            </div>
+          </div>
+          <div class="dsc-producto-precio">{{ _tools.monedaChange(3, 2, precioUnitario) }}</div>
+        </div>
+        <p style="font-size: 12.5px; color: #6b7280; margin: 8px 2px 0;" *ngIf="mode === 'muestra'">
+          Esta muestra llega a tu propia dirección de registro (no a un cliente).
+        </p>
       </div>
 
-      <p class="text-muted" *ngIf="mode === 'muestra'">
-        Esta muestra llega a tu propia dirección de registro (no a un cliente).
-      </p>
-
-      <div class="row">
-        <div class="col-12 col-sm-6">
-          <label>Nombre completo *</label>
-          <input class="form-control form-control-sm" [(ngModel)]="cliente.nombre" (ngModelChange)="onCampoChange()"
-                 [disabled]="destinatarioBloqueado || camposBloqueados" required />
-        </div>
-        <div class="col-12 col-sm-6">
-          <label>Teléfono *</label>
-          <input class="form-control form-control-sm" [(ngModel)]="cliente.telefono" (ngModelChange)="onCampoChange()"
-                 [disabled]="destinatarioBloqueado || camposBloqueados" required />
-        </div>
-        <div class="col-12">
-          <label>Dirección *</label>
-          <input class="form-control form-control-sm" [(ngModel)]="cliente.direccion" (ngModelChange)="onCampoChange()"
-                 [disabled]="destinatarioBloqueado || camposBloqueados" placeholder="Calle, número, detalles de entrega" required />
-        </div>
-        <div class="col-12">
-          <label>Barrio *</label>
-          <input class="form-control form-control-sm" [(ngModel)]="cliente.barrio" (ngModelChange)="onCampoChange()"
-                 [disabled]="camposBloqueados" required />
-        </div>
-
-        <div class="col-12" style="position: relative;">
-          <label>Ciudad destino *</label>
-          <input class="form-control form-control-sm" [(ngModel)]="ciudadQuery" autocomplete="off"
-                 (input)="onCiudadInput()" (focus)="ciudadFocus = true" (blur)="onCiudadBlur()"
-                 placeholder="Ej: Medellín, Bogotá, Cali..." required />
-          <p *ngIf="ciudadSeleccionada" class="text-success" style="font-size: 12px; margin: 4px 0 0;">
-            ✓ {{ ciudadSeleccionada.name }} <a class="pointer" (click)="limpiarCiudad()">(cambiar)</a>
-          </p>
-          <div *ngIf="ciudadFocus && sugerencias.length && !ciudadSeleccionada"
-               style="position: absolute; z-index: 20; left: 15px; right: 15px; background: #fff; border: 1px solid #ddd; border-radius: 8px; max-height: 200px; overflow-y: auto;">
-            <div *ngFor="let c of sugerencias" class="pointer p-2" style="border-bottom: 1px solid #eee;" (mousedown)="seleccionarCiudad(c)">
-              {{ c.name }}
+      <!-- Datos de envío -->
+      <div class="dsc-section">
+        <p class="dsc-section-title">Datos de envío</p>
+        <div class="dsc-form-grid">
+          <div class="dsc-field">
+            <label>Nombre completo</label>
+            <input class="dsc-input" [(ngModel)]="cliente.nombre" (ngModelChange)="onCampoChange()"
+                   [disabled]="destinatarioBloqueado || camposBloqueados" required />
+          </div>
+          <div class="dsc-field">
+            <label>Teléfono</label>
+            <input class="dsc-input" [(ngModel)]="cliente.telefono" (ngModelChange)="onCampoChange()"
+                   [disabled]="destinatarioBloqueado || camposBloqueados" required />
+          </div>
+          <div class="dsc-field dsc-field-full">
+            <label>Dirección</label>
+            <input class="dsc-input" [(ngModel)]="cliente.direccion" (ngModelChange)="onCampoChange()"
+                   [disabled]="destinatarioBloqueado || camposBloqueados" placeholder="Calle, número, detalles de entrega" required />
+          </div>
+          <div class="dsc-field">
+            <label>Barrio</label>
+            <input class="dsc-input" [(ngModel)]="cliente.barrio" (ngModelChange)="onCampoChange()"
+                   [disabled]="camposBloqueados" required />
+          </div>
+          <div class="dsc-field">
+            <label>Cantidad</label>
+            <input type="number" min="1" class="dsc-input dsc-input-cantidad" [(ngModel)]="cantidad" (ngModelChange)="onCampoChange()"
+                   [disabled]="camposBloqueados" required />
+          </div>
+          <div class="dsc-field dsc-field-full dsc-ciudad-wrap">
+            <label>Ciudad destino</label>
+            <input class="dsc-input" [(ngModel)]="ciudadQuery" autocomplete="off"
+                   (input)="onCiudadInput()" (focus)="ciudadFocus = true" (blur)="onCiudadBlur()"
+                   placeholder="Ej: Medellín, Bogotá, Cali..." required />
+            <p *ngIf="ciudadSeleccionada" class="dsc-ciudad-ok">
+              ✓ {{ ciudadSeleccionada.name }} <a class="pointer" (click)="limpiarCiudad()">cambiar</a>
+            </p>
+            <div class="dsc-sugerencias" *ngIf="ciudadFocus && sugerencias.length && !ciudadSeleccionada">
+              <div class="dsc-sugerencia-item" *ngFor="let c of sugerencias" (mousedown)="seleccionarCiudad(c)">
+                {{ c.name }}
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="col-12" style="margin-top: 10px;">
-          <label>Cantidad *</label>
-          <input type="number" min="1" class="form-control form-control-sm" [(ngModel)]="cantidad" (ngModelChange)="onCampoChange()"
-                 [disabled]="camposBloqueados" style="width: 100px;" required />
+        <div class="text-center" style="margin-top: 10px;" *ngIf="!fleteSeleccionado">
+          <button type="button" class="dsc-cotizar-link" [disabled]="loader || cotizando" (click)="intentarCotizarAutomatico()">
+            {{ (loader || cotizando) ? 'Cotizando…' : (orderId ? '↻ Recotizar envío' : '↻ Cotizar envío') }}
+          </button>
         </div>
       </div>
 
-      <div class="text-center mt-2" *ngIf="!fleteSeleccionado">
-        <button type="button" class="btn btn-primary" [disabled]="loader || cotizando" (click)="intentarCotizarAutomatico()">
-          {{ (loader || cotizando) ? 'Cotizando...' : (orderId ? 'Recotizar envío' : 'Cotizar envío') }}
-        </button>
-      </div>
-
-      <div class="p-2 mt-2" style="background: #f7f7f7; border-radius: 10px;">
-        <p style="margin: 0;">Precio unitario: <strong>{{ _tools.monedaChange(3, 2, precioUnitario) }}</strong></p>
-        <p style="margin: 0;">Subtotal ({{ cantidad }} und): <strong>{{ _tools.monedaChange(3, 2, subtotal) }}</strong></p>
-      </div>
-
-      <!-- Transportadoras: aparecen aquí mismo, dentro del formulario, apenas queda completo -->
-      <div class="mt-3" *ngIf="cotizando || cotizaciones.length">
-        <h5>Elige transportadora</h5>
-        <div *ngIf="cotizando" class="text-center p-3">Cotizando según el peso y las dimensiones del producto...</div>
-        <div *ngFor="let c of cotizaciones" class="d-flex justify-content-between align-items-center p-2 mb-1 pointer"
-             style="border: 1px solid #ddd; border-radius: 10px;"
-             [class.border-primary]="fleteSeleccionado === c"
+      <!-- Transportadoras -->
+      <div class="dsc-section" *ngIf="cotizando || cotizaciones.length">
+        <p class="dsc-section-title">Elige transportadora</p>
+        <div *ngIf="cotizando" class="dsc-card-soft text-center" style="color:#6b7280;">
+          Cotizando según el peso y las dimensiones del producto…
+        </div>
+        <div *ngFor="let c of cotizaciones" class="dsc-transportadora" [class.dsc-transportadora-activa]="fleteSeleccionado === c"
              (click)="elegirFlete(c)">
-          <div class="d-flex align-items-center">
-            <img *ngIf="c.imgTrasp" [src]="c.imgTrasp" style="width: 40px; height: 40px; object-fit: contain; margin-right: 10px;" />
-            <div>
-              <strong>{{ c.slug }}</strong>
-              <p style="margin: 0; font-size: 12px; color: #666;">{{ c.tiempoEstimado }}</p>
-            </div>
+          <img *ngIf="c.imgTrasp" [src]="c.imgTrasp" class="dsc-transportadora-logo" alt="" />
+          <div class="dsc-transportadora-info">
+            <p class="dsc-transportadora-nombre">{{ c.slug }}</p>
+            <p class="dsc-transportadora-tiempo">{{ c.tiempoEstimado }}</p>
           </div>
-          <strong>{{ _tools.monedaChange(3, 2, c.fleteTotal) }}</strong>
+          <div class="dsc-transportadora-precio">{{ _tools.monedaChange(3, 2, c.fleteTotal) }}</div>
+          <div class="dsc-transportadora-check"></div>
+        </div>
+      </div>
+
+      <!-- Resumen de costos -->
+      <div class="dsc-section" *ngIf="!fleteSeleccionado">
+        <div class="dsc-card-soft">
+          <div class="dsc-resumen-row">
+            <span class="dsc-label-muted">Precio unitario</span>
+            <strong>{{ _tools.monedaChange(3, 2, precioUnitario) }}</strong>
+          </div>
+          <div class="dsc-resumen-row">
+            <span class="dsc-label-muted">Subtotal ({{ cantidad }} und)</span>
+            <strong>{{ _tools.monedaChange(3, 2, subtotal) }}</strong>
+          </div>
         </div>
       </div>
 
       <!-- Resumen y cobro: aparece apenas se elige una transportadora, sigue en la misma ventana -->
-      <div class="mt-3" *ngIf="fleteSeleccionado">
-        <div class="p-2" style="background: #f7f7f7; border-radius: 10px;">
-          <div class="d-flex justify-content-between"><span>Subtotal ({{ cantidad }} und)</span><strong>{{ _tools.monedaChange(3, 2, subtotal) }}</strong></div>
-          <div class="d-flex justify-content-between"><span>Flete ({{ fleteSeleccionado.slug }})</span><strong>{{ _tools.monedaChange(3, 2, fleteSeleccionado.fleteTotal) }}</strong></div>
-          <hr style="margin: 6px 0;">
-          <div class="d-flex justify-content-between"><span>Total a pagar</span><strong>{{ _tools.monedaChange(3, 2, totalAPagar) }}</strong></div>
-          <div class="d-flex justify-content-between" style="font-size: 12px;">
+      <div class="dsc-section" *ngIf="fleteSeleccionado">
+        <p class="dsc-section-title">Resumen y pago</p>
+        <div class="dsc-card-soft">
+          <div class="dsc-resumen-row">
+            <span class="dsc-label-muted">Subtotal ({{ cantidad }} und)</span>
+            <strong>{{ _tools.monedaChange(3, 2, subtotal) }}</strong>
+          </div>
+          <div class="dsc-resumen-row">
+            <span class="dsc-label-muted">Flete ({{ fleteSeleccionado.slug }})</span>
+            <strong>{{ _tools.monedaChange(3, 2, fleteSeleccionado.fleteTotal) }}</strong>
+          </div>
+          <div class="dsc-resumen-row dsc-total">
+            <span>Total a pagar</span>
+            <span>{{ _tools.monedaChange(3, 2, totalAPagar) }}</span>
+          </div>
+          <div class="dsc-saldo-row">
             <span>Saldo en tu billetera</span>
             <strong [class.text-danger]="saldoInsuficiente">{{ _tools.monedaChange(3, 2, saldo) }}</strong>
           </div>
         </div>
 
-        <div *ngIf="saldoInsuficiente && !mostrarRecarga" class="p-2 mt-2" style="background: #fdecea; border-radius: 10px;">
-          <p class="text-danger" style="margin: 0;">Saldo insuficiente para confirmar el pedido.</p>
-          <button type="button" class="btn btn-danger btn-sm mt-1" (click)="abrirRecarga()">Recargar billetera</button>
+        <div *ngIf="saldoInsuficiente && !mostrarRecarga" class="dsc-alert dsc-alert-danger" style="margin-top: 10px;">
+          <p style="margin: 0 0 8px;">Saldo insuficiente para confirmar el pedido.</p>
+          <button type="button" class="dsc-btn dsc-btn-danger dsc-btn-sm" (click)="abrirRecarga()">Recargar billetera</button>
         </div>
 
         <!-- Recarga inline, sin salir de esta ventana -->
-        <div *ngIf="mostrarRecarga" class="p-2 mt-2" style="background: #fff8e6; border-radius: 10px;">
-          <h6>Recargar billetera</h6>
-          <div class="d-flex flex-wrap">
-            <button type="button" *ngFor="let m of montosSugeridos" class="btn btn-outline-primary btn-sm m-1"
+        <div *ngIf="mostrarRecarga" class="dsc-card" style="margin-top: 10px; background:#fffbeb; border-color:#fde68a;">
+          <p class="dsc-section-title" style="margin-bottom: 8px;">Recargar billetera</p>
+          <div class="dsc-recarga-montos">
+            <button type="button" *ngFor="let m of montosSugeridos" class="dsc-btn dsc-btn-outline dsc-btn-sm"
+                    [class.dsc-btn-activo]="montoRecarga === m"
                     (click)="montoRecarga = m">{{ _tools.monedaChange(3, 2, m) }}</button>
           </div>
-          <label class="mt-1">Otro monto</label>
-          <input type="number" class="form-control form-control-sm" [(ngModel)]="montoRecarga" />
-          <div class="text-center mt-2">
-            <button type="button" class="btn btn-secondary btn-sm m-1" (click)="cerrarRecarga()">Cancelar</button>
-            <button type="button" class="btn btn-primary btn-sm m-1" [disabled]="procesandoRecarga" (click)="lanzarRecarga()">
-              {{ procesandoRecarga ? 'Abriendo...' : 'Pagar recarga' }}
+          <div class="dsc-field">
+            <label>Otro monto</label>
+            <input type="number" class="dsc-input" [(ngModel)]="montoRecarga" />
+          </div>
+          <div class="dsc-actions">
+            <button type="button" class="dsc-btn dsc-btn-secondary dsc-btn-sm" (click)="cerrarRecarga()">Cancelar</button>
+            <button type="button" class="dsc-btn dsc-btn-primary dsc-btn-sm" [disabled]="procesandoRecarga" (click)="lanzarRecarga()">
+              {{ procesandoRecarga ? 'Abriendo…' : 'Pagar recarga' }}
             </button>
           </div>
         </div>
 
-        <div class="text-center mt-3" *ngIf="!mostrarRecarga">
-          <button type="button" class="btn btn-secondary m-1" (click)="cancelarYReembolsar()" *ngIf="error">Cancelar pedido</button>
-          <button type="button" class="btn btn-primary m-1" [disabled]="saldoInsuficiente || loader" (click)="error ? reintentarGuia() : confirmarPago()">
-            {{ loader ? 'Procesando...' : (error ? 'Reintentar guía' : 'Confirmar y pagar') }}
+        <div class="dsc-actions" *ngIf="!mostrarRecarga">
+          <button type="button" class="dsc-btn dsc-btn-secondary" (click)="cancelarYReembolsar()" *ngIf="error">Cancelar pedido</button>
+          <button type="button" class="dsc-btn dsc-btn-primary" [disabled]="saldoInsuficiente || loader" (click)="error ? reintentarGuia() : confirmarPago()">
+            {{ loader ? 'Procesando…' : (error ? 'Reintentar guía' : 'Confirmar y pagar') }}
           </button>
         </div>
       </div>
 
-      <p *ngIf="error && !fleteSeleccionado" class="text-danger mt-2">{{ error }}</p>
-      <p *ngIf="loader && !orderId" class="text-muted mt-2">Creando pedido...</p>
+      <div class="dsc-alert dsc-alert-danger" *ngIf="error && !fleteSeleccionado" style="margin-top: 4px;">{{ error }}</div>
+      <p class="text-center" style="color:#6b7280; margin-top: 8px;" *ngIf="loader && !orderId">Creando pedido…</p>
 
     </ng-template>
   </div>
