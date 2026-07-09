@@ -2,6 +2,12 @@
     background: yellow;
 }
 
+// Menos espacio arriba de la foto grande y la galeria de miniaturas: Material le pone
+// bastante padding-top por defecto a mat-dialog-content.
+::ng-deep .mat-dialog-content {
+  padding-top: 4px !important;
+}
+
 .contentCenter{
     padding: 0 5%;
 }
