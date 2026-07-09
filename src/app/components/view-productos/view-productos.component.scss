@@ -41,6 +41,26 @@
 .paddinLader{
   padding: 0 5%;
 }
+.colores-select-wrapper {
+  position: relative;
+}
+
+.colores-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 26px !important;
+}
+
+.colores-select-arrow {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #666;
+}
+
 .borderBotton{
   border-bottom: 1px solid #c1c1c1;
 }
