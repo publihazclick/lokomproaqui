@@ -186,7 +186,10 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
     this.ciudadQuery = c.name;
     this.sugerencias = [];
     this.ciudadFocus = false;
-    this.onCampoChange();
+    // Elegir la ciudad es una accion completa (no texto que siga cambiando letra a letra):
+    // cotiza de inmediato, sin esperar el debounce que si tiene sentido para los campos de texto.
+    clearTimeout(this.campoDebounce);
+    this.intentarCotizarAutomatico();
   }
 
   limpiarCiudad() {
