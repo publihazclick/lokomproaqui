@@ -48,33 +48,39 @@
         <div class="dsc-form-grid">
           <div class="dsc-field">
             <label>Nombre completo</label>
-            <input class="dsc-input" [(ngModel)]="cliente.nombre" (ngModelChange)="onCampoChange()"
+            <input class="dsc-input" [ngModel]="cliente.nombre" (ngModelChange)="onNombreChange($event)"
                    [disabled]="destinatarioBloqueado || camposBloqueados" required />
           </div>
           <div class="dsc-field">
             <label>Teléfono</label>
-            <input class="dsc-input" [(ngModel)]="cliente.telefono" (ngModelChange)="onCampoChange()"
+            <input class="dsc-input" inputmode="numeric" [ngModel]="cliente.telefono" (ngModelChange)="onTelefonoChange($event)"
                    [disabled]="destinatarioBloqueado || camposBloqueados" required />
           </div>
           <div class="dsc-field dsc-field-full">
             <label>Dirección</label>
-            <input class="dsc-input" [(ngModel)]="cliente.direccion" (ngModelChange)="onCampoChange()"
+            <input class="dsc-input" [ngModel]="cliente.direccion" (ngModelChange)="onDireccionChange($event)"
                    [disabled]="destinatarioBloqueado || camposBloqueados" placeholder="Calle, número, detalles de entrega" required />
           </div>
           <div class="dsc-field">
             <label>Barrio</label>
-            <input class="dsc-input" [(ngModel)]="cliente.barrio" (ngModelChange)="onCampoChange()"
+            <input class="dsc-input" [ngModel]="cliente.barrio" (ngModelChange)="onBarrioChange($event)"
                    [disabled]="camposBloqueados" required />
           </div>
           <div class="dsc-field">
             <label>Cantidad</label>
-            <input type="number" min="1" class="dsc-input dsc-input-cantidad" [(ngModel)]="cantidad" (ngModelChange)="onCampoChange()"
-                   [disabled]="camposBloqueados" required />
+            <div class="dsc-cantidad-wrap">
+              <input type="number" min="1" class="dsc-input dsc-input-cantidad" [ngModel]="cantidad" (ngModelChange)="onCantidadChange($event)"
+                     [disabled]="camposBloqueados" required />
+              <div class="dsc-cantidad-steppers" *ngIf="!camposBloqueados">
+                <button type="button" class="dsc-stepper dsc-stepper-up" (click)="incrementarCantidad()" aria-label="Aumentar cantidad"></button>
+                <button type="button" class="dsc-stepper dsc-stepper-down" (click)="decrementarCantidad()" aria-label="Disminuir cantidad"></button>
+              </div>
+            </div>
           </div>
           <div class="dsc-field dsc-field-full dsc-ciudad-wrap">
             <label>Ciudad destino</label>
-            <input class="dsc-input" [(ngModel)]="ciudadQuery" autocomplete="off"
-                   (input)="onCiudadInput()" (focus)="ciudadFocus = true" (blur)="onCiudadBlur()"
+            <input class="dsc-input" [ngModel]="ciudadQuery" autocomplete="off"
+                   (ngModelChange)="onCiudadInput($event)" (focus)="ciudadFocus = true" (blur)="onCiudadBlur()"
                    placeholder="Ej: Medellín, Bogotá, Cali..." required />
             <p *ngIf="ciudadSeleccionada" class="dsc-ciudad-ok">
               ✓ {{ ciudadSeleccionada.name }} <a class="pointer" (click)="limpiarCiudad()">cambiar</a>

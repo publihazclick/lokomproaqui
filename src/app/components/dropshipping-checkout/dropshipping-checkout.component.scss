@@ -222,6 +222,63 @@ $dsc-radius-sm: 10px;
 
 .dsc-input-cantidad {
   width: 110px;
+  padding-right: 26px;
+}
+
+// Flechas de subir/bajar cantidad dibujadas en CSS puro (mismo criterio que el boton de
+// cerrar: nunca dependen de que una fuente de iconos termine de cargar).
+.dsc-cantidad-wrap {
+  position: relative;
+  width: 110px;
+}
+
+.dsc-cantidad-steppers {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  bottom: 1px;
+  width: 22px;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid $dsc-border;
+  border-radius: 0 $dsc-radius-sm $dsc-radius-sm 0;
+  overflow: hidden;
+}
+
+.dsc-stepper {
+  flex: 1;
+  border: none;
+  background: #f8fafc;
+  padding: 0;
+  position: relative;
+  cursor: pointer;
+}
+
+.dsc-stepper:hover {
+  background: #eef2f6;
+}
+
+.dsc-stepper-up {
+  border-bottom: 1px solid $dsc-border;
+}
+
+.dsc-stepper::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border: solid $dsc-muted;
+  border-width: 0 1.5px 1.5px 0;
+}
+
+.dsc-stepper-up::before {
+  transform: translate(-50%, -30%) rotate(-135deg);
+}
+
+.dsc-stepper-down::before {
+  transform: translate(-50%, -70%) rotate(45deg);
 }
 
 // ── Autocompletar ciudad ────────────────────────────────────────────────

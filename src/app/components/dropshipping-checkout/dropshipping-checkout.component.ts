@@ -145,6 +145,60 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
     this.campoDebounce = setTimeout(() => this.intentarCotizarAutomatico(), 500);
   }
 
+  // ── Saneamiento de campos: cada uno solo permite el tipo de caracter que le corresponde ────
+  private soloLetras(v: string): string {
+    return (v || '').replace(/[^A-Za-zÀ-ÿ\s'-]/g, '');
+  }
+
+  private soloNumeros(v: string): string {
+    return (v || '').replace(/[^0-9]/g, '');
+  }
+
+  private letrasYNumeros(v: string): string {
+    return (v || '').replace(/[^A-Za-z0-9À-ÿ\s#.,-]/g, '');
+  }
+
+  onNombreChange(v: string) {
+    this.cliente.nombre = this.soloLetras(v);
+    this.onCampoChange();
+  }
+
+  onTelefonoChange(v: string) {
+    this.cliente.telefono = this.soloNumeros(v);
+    this.onCampoChange();
+  }
+
+  onDireccionChange(v: string) {
+    this.cliente.direccion = this.letrasYNumeros(v);
+    this.onCampoChange();
+  }
+
+  onBarrioChange(v: string) {
+    this.cliente.barrio = this.letrasYNumeros(v);
+    this.onCampoChange();
+  }
+
+  // ── Cantidad: flechas para subir/bajar (el precio se recalcula solo via los getters subtotal/totalAPagar) ──
+  onCantidadChange(v: any) {
+    let n = parseInt(v, 10);
+    if (isNaN(n) || n < 1) n = 1;
+    this.cantidad = n;
+    this.onCampoChange();
+  }
+
+  incrementarCantidad() {
+    if (this.camposBloqueados) return;
+    this.cantidad = (Number(this.cantidad) || 0) + 1;
+    this.onCampoChange();
+  }
+
+  decrementarCantidad() {
+    if (this.camposBloqueados) return;
+    const nueva = (Number(this.cantidad) || 0) - 1;
+    this.cantidad = nueva < 1 ? 1 : nueva;
+    this.onCampoChange();
+  }
+
   intentarCotizarAutomatico() {
     if (this.loader || this.cotizando) return;
     if (!this.formValido()) {
@@ -161,7 +215,8 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
   }
 
   // ── Ciudad (autocompletar contra Mipaquete) ─────────────────────────────
-  onCiudadInput() {
+  onCiudadInput(v: string) {
+    this.ciudadQuery = this.soloLetras(v);
     this.ciudadSeleccionada = null;
     this.fleteSeleccionado = null;
     this.cotizaciones = [];
