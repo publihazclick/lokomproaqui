@@ -145,8 +145,13 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
     this.campoDebounce = setTimeout(() => this.intentarCotizarAutomatico(), 500);
   }
 
-  private intentarCotizarAutomatico() {
-    if (!this.formValido() || this.loader || this.cotizando) return;
+  intentarCotizarAutomatico() {
+    if (this.loader || this.cotizando) return;
+    if (!this.formValido()) {
+      this.error = 'Completa todos los campos (incluida la ciudad) para cotizar el envio';
+      return;
+    }
+    this.error = '';
     if (!this.orderId) {
       this.crearPedidoYCotizar();
     } else {

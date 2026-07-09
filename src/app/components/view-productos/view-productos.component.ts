@@ -340,10 +340,10 @@ export class ViewProductosComponent implements OnInit {
     if (!this.data.color || this.data.color === 'null') {
       return this._tools.tooast({ title: 'Primero debes seleccionar talla y color', icon: 'warning' });
     }
-    // Si el color elegido tiene mas de una talla real, la talla tambien es obligatoria (los
-    // productos de talla "Unica" no tienen selector de talla, no hace falta exigirla).
+    // Si el color elegido tiene tallas reales, la talla tambien es obligatoria (los productos
+    // sin tallas, ej. billeteras, no tienen selector de talla, no hace falta exigirla).
     const necesitaTalla = this.seleccionoColor && this.seleccionoColor.tallaSelect
-      && this.seleccionoColor.tallaSelect[0] && this.seleccionoColor.tallaSelect[0].tal_descripcion !== 'Unica';
+      && this.seleccionoColor.tallaSelect[0] && !!this.seleccionoColor.tallaSelect[0].tal_descripcion;
     if (necesitaTalla && !this.data.tallas) {
       return this._tools.tooast({ title: 'Primero debes seleccionar talla y color', icon: 'warning' });
     }
@@ -360,14 +360,15 @@ export class ViewProductosComponent implements OnInit {
       this.data.tallas = "";
       this.seleccionnTalla = {};
       this.seleccionoColor = this.data.listColor.find( row => row.talla == this.data.color );
-      // Productos de talla "Unica" (una sola medida, ej. billeteras) no muestran selector de
-      // talla para elegir (no hay nada que elegir): sin esto data.tallas/seleccionnTalla
-      // quedaban vacios para siempre y el pedido se creaba sin product_variant_id, sin
-      // descontar stock nunca.
-      if( this.seleccionoColor && this.seleccionoColor.tallaSelect && this.seleccionoColor.tallaSelect[0]
-          && this.seleccionoColor.tallaSelect[0].tal_descripcion === 'Unica' ) {
+      // Productos sin tallas reales (ej. billeteras: size_id null en product_variants, por eso
+      // tal_descripcion llega vacio, no la palabra "Unica") no tienen selector de talla para
+      // elegir. Se deja data.tallas vacio (asi es, no hay talla) pero se resuelve
+      // seleccionnTalla directo para que la cantidad en stock se muestre/valide bien; la
+      // variante real se resuelve por color en _buildOrderItems (ventas.service.ts) al
+      // pasar pedido.
+      if( this.seleccionoColor && this.seleccionoColor.tallaSelect && this.seleccionoColor.tallaSelect.length === 1
+          && !this.seleccionoColor.tallaSelect[0].tal_descripcion ) {
         this.seleccionnTalla = this.seleccionoColor.tallaSelect[0];
-        this.data.tallas = this.seleccionnTalla.tal_descripcion;
       }
       this.llenadoGaleria();
       this.seleccionTalla();

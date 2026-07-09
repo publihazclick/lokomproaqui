@@ -3,7 +3,7 @@
     <div class="col-12" style="border-radius: 20px;">
       <div class="d-flex bd-highlight" style="padding-top: 0px;">
         <div class="p-1 flex-grow-1 bd-highlight">
-          <h4 style="text-align: center;" class="fw-bold">{{ data.pro_nombre | slice: 0:12 }} ... </h4>
+          <h4 style="text-align: center;" class="fw-bold">{{ data.pro_nombre }}</h4>
         </div>
         <div class="p-1 bd-highlight">
           <button type="button" class="btn btn-danger cerrar-modal-btn" mat-dialog-close aria-label="Cerrar"></button>
@@ -62,6 +62,11 @@
                   </ng-image-slider>
                 </div>
               </div>
+              <div class="col-12 text-center" *ngIf="dataUser.id && disabledView === 'store'">
+                <button type="button" class="btn accion-producto-btn" (click)="handleAddStore()">
+                  Agregar a mi Tienda
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -106,7 +111,7 @@
                             <section class="  p-1" style="text-align: center; border-radius: 20px; ">
                               <div class="row">
                                 <div class="col-12">
-                                  <section class="paddinLader" *ngIf="seleccionoColor.tallaSelect[0].tal_descripcion !== 'Unica'">
+                                  <section class="paddinLader" *ngIf="seleccionoColor.tallaSelect[0].tal_descripcion">
                                     <label for="exampleFormControlSelect1">Tallas disponibles:</label>
                                     <div class="colores-select-wrapper">
                                       <select class="form-control form-control-sm text-align colores-select" [(ngModel)]="data.tallas"
@@ -118,7 +123,7 @@
                                       <i class="material-icons colores-select-arrow">arrow_drop_down</i>
                                     </div>
                                   </section>
-                                  <section class="paddinLader" *ngIf="seleccionoColor.tallaSelect[0].tal_descripcion === 'Unica'">
+                                  <section class="paddinLader" *ngIf="!seleccionoColor.tallaSelect[0].tal_descripcion">
                                     <label>Cantidades disponibles:</label>
                                     <p>
                                       {{ seleccionoColor.tallaSelect[0].cantidad }}
@@ -182,9 +187,6 @@
                     </div>
                     <div class="col-12 p-2" *ngIf="dataUser.id">
                       <div class="acciones-producto-row">
-                        <button type="button" class="btn accion-producto-btn" *ngIf="disabledView === 'store'" (click)="handleAddStore()">
-                          Agregar a mi Tienda
-                        </button>
                         <button type="button" class="btn accion-producto-btn" (click)="abrirDropshipping('dropshipping')">
                           Hacer Dropshipping
                         </button>

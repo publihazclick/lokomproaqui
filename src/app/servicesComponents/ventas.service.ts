@@ -93,6 +93,17 @@ export class VentasService {
         if (item.color && item.color !== 'null') q = q.eq('color', item.color);
         const { data: variant } = await q.maybeSingle();
         if (variant) variantId = variant.id;
+      } else if (item.color && item.color !== 'null') {
+        // Producto sin tallas (ej. billeteras: size_id null en product_variants, no hay nada
+        // que filtrar por talla): una sola variante por color, se resuelve directo por color.
+        const { data: variant } = await supabase
+          .from('product_variants')
+          .select('id')
+          .eq('product_id', item.articulo)
+          .eq('color', item.color)
+          .is('size_id', null)
+          .maybeSingle();
+        if (variant) variantId = variant.id;
       }
 
       items.push({

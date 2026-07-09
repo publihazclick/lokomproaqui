@@ -27,8 +27,8 @@
       <!-- Color y talla ya elegidos en la ficha del producto -->
       <div class="p-2 mb-2" style="background: #f0f7ff; border-radius: 10px;">
         <span *ngIf="colorProducto">Color: <strong>{{ colorProducto }}</strong></span>
-        <span *ngIf="colorProducto && tallaProducto && tallaProducto !== 'Unica'">&nbsp;·&nbsp;</span>
-        <span *ngIf="tallaProducto && tallaProducto !== 'Unica'">Talla: <strong>{{ tallaProducto }}</strong></span>
+        <span *ngIf="colorProducto && tallaProducto">&nbsp;·&nbsp;</span>
+        <span *ngIf="tallaProducto">Talla: <strong>{{ tallaProducto }}</strong></span>
       </div>
 
       <p class="text-muted" *ngIf="mode === 'muestra'">
@@ -78,6 +78,12 @@
           <input type="number" min="1" class="form-control form-control-sm" [(ngModel)]="cantidad" (ngModelChange)="onCampoChange()"
                  [disabled]="camposBloqueados" style="width: 100px;" required />
         </div>
+      </div>
+
+      <div class="text-center mt-2" *ngIf="!fleteSeleccionado">
+        <button type="button" class="btn btn-primary" [disabled]="loader || cotizando" (click)="intentarCotizarAutomatico()">
+          {{ (loader || cotizando) ? 'Cotizando...' : (orderId ? 'Recotizar envío' : 'Cotizar envío') }}
+        </button>
       </div>
 
       <div class="p-2 mt-2" style="background: #f7f7f7; border-radius: 10px;">
