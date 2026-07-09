@@ -85,12 +85,13 @@ export class VentasService {
     for (const item of cartItems) {
       let variantId: any = null;
       if (item.talla) {
-        const { data: variant } = await supabase
+        let q = supabase
           .from('product_variants')
           .select('id, sizes!inner(name)')
           .eq('product_id', item.articulo)
-          .eq('sizes.name', item.talla)
-          .maybeSingle();
+          .eq('sizes.name', item.talla);
+        if (item.color && item.color !== 'null') q = q.eq('color', item.color);
+        const { data: variant } = await q.maybeSingle();
         if (variant) variantId = variant.id;
       }
 

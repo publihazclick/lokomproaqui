@@ -15,6 +15,8 @@ function mapProfileToLegacyUser(profile: any, email: string, token?: string) {
     usu_apellido: profile.last_name,
     usu_email: email,
     usu_telefono: profile.phone,
+    usu_ciudad: profile.city,
+    usu_direccion: profile.address,
     usu_documento: profile.document_id,
     usu_usuario: profile.referral_code,
     usu_imagen: profile.avatar_url,

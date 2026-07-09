@@ -181,6 +181,16 @@
                         </div>
                       </div>
                     </div>
+                    <div class="col-12 p-2" style="text-align: center;" *ngIf="dataUser.id">
+                      <div class="d-flex justify-content-around flex-wrap">
+                        <button type="button" class="btn btn-primary m-1" (click)="abrirDropshipping('dropshipping')">
+                          Hacer Dropshipping
+                        </button>
+                        <button type="button" class="btn btn-primary m-1" (click)="abrirDropshipping('muestra')">
+                          Pedir muestra
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
             </div>
@@ -198,10 +208,6 @@
             Quitar de mi Tienda
           </button>
     
-          <a *ngIf="data['pro_categoria']" target="_blank" [routerLink]="[ '/listproduct/categoria', data['pro_categoria'].id ] " class="btn btn-primary m-1"> Hacer Dropshipping </a>
-
-          <button type="button" class="btn btn-primary m-1" (click)="pedirMuestra(data)"> Pedir muestra </button>
-
           <button cdkFocusInitial (click)="AgregarCart(false)" type="button" class="btn btn-primary m-1" *ngIf="(disabledView !== 'store') && (disabledView !== 'createPrice')">
             {{ titleButton }}
           </button>
@@ -226,12 +232,6 @@
         <button type="button" class="btn btn-danger" (click)="handleDroppArticle()" style="padding: 2% 50px;">
           Quitar de mi Tienda
         </button>
-      </div>
-      <div *ngIf="data['pro_categoria']">
-        <a target="_blank" [routerLink]="[ '/listproduct/categoria', data['pro_categoria'].id ] " style="padding: 2% 50px;" class="btn btn-primary"> Hacer Dropshipping </a>
-      </div>
-      <div>
-        <button type="button" class="btn btn-primary" style="padding: 2% 50px;" (click)="pedirMuestra(data)"> Pedir muestra </button>
       </div>
       <div *ngIf="(disabledView !== 'store') && (disabledView !== 'createPrice')">
         <button cdkFocusInitial (click)="AgregarCart(false)" type="button" class="btn btn-primary" style="padding: 2% 50px;">

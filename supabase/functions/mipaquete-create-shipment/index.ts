@@ -51,6 +51,13 @@ Deno.serve(async (req) => {
     const [buyerFirst, ...buyerRest] = (order.buyer_name || 'Cliente').trim().split(/\s+/);
     const sellerProfile: any = (order as any).profiles || {};
 
+    // BUG CONOCIDO SIN RESOLVER (2026-07-09): Mipaquete rechaza este campo con
+    // "paymentType is required or its format is not valid" tanto en 1/101 (numero) como
+    // en "1"/"101" (texto). Nunca se habia probado createSending con datos reales antes de
+    // hoy (todas las verificaciones previas del proyecto se quedaron en la cotizacion).
+    // Necesita la documentacion oficial de Mipaquete para saber el valor/formato correcto
+    // antes de seguir adivinando. Mientras tanto, generar guias reales falla en TODO pedido,
+    // no solo en los de dropshipping/muestra nuevos.
     const paymentType = order.order_type === 'contraentrega' ? 101 : 1;
     const valueCollection = order.order_type === 'contraentrega' ? declaredValue + (Number(order.freight_value) || 0) : 0;
 
@@ -68,11 +75,15 @@ Deno.serve(async (req) => {
       receiver: {
         name: buyerFirst || 'Cliente',
         surname: buyerRest.join(' ') || '.',
-        email: '',
+        // Mipaquete exige un email con formato valido; orders no tiene columna de email del
+        // comprador, asi que se usa un valor de respaldo generico cuando no hay uno real.
+        email: String((order as any).buyer_email || 'pedidos@lokomproaqui.com'),
         prefix: '+57',
         cellPhone: String(order.buyer_phone || ''),
         destinationAddress: String(order.buyer_address || ''),
-        nit: '',
+        // orders no tiene columna de documento del comprador; se usa el telefono como respaldo
+        // (igual que el email, Mipaquete solo exige formato valido, no que sea la cedula real).
+        nit: String((order as any).buyer_document || order.buyer_phone || '0000000000'),
         nitType: 'CC',
       },
       productInformation: {
@@ -93,8 +104,8 @@ Deno.serve(async (req) => {
       deliveryCompany: String(deliveryCompanyId),
       criteria: 'price',
       description: String(items[0]?.products?.name || 'Producto'),
-      comments: '',
-      paymentType,
+      comments: 'Pedido LokomproAqui #' + orderId,
+      paymentType: String(paymentType),
       valueCollection,
       requestPickup: !!body.request_pickup,
     };

@@ -5,6 +5,7 @@ import { TiendaComponent } from './tienda.component';
 import { PedidosComponent } from '../components/pedidos/pedidos.component';
 import { LoginComponent } from '../components/login/login.component';
 import { ViewProductosComponent } from '../components/view-productos/view-productos.component';
+import { DropshippingCheckoutComponent } from '../components/dropshipping-checkout/dropshipping-checkout.component';
 import { TerminosComponent } from '../layout/terminos/terminos.component';
 import { LoginsComponent } from '../layout/login/login.component';
 import { RegistrosComponent } from '../layout/registro/registro.component';
@@ -38,6 +39,7 @@ import { SwiperModule } from "swiper/angular";
   entryComponents:[
     LoginComponent,
     ViewProductosComponent,
+    DropshippingCheckoutComponent,
     TerminosComponent,
     TerminosGeneralesComponent,
     TratamientoDatoComponent
@@ -47,6 +49,7 @@ import { SwiperModule } from "swiper/angular";
     PedidosComponent,
     LoginComponent,
     ViewProductosComponent,
+    DropshippingCheckoutComponent,
     TerminosComponent,
     TerminosGeneralesComponent,
     TratamientoDatoComponent,

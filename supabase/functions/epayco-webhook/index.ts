@@ -40,6 +40,43 @@ Deno.serve(async (req) => {
 
     const newStatus = response === 'Aceptada' ? 2 : (response === 'Rechazada' ? 1 : 0);
 
+    // Recarga de billetera dropshipper (distinta de las recargas de celular de mas abajo):
+    // el invoice se genera como "TOPUP-<codigo>" desde WalletService.createTopup.
+    if (invoice && invoice.startsWith('TOPUP-')) {
+      const { data: existing, error: fetchErr } = await supabase
+        .from('wallet_topups')
+        .select('profile_id, amount, status')
+        .eq('code', invoice)
+        .maybeSingle();
+
+      if (fetchErr || !existing) {
+        return new Response(JSON.stringify({ error: 'Recarga no encontrada' }), { status: 404 });
+      }
+
+      // ePayco puede reintentar el mismo webhook: solo acreditar si todavia no estaba pagada.
+      const alreadyCredited = existing.status === 2;
+
+      await supabase
+        .from('wallet_topups')
+        .update({ status: newStatus, epayco_transaction_id: transactionId })
+        .eq('code', invoice);
+
+      if (newStatus === 2 && !alreadyCredited) {
+        const { error: creditErr } = await supabase.rpc('credit_wallet', {
+          p_profile_id: existing.profile_id,
+          p_wallet_type: 'dropshipper',
+          p_amount: Number(existing.amount),
+          p_order_id: null,
+          p_pct: null,
+        });
+        if (creditErr) {
+          return new Response(JSON.stringify({ error: creditErr.message }), { status: 500 });
+        }
+      }
+
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    }
+
     const { error } = await supabase
       .from('recharge_purchases')
       .update({ status: newStatus, epayco_transaction_id: transactionId })
