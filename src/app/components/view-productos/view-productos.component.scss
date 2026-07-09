@@ -8,6 +8,51 @@
   padding-top: 4px !important;
 }
 
+// Fila de acciones principales del producto (Agregar a mi Tienda / Hacer Dropshipping /
+// Pedir muestra): mismo tamaño y espaciado entre los 3, en vez de un boton grande pegado
+// abajo y dos chiquitos sueltos arriba.
+.acciones-producto-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.accion-producto-btn {
+  flex: 1 1 160px;
+  max-width: 220px;
+  background: #02a0e3;
+  color: #fff;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  border: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.accion-producto-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+  color: #fff;
+}
+
+// Boton de cerrar como icono circular en vez de texto "X" (algunos navegadores lo
+// autotraducian raro, ej. "incognita", por interpretar la letra suelta como una variable).
+.cerrar-modal-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cerrar-modal-btn i {
+  font-size: 20px;
+}
+
 .contentCenter{
     padding: 0 5%;
 }

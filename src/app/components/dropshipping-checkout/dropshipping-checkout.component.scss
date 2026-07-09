@@ -2,3 +2,19 @@
   border-color: #02a0e3 !important;
   box-shadow: 0 0 0 2px rgba(2, 160, 227, 0.15);
 }
+
+// Boton de cerrar como icono circular en vez de texto "X" (algunos navegadores lo
+// autotraducian raro, ej. "incognita", por interpretar la letra suelta como una variable).
+.cerrar-modal-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cerrar-modal-btn i {
+  font-size: 20px;
+}

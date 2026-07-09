@@ -360,7 +360,15 @@ export class ViewProductosComponent implements OnInit {
       this.data.tallas = "";
       this.seleccionnTalla = {};
       this.seleccionoColor = this.data.listColor.find( row => row.talla == this.data.color );
-      this.data.tallas = this.seleccionoColor[0];
+      // Productos de talla "Unica" (una sola medida, ej. billeteras) no muestran selector de
+      // talla para elegir (no hay nada que elegir): sin esto data.tallas/seleccionnTalla
+      // quedaban vacios para siempre y el pedido se creaba sin product_variant_id, sin
+      // descontar stock nunca.
+      if( this.seleccionoColor && this.seleccionoColor.tallaSelect && this.seleccionoColor.tallaSelect[0]
+          && this.seleccionoColor.tallaSelect[0].tal_descripcion === 'Unica' ) {
+        this.seleccionnTalla = this.seleccionoColor.tallaSelect[0];
+        this.data.tallas = this.seleccionnTalla.tal_descripcion;
+      }
       this.llenadoGaleria();
       this.seleccionTalla();
       this.cambioImgs();

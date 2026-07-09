@@ -6,8 +6,8 @@
           <h4 style="text-align: center;" class="fw-bold">{{ data.pro_nombre | slice: 0:12 }} ... </h4>
         </div>
         <div class="p-1 bd-highlight">
-          <button type="button" class="btn btn-danger" mat-dialog-close>
-            X
+          <button type="button" class="btn btn-danger cerrar-modal-btn" mat-dialog-close aria-label="Cerrar">
+            <i class="material-icons">close</i>
           </button>
         </div>
       </div>
@@ -181,12 +181,15 @@
                         </div>
                       </div>
                     </div>
-                    <div class="col-12 p-2" style="text-align: center;" *ngIf="dataUser.id">
-                      <div class="d-flex justify-content-around flex-wrap">
-                        <button type="button" class="btn btn-primary m-1" (click)="abrirDropshipping('dropshipping')">
+                    <div class="col-12 p-2" *ngIf="dataUser.id">
+                      <div class="acciones-producto-row">
+                        <button type="button" class="btn accion-producto-btn" *ngIf="disabledView === 'store'" (click)="handleAddStore()">
+                          Agregar a mi Tienda
+                        </button>
+                        <button type="button" class="btn accion-producto-btn" (click)="abrirDropshipping('dropshipping')">
                           Hacer Dropshipping
                         </button>
-                        <button type="button" class="btn btn-primary m-1" (click)="abrirDropshipping('muestra')">
+                        <button type="button" class="btn accion-producto-btn" (click)="abrirDropshipping('muestra')">
                           Pedir muestra
                         </button>
                       </div>
@@ -198,10 +201,6 @@
         <section *ngIf="breakpoint === 1" style="text-align: center;">
           <button type="button" class="btn btn-success m-1" *ngIf="disabledView === 'createPrice'" (click)="handleAddStore()">
             Actualizar Precio
-          </button>
-    
-          <button cdkFocusInitial (click)="handleAddStore()" type="button" class="btn btn-primary m-1" *ngIf="disabledView === 'store' && dataUser.id">
-            Agregar a mi Tienda
           </button>
     
           <button type="button" class="btn btn-danger m-1" *ngIf="disabledView === 'createPrice'" (click)="handleDroppArticle()">
@@ -221,11 +220,6 @@
       <div *ngIf="disabledView === 'createPrice'">
         <button type="button" class="btn btn-warning" (click)="handleAddStore()" style="padding: 2% 50px;">
           Actualizar Precio
-        </button>
-      </div>
-      <div *ngIf="disabledView === 'store' && dataUser.id">
-        <button cdkFocusInitial (click)="handleAddStore()" type="button" class="btn btn-primary" style="padding: 2% 50px;">
-          Agregar a mi Tienda
         </button>
       </div>
       <div *ngIf="disabledView === 'createPrice'">
