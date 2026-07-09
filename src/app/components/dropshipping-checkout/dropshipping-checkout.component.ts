@@ -7,9 +7,11 @@ import { environment } from 'src/environments/environment';
 
 declare var ePayco: any;
 
-// Checkout de "Hacer Dropshipping" / "Pedir muestra": crea el pedido, cotiza y genera el envio
-// real con Mipaquete, y cobra el total (producto + flete) de la billetera prepago 'dropshipper'
-// del propio usuario. Ver plan en C:\Users\MOINS\.claude\plans\linear-napping-noodle.md.
+// Checkout de "Hacer Dropshipping" / "Pedir muestra": todo en una sola ventana. Apenas el
+// formulario queda completo (todos los campos son obligatorios) se crea el pedido y se cotiza
+// el flete automaticamente (las transportadoras aparecen ahi mismo, debajo de la ciudad).
+// Cobra el total (producto + flete) de la billetera prepago 'dropshipper' del propio usuario.
+// Ver plan en C:\Users\MOINS\.claude\plans\linear-napping-noodle.md.
 @Component({
   selector: 'app-dropshipping-checkout',
   templateUrl: './dropshipping-checkout.component.html',
@@ -21,13 +23,15 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
   producto: any = {};
   dataUser: any = {};
 
-  // datos -> flete -> resumen -> exito
-  paso: string = 'datos';
+  // formulario -> exito (la cotizacion y el resumen aparecen dentro del mismo "formulario")
+  paso: string = 'formulario';
   loader: boolean = false;
   error: string = '';
 
   precioUnitario: number = 0;
   cantidad: number = 1;
+  colorProducto: string = '';
+  tallaProducto: string = '';
 
   cliente = {
     nombre: '',
@@ -42,12 +46,14 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
   ciudadFocus: boolean = false;
   ciudadSeleccionada: any = null;
   private ciudadDebounce: any = null;
+  private campoDebounce: any = null;
 
   cotizando: boolean = false;
   cotizaciones: any[] = [];
   fleteSeleccionado: any = null;
 
   orderId: any = null;
+  camposBloqueados: boolean = false;
   guiaGenerada: string = '';
 
   saldo: number = 0;
@@ -80,8 +86,13 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
       ? (this.producto.pro_vendedor || 0)
       : (this.producto.pro_uni_venta || 0);
 
+    // Color y talla ya fueron elegidos en la ficha del producto antes de abrir este formulario
+    // (validado en view-productos.component.ts antes de abrir este dialogo).
+    this.colorProducto = (this.producto.color && this.producto.color !== 'null') ? this.producto.color : '';
+    this.tallaProducto = this.producto.tallas || '';
+
     if (this.mode === 'muestra') {
-      // Pedir muestra: le llega al propio dropshipper, no a un tercero.
+      // Pedir muestra: le llega al propio dropshipper (datos de su registro), no a un tercero.
       this.destinatarioBloqueado = true;
       this.cliente.nombre = [this.dataUser.usu_nombre, this.dataUser.usu_apellido].filter(Boolean).join(' ');
       this.cliente.telefono = this.dataUser.usu_telefono || '';
@@ -94,6 +105,7 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.ciudadDebounce) clearTimeout(this.ciudadDebounce);
+    if (this.campoDebounce) clearTimeout(this.campoDebounce);
     if (this.pollingRecarga) clearInterval(this.pollingRecarga);
   }
 
@@ -116,12 +128,31 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Todos los campos son obligatorios, ninguno opcional.
   formValido(): boolean {
     return !!this.cliente.nombre.trim()
       && !!this.cliente.telefono.trim()
       && !!this.cliente.direccion.trim()
+      && !!this.cliente.barrio.trim()
       && !!this.ciudadSeleccionada
       && (Number(this.cantidad) || 0) >= 1;
+  }
+
+  // Se llama en cada cambio de cualquier campo (con debounce): apenas el formulario queda
+  // completo por primera vez, crea el pedido y cotiza automaticamente, sin boton "continuar".
+  onCampoChange() {
+    clearTimeout(this.campoDebounce);
+    this.campoDebounce = setTimeout(() => this.intentarCotizarAutomatico(), 500);
+  }
+
+  private intentarCotizarAutomatico() {
+    if (!this.formValido() || this.loader || this.cotizando) return;
+    if (!this.orderId) {
+      this.crearPedidoYCotizar();
+    } else {
+      // El pedido ya existe (solo cambio de ciudad, con los demas campos ya bloqueados): recotiza.
+      this.cotizar();
+    }
   }
 
   // ── Ciudad (autocompletar contra Mipaquete) ─────────────────────────────
@@ -150,6 +181,7 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
     this.ciudadQuery = c.name;
     this.sugerencias = [];
     this.ciudadFocus = false;
+    this.onCampoChange();
   }
 
   limpiarCiudad() {
@@ -159,17 +191,16 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
     this.cotizaciones = [];
   }
 
-  // ── Paso 1: crear el pedido y pasar a cotizar ───────────────────────────
-  continuar() {
-    if (!this.formValido() || this.loader) return;
+  // ── Crea el pedido (una sola vez) y cotiza, todo dentro del mismo formulario ────────────
+  private crearPedidoYCotizar() {
     this.loader = true;
     this.error = '';
 
     this._ventas.create2({
       usu_clave_int: this.dataUser.id,
       pro_clave_int: this.producto.id,
-      ven_tallas: this.producto.tallas || null,
-      ven_observacion: (this.producto.color && this.producto.color !== 'null') ? this.producto.color : null,
+      ven_tallas: this.tallaProducto || null,
+      ven_observacion: this.colorProducto || null,
       ven_cantidad: this.cantidad,
       ven_precio: this.precioUnitario,
       ven_total: this.subtotal,
@@ -178,7 +209,7 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
       ven_telefono_cliente: this.cliente.telefono.trim(),
       ven_direccion_cliente: this.cliente.direccion.trim(),
       ven_ciudad: this.ciudadSeleccionada.name,
-      ven_barrio: this.cliente.barrio.trim() || null,
+      ven_barrio: this.cliente.barrio.trim(),
       ven_tipo: this.mode,
     }).subscribe((res: any) => {
       this.loader = false;
@@ -187,6 +218,9 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
         return;
       }
       this.orderId = res.id;
+      // Ya se creo el pedido con estos datos (y ya descontamos stock): se bloquean los campos
+      // para no desincronizar el pedido real con lo que se ve en el formulario.
+      this.camposBloqueados = true;
       this.cotizar();
     }, () => {
       this.loader = false;
@@ -194,15 +228,16 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ── Paso 2: cotizar flete para el pedido ya creado ──────────────────────
+  // Cotiza (o recotiza) el flete para el pedido ya creado, basado en el peso/dimensiones reales
+  // del producto (lo calcula la funcion mipaquete-quote a partir de order_items/products).
   cotizar() {
     if (!this.orderId || !this.ciudadSeleccionada) return;
     this.cotizando = true;
     this.error = '';
+    this.fleteSeleccionado = null;
     this._ventas.getFleteValor({ id: this.orderId, codeCiudad: this.ciudadSeleccionada.code }).subscribe((res: any) => {
       this.cotizando = false;
       this.cotizaciones = res.data || [];
-      this.paso = 'flete';
       if (!this.cotizaciones.length) {
         this.error = 'No hay transportadoras disponibles para esa ciudad';
       }
@@ -214,13 +249,12 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
 
   elegirFlete(c: any) {
     this.fleteSeleccionado = c;
-    this.paso = 'resumen';
     this.refrescarSaldo();
   }
 
-  // ── Paso 3: cobrar y generar la guia ─────────────────────────────────────
+  // ── Cobrar y generar la guia ─────────────────────────────────────────────
   confirmarPago() {
-    if (this.loader) return;
+    if (this.loader || !this.fleteSeleccionado) return;
     if (this.saldoInsuficiente) { this.abrirRecarga(); return; }
 
     this.loader = true;
@@ -284,7 +318,7 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ── Recarga de billetera (inline, via ePayco) ───────────────────────────
+  // ── Recarga de billetera (inline, via ePayco, sin salir de esta ventana) ─────────────────
   abrirRecarga() {
     this.error = '';
     this.mostrarRecarga = true;

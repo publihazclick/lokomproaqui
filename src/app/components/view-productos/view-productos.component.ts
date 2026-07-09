@@ -337,6 +337,16 @@ export class ViewProductosComponent implements OnInit {
   // el envio con Mipaquete). Reemplaza al viejo pedirMuestra() que solo abria WhatsApp.
   abrirDropshipping(mode: 'dropshipping' | 'muestra') {
     if (!this.dataUser.id) return this._tools.tooast({ title: 'Debes iniciar sesión para continuar', icon: 'warning' });
+    if (!this.data.color || this.data.color === 'null') {
+      return this._tools.tooast({ title: 'Primero debes seleccionar talla y color', icon: 'warning' });
+    }
+    // Si el color elegido tiene mas de una talla real, la talla tambien es obligatoria (los
+    // productos de talla "Unica" no tienen selector de talla, no hace falta exigirla).
+    const necesitaTalla = this.seleccionoColor && this.seleccionoColor.tallaSelect
+      && this.seleccionoColor.tallaSelect[0] && this.seleccionoColor.tallaSelect[0].tal_descripcion !== 'Unica';
+    if (necesitaTalla && !this.data.tallas) {
+      return this._tools.tooast({ title: 'Primero debes seleccionar talla y color', icon: 'warning' });
+    }
     this.dialog.open(DropshippingCheckoutComponent, {
       width: this.breakpoint === 6 ? '60%' : '95%',
       data: { producto: this.data, dataUser: this.dataUser, mode }
