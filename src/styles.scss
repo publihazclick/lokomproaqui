@@ -1,4 +1,8 @@
-$material-icons-font-path: '~material-icons/iconfont/';
+// Ruta estable (no hasheada, en /assets) en vez de la del paquete npm: asi el <link rel="preload">
+// de index.html apunta siempre a la misma URL real que termina usando el @font-face, y el
+// navegador empieza a descargar la fuente desde el primer instante en vez de esperar a que el
+// CSS la pida (evita el parpadeo "aparece el nombre del icono como texto y desaparece").
+$material-icons-font-path: '/assets/fonts/material-icons/';
 $material-icons-font-display: swap;
 @import 'material-icons/iconfont/filled';
 @import "~swiper/swiper-bundle";

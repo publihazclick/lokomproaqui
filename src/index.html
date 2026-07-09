@@ -12,6 +12,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500&family=Maven+Pro:wght@500&display=swap" rel="stylesheet">
+
+  <!-- Precarga la fuente de los iconos (material-icons) desde el primer instante, para que no
+       se vea el nombre del icono como texto ni un parpadeo mientras la fuente carga (le pasaba
+       en varios apartados del menu porque la fuente solo se pedia cuando el CSS la necesitaba). -->
+  <link rel="preload" as="font" type="font/woff2" href="./assets/fonts/material-icons/material-icons.woff2" crossorigin>
   <script type="text/javascript" src="https://checkout.epayco.co/checkout.js" defer></script>
 
   <!--<link rel="preconnect" href="https://fonts.googleapis.com">
