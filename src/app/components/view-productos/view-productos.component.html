@@ -111,7 +111,7 @@
                             <section class="  p-1" style="text-align: center; border-radius: 20px; ">
                               <div class="row">
                                 <div class="col-12">
-                                  <section class="paddinLader" *ngIf="seleccionoColor.tallaSelect[0].tal_descripcion">
+                                  <section class="paddinLader" *ngIf="data.color && data.color !== 'null' && seleccionoColor.tallaSelect[0].tal_descripcion">
                                     <label for="exampleFormControlSelect1">Tallas disponibles:</label>
                                     <div class="colores-select-wrapper">
                                       <select class="form-control form-control-sm text-align colores-select" [(ngModel)]="data.tallas"
@@ -123,11 +123,14 @@
                                       <i class="material-icons colores-select-arrow">arrow_drop_down</i>
                                     </div>
                                   </section>
-                                  <section class="paddinLader" *ngIf="!seleccionoColor.tallaSelect[0].tal_descripcion">
+                                  <section class="paddinLader" *ngIf="data.color && data.color !== 'null' && !seleccionoColor.tallaSelect[0].tal_descripcion">
                                     <label>Cantidades disponibles:</label>
                                     <p>
                                       {{ seleccionoColor.tallaSelect[0].cantidad }}
                                     </p>
+                                  </section>
+                                  <section class="paddinLader" *ngIf="!data.color || data.color === 'null'">
+                                    <label>Elige un color primero</label>
                                   </section>
                                 </div>
                                 <div class="col-12" *ngIf="!data.coinShop">
