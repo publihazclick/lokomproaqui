@@ -110,12 +110,15 @@
                                 <div class="col-12">
                                   <section class="paddinLader" *ngIf="seleccionoColor.tallaSelect[0].tal_descripcion !== 'Unica'">
                                     <label for="exampleFormControlSelect1">Tallas disponibles:</label>
-                                    <select class="form-control form-control-sm text-align" [(ngModel)]="data.tallas"
-                                        (change)="seleccionTalla()" [disabled]="!data.color">
-                                        <option [value]="item.tal_descripcion" *ngFor="let item of seleccionoColor.tallaSelect">
-                                            Talla: {{
-                                            item.tal_descripcion }} UND: {{ item.cantidad }}</option>
-                                    </select>
+                                    <div class="colores-select-wrapper">
+                                      <select class="form-control form-control-sm text-align colores-select" [(ngModel)]="data.tallas"
+                                          (change)="seleccionTalla()" [disabled]="!data.color">
+                                          <option [value]="item.tal_descripcion" *ngFor="let item of seleccionoColor.tallaSelect">
+                                              Talla: {{
+                                              item.tal_descripcion }} UND: {{ item.cantidad }}</option>
+                                      </select>
+                                      <i class="material-icons colores-select-arrow">arrow_drop_down</i>
+                                    </div>
                                   </section>
                                   <section class="paddinLader" *ngIf="seleccionoColor.tallaSelect[0].tal_descripcion === 'Unica'">
                                     <p>
