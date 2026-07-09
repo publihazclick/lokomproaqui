@@ -332,6 +332,24 @@ export class ViewProductosComponent implements OnInit {
     window.open(this.urlwhat);
   }
 
+  pedirMuestra(obj: any) {
+    let cerialNumero: any = '';
+    let numeroSplit: any;
+    let cabeza: any = this.dataUser.cabeza;
+    const url = this.shareUrl();
+    if (cabeza) {
+      numeroSplit = _.split(cabeza.usu_telefono, "+57", 2);
+      if (numeroSplit[1]) cabeza.usu_telefono = numeroSplit[1];
+      if (cabeza.usu_perfil == 3) cerialNumero = (cabeza.usu_indicativo || '57') + (cabeza.usu_telefono || this._tools.dataConfig.clInformacion );
+      else cerialNumero = "57" + this._tools.dataConfig.clInformacion;
+    } else cerialNumero = "57" + this._tools.dataConfig.clInformacion;
+    if (this.userId.id) this.urlwhat = `https://wa.me/${this.userId.usu_indicativo || 57}${((_.split(this.userId.usu_telefono, "+57", 2))[1]) || this._tools.dataConfig.clInformacion }?text=Hola, quiero pedir una muestra del producto ${obj.pro_nombre} codigo: ${obj.pro_codigo} url ==> ${ url }`;
+    else {
+      this.urlwhat = `https://wa.me/${cerialNumero}?text=Hola, quiero pedir una muestra del producto ${obj.pro_nombre} codigo: ${obj.pro_codigo} url ==> ${ url }`;
+    }
+    window.open(this.urlwhat);
+  }
+
   colorSeleccionado(){
     try {
       if( !this.data.color ) return this.procesoNext();
