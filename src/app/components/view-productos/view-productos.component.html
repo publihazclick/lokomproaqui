@@ -108,13 +108,7 @@
                             <section class="  p-1" style="text-align: center; border-radius: 20px; ">
                               <div class="row">
                                 <div class="col-12">
-                                  <section class="paddinLader" *ngIf="!data.color && data.listColor && data.listColor.length > 1">
-                                    <label for="exampleFormControlSelect1">Tallas disponibles:</label>
-                                    <select class="form-control form-control-sm text-align" disabled>
-                                        <option value="null">Todos</option>
-                                    </select>
-                                  </section>
-                                  <section class="paddinLader" *ngIf="data.color && seleccionoColor.tallaSelect[0].tal_descripcion !== 'Unica'">
+                                  <section class="paddinLader" *ngIf="seleccionoColor.tallaSelect[0].tal_descripcion !== 'Unica'">
                                     <label for="exampleFormControlSelect1">Tallas disponibles:</label>
                                     <select class="form-control form-control-sm text-align" [(ngModel)]="data.tallas"
                                         (change)="seleccionTalla()" [disabled]="!data.color">
@@ -123,7 +117,7 @@
                                             item.tal_descripcion }} UND: {{ item.cantidad }}</option>
                                     </select>
                                   </section>
-                                  <section class="paddinLader" *ngIf="(data.color || !data.listColor || data.listColor.length <= 1) && seleccionoColor.tallaSelect[0].tal_descripcion === 'Unica'">
+                                  <section class="paddinLader" *ngIf="seleccionoColor.tallaSelect[0].tal_descripcion === 'Unica'">
                                     <p>
                                       Cantidades {{ seleccionoColor.tallaSelect[0].cantidad }}
                                     </p>

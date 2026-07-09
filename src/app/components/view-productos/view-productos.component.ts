@@ -100,6 +100,9 @@ export class ViewProductosComponent implements OnInit {
       if( this.data.view ) this.disabledView = this.data.view;
       if( this.dataUser.id ) this.validPriceUser();
       this.galeria = _.clone( this.data.listaGaleria || [] );
+      // Que se vea "Todos" seleccionado de entrada en "Colores disponibles" (el select ya tiene
+      // esa opcion con value="null"), en vez de arrancar en blanco.
+      if( this.data.listColor && this.data.listColor.length ) this.data.color = 'null';
       this.data.cantidadAdquirir = 1;
       this.urlFoto = this.data.foto;
       this.data.encuanto = this.data.coinShop == true ? ( this.data.pro_vendedorCompra || this.data.pro_uni_venta ) : this.data.pro_uni_venta;
@@ -217,7 +220,7 @@ export class ViewProductosComponent implements OnInit {
 
   async AgregarCart( opt:any ){
     if( this.disabledPr == false ) return this._tools.tooast({ title: "lo sentimos pero no se puedes vender este producto en este precio", icon: "warning" });
-    if(  !this.data.color ) return this._tools.tooast({ title: "Lo sentimos tienes que seleccionar un color", icon: "warning" });
+    if(  !this.data.color || this.data.color === 'null' ) return this._tools.tooast({ title: "Lo sentimos tienes que seleccionar un color", icon: "warning" });
     if(  this.seleccionnTalla.cantidad < this.data.cantidadAdquirir ) return this._tools.tooast({ title: "Lo sentimos en estos momento no tenemos en stock", icon: "warning" });
     if (!this.data.tallas) {
       try {
