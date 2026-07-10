@@ -51,32 +51,35 @@ Deno.serve(async (req) => {
     const [buyerFirst, ...buyerRest] = (order.buyer_name || 'Cliente').trim().split(/\s+/);
     const sellerProfile: any = (order as any).profiles || {};
 
-    // BUG CONOCIDO SIN RESOLVER (2026-07-09): Mipaquete rechaza este campo con
-    // "paymentType is required or its format is not valid" tanto en 1/101 (numero) como
-    // en "1"/"101" (texto). Nunca se habia probado createSending con datos reales antes de
-    // hoy (todas las verificaciones previas del proyecto se quedaron en la cotizacion).
-    // Necesita la documentacion oficial de Mipaquete para saber el valor/formato correcto
-    // antes de seguir adivinando. Mientras tanto, generar guias reales falla en TODO pedido,
-    // no solo en los de dropshipping/muestra nuevos.
+    // BUG RESUELTO (2026-07-10): la coleccion Postman OFICIAL de Mipaquete
+    // (https://api.documentacion.mipaquete.com/, request "createSending" con ejemplo real
+    // verificado, respuesta 200 "Envio generado correctamente") revela dos errores reales:
+    // 1. paymentType debe mandarse como NUMERO, no como string (el codigo viejo hacia
+    //    String(paymentType), Mipaquete lo rechazaba con "format is not valid").
+    // 2. Los valores validos son 101 ("pago con saldo de mipaquete") y 102 ("descontando el
+    //    envio del recaudo realizado, aplica para pago contra entrega") — el codigo viejo usaba
+    //    1/101, y 1 nunca fue un valor valido documentado.
+    // Ademas faltaba un campo raiz obligatorio segun el ejemplo oficial: adminTransactionData.saleValue
+    // ("valor de venta del producto a enviar, aplica para pago contra entrega, si no se coloca 0").
     //
-    // Recaudo contra entrega (2026-07-10): en pedidos normales 'contraentrega' nadie prepago
-    // nada, asi que el mensajero recauda producto+flete completo. En 'dropshipping'/'muestra'
-    // el dropshipper ya prepago el flete desde su billetera (ver dropshipping-checkout), asi
-    // que aqui el mensajero solo debe recaudar el valor del producto (order.price_total, el
-    // mismo subtotal ya mostrado en el checkout) para no cobrar el flete dos veces.
-    // Envio incluido/aparte (2026-07-10, solo aplica a 'dropshipping'): el vendedor elige si el
-    // precio que escribio en el checkout ya incluye el flete o no. Si NO lo incluye, hay que
-    // sumarle el flete al recaudo para que el mensajero cobre el valor total real en destino.
-    // 'muestra' no tiene este toggle (shipping_included siempre true ahi), se comporta igual que
-    // antes de este cambio.
+    // Recaudo contra entrega: en pedidos normales 'contraentrega' nadie prepago nada, asi que el
+    // mensajero recauda producto+flete completo (paymentType 102, Mipaquete descuenta el flete
+    // del recaudo antes de liquidar). En 'dropshipping'/'muestra' el dropshipper ya prepago el
+    // flete desde su billetera (ver dropshipping-checkout), asi que aqui Mipaquete cobra el flete
+    // de nuestro saldo propio en Mipaquete (paymentType 101) y el mensajero solo recauda el valor
+    // del producto (mas el flete si el vendedor eligio "envio aparte", ver shipping_included).
     const isMarketplaceCod = order.order_type === 'contraentrega';
     const isSelfFundedFreight = order.order_type === 'dropshipping' || order.order_type === 'muestra';
-    const paymentType = (isMarketplaceCod || isSelfFundedFreight) ? 101 : 1;
+    const paymentType = isMarketplaceCod ? 102 : 101;
     const selfFundedCollection = (Number(order.price_total) || declaredValue)
       + (order.order_type === 'dropshipping' && order.shipping_included === false ? (Number(order.freight_value) || 0) : 0);
     const valueCollection = isMarketplaceCod
       ? declaredValue + (Number(order.freight_value) || 0)
       : (isSelfFundedFreight ? selfFundedCollection : 0);
+    // saleValue: "aplica para servicio de pago contra entrega, si no se coloca 0" — en la
+    // practica, cualquier caso donde SI hay recaudo (valueCollection > 0) necesita el valor de
+    // venta real para la liquidacion de Mipaquete.
+    const saleValue = valueCollection > 0 ? (isMarketplaceCod ? declaredValue : selfFundedCollection) : 0;
 
     const sendingPayload = {
       sender: {
@@ -122,9 +125,12 @@ Deno.serve(async (req) => {
       criteria: 'price',
       description: String(items[0]?.products?.name || 'Producto'),
       comments: 'Pedido LokomproAqui #' + orderId,
-      paymentType: String(paymentType),
+      paymentType,
       valueCollection,
       requestPickup: !!body.request_pickup,
+      adminTransactionData: {
+        saleValue,
+      },
     };
 
     const apiKey = Deno.env.get('MIPAQUETE_API_KEY') ?? '';
