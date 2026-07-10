@@ -49,7 +49,15 @@ const routes: Routes = [
       path: '',
       loadChildren: () => import('./../dashboard-config/config.module').then(m => m.ConfigModule)
     }]
-  }
+  },
+  // Comodin real (2026-07-10): cualquier URL que no matchee NINGUNA ruta de arriba (mal escrita,
+  // vieja, borrada) cae aca en vez de pantalla en blanco. Va DESPUES de 'config' a proposito: el
+  // primer bloque (path:'') no tiene pathMatch:'full', asi que consume 0 segmentos y prueba sus
+  // hijos contra la URL completa restante — si un comodin viviera ADENTRO de esos hijos,
+  // interceptaria tambien /config/** antes de que Angular llegue siquiera a probar la ruta
+  // 'config' de aqui abajo, rompiendo todo el panel admin. Como entrada de nivel raiz aparte, solo
+  // se prueba cuando ni el arbol de TiendaComponent ni 'config' matchearon nada.
+  { path: '**', redirectTo: '/info' },
 ];
 
 @NgModule({
