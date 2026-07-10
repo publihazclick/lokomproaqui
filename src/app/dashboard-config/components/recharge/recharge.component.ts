@@ -17,6 +17,7 @@ export class RechargeComponent implements OnInit {
   loader:boolean = false;
   disabedPn:boolean = false;
   selectedId:any = null;
+  selectedItem:any = null;
   dataUser:any = {};
   keyEpayco = environment.keyEpayco;
   estadoPruebaPagos = environment.estadoPruebaPagos;
@@ -46,8 +47,13 @@ export class RechargeComponent implements OnInit {
     });
   }
 
-  handleActivatePackage( item:any ){
+  selectValue( item:any ){
     if( this.disabedPn ) return false;
+    this.selectedItem = item;
+  }
+
+  handleActivatePackage( item:any ){
+    if( this.disabedPn || !item ) return false;
     this.disabedPn = true;
     this.selectedId = item.id;
     let data = {

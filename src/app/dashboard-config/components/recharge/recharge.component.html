@@ -25,10 +25,8 @@
             Por ahora no hay valores de recarga disponibles.
           </div>
 
-          <div class="bank-cards-grid" *ngIf="!loader && listRecharge.length > 0">
-            <div class="bank-card" [ngClass]="'bank-card--' + (i % 4)"
-              [class.bank-card--busy]="disabedPn && selectedId === item.id"
-              *ngFor="let item of listRecharge; let i = index" (click)="handleActivatePackage( item )">
+          <div class="bank-card-wrapper" *ngIf="!loader && listRecharge.length > 0">
+            <div class="bank-card" [class.bank-card--busy]="disabedPn">
 
               <div class="bank-card__glow"></div>
 
@@ -39,8 +37,6 @@
 
               <div class="bank-card__chip"></div>
 
-              <div class="bank-card__amount">{{ _tools.monedaChange( 3,2, ( item.precio || 0 ) ) }}</div>
-
               <div class="bank-card__number">
                 <span>&bull;&bull;&bull;&bull;</span>
                 <span>&bull;&bull;&bull;&bull;</span>
@@ -48,17 +44,32 @@
                 <span>SALDO</span>
               </div>
 
+              <div class="bank-card__amount" [class.bank-card__amount--placeholder]="!selectedItem">
+                {{ selectedItem ? _tools.monedaChange( 3,2, ( selectedItem.precio || 0 ) ) : 'Elige un valor' }}
+              </div>
+
+              <div class="bank-card__values">
+                <button type="button" class="bank-card__value"
+                  [class.bank-card__value--active]="selectedItem?.id === item.id"
+                  [disabled]="disabedPn"
+                  *ngFor="let item of listRecharge" (click)="selectValue( item )">
+                  {{ _tools.monedaChange( 3,2, ( item.precio || 0 ) ) }}
+                </button>
+              </div>
+
               <div class="bank-card__bottom">
                 <div class="bank-card__holder">
                   <small>TITULAR</small>
                   <span>{{ dataUser.name || 'MI CUENTA' }} {{ dataUser.lastname }}</span>
                 </div>
-                <div class="bank-card__cta">
-                  <ng-container *ngIf="!(disabedPn && selectedId === item.id); else busy">
+                <button type="button" class="bank-card__cta"
+                  [disabled]="!selectedItem || disabedPn"
+                  (click)="handleActivatePackage( selectedItem )">
+                  <ng-container *ngIf="!disabedPn; else busy">
                     Recargar <i class="material-icons">arrow_forward</i>
                   </ng-container>
                   <ng-template #busy><span class="bank-card__spinner"></span></ng-template>
-                </div>
+                </button>
               </div>
 
             </div>
