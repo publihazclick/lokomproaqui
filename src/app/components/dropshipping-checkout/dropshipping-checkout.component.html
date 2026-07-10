@@ -156,20 +156,22 @@
 
         <div *ngIf="saldoInsuficiente && !mostrarRecarga" class="dsc-alert dsc-alert-danger" style="margin-top: 10px;">
           <p style="margin: 0 0 8px;">Saldo insuficiente para confirmar el pedido.</p>
-          <button type="button" class="dsc-btn dsc-btn-danger dsc-btn-sm" (click)="abrirRecarga()">Recargar billetera</button>
+          <button type="button" class="dsc-btn dsc-btn-danger dsc-btn-sm" (click)="abrirRecarga()">Recargar Billetera de fletes</button>
         </div>
 
         <!-- Recarga inline, sin salir de esta ventana -->
         <div *ngIf="mostrarRecarga" class="dsc-card" style="margin-top: 10px; background:#fffbeb; border-color:#fde68a;">
-          <p class="dsc-section-title" style="margin-bottom: 8px;">Recargar billetera</p>
-          <div class="dsc-recarga-montos">
-            <button type="button" *ngFor="let m of montosSugeridos" class="dsc-btn dsc-btn-outline dsc-btn-sm"
-                    [class.dsc-btn-activo]="montoRecarga === m"
-                    (click)="montoRecarga = m">{{ _tools.monedaChange(3, 2, m) }}</button>
-          </div>
-          <div class="dsc-field">
-            <label>Otro monto</label>
-            <input type="number" class="dsc-input" [(ngModel)]="montoRecarga" />
+          <p class="dsc-section-title" style="margin-bottom: 8px;">Recargar Billetera de fletes</p>
+          <div class="dsc-recarga-montos-card">
+            <div class="dsc-recarga-montos-grid">
+              <button type="button" *ngFor="let m of montosSugeridos" class="dsc-monto-tile"
+                      [class.dsc-monto-tile-activo]="montoRecarga === m"
+                      (click)="montoRecarga = m">{{ _tools.monedaChange(3, 2, m) }}</button>
+            </div>
+            <div class="dsc-field" style="margin-top: 10px;">
+              <label>Otro monto</label>
+              <input type="number" class="dsc-input" [(ngModel)]="montoRecarga" />
+            </div>
           </div>
           <div class="dsc-actions">
             <button type="button" class="dsc-btn dsc-btn-secondary dsc-btn-sm" (click)="cerrarRecarga()">Cancelar</button>

@@ -533,12 +533,45 @@ $dsc-radius-sm: 10px;
   margin-top: 16px;
 }
 
-// ── Recarga inline ──────────────────────────────────────────────────────
-.dsc-recarga-montos {
-  display: flex;
-  flex-wrap: wrap;
+// ── Recarga inline: una sola tarjeta con todos los montos adentro ───────
+.dsc-recarga-montos-card {
+  background: #fff;
+  border: 1px solid $dsc-border;
+  border-radius: $dsc-radius;
+  padding: 14px;
+}
+
+.dsc-recarga-montos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  margin-bottom: 10px;
+
+  @media (max-width: 420px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.dsc-monto-tile {
+  border: 1.5px solid $dsc-border;
+  border-radius: $dsc-radius-sm;
+  padding: 10px 6px;
+  background: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  color: $dsc-text;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.dsc-monto-tile:hover {
+  border-color: darken($dsc-border, 15%);
+}
+
+.dsc-monto-tile-activo {
+  border-color: $dsc-primary;
+  background: rgba(2, 160, 227, 0.08);
+  color: $dsc-primary-dark;
 }
 
 // ── Pantalla de exito ───────────────────────────────────────────────────
