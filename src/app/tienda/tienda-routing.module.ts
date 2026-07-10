@@ -12,6 +12,7 @@ import { InfoSupplierComponent } from '../layout/info-supplier/info-supplier.com
 import { PortalComponent } from '../layout/portal/portal.component';
 import { SignUpComponent } from '../layout/sign-up/sign-up.component';
 import { ListArticleComponent } from '../components/list-article/list-article.component';
+import { GuestGuard } from '../services/guest.guard';
 
 const routes: Routes = [
   {
@@ -19,14 +20,14 @@ const routes: Routes = [
     component: TiendaComponent,
     children: [
       { path: '', redirectTo: '/info', pathMatch: 'full' },
-      { path: 'realizarventa', component: ArticuloComponent },
-      { path: 'realizarventa/:categoria', component: ArticuloComponent },
-      { path: 'pedidos', component: ArticuloComponent },
-      { path: 'pedidos/:categoria', component: ArticuloComponent },
-      { path: 'articulo', component: PedidosComponent },
+      { path: 'realizarventa', component: ArticuloComponent, canActivate: [GuestGuard] },
+      { path: 'realizarventa/:categoria', component: ArticuloComponent, canActivate: [GuestGuard] },
+      { path: 'pedidos', component: ArticuloComponent, canActivate: [GuestGuard] },
+      { path: 'pedidos/:categoria', component: ArticuloComponent, canActivate: [GuestGuard] },
+      { path: 'articulo', component: PedidosComponent, canActivate: [GuestGuard] },
       //{ path: ':id', component: ArticuloComponent },
-      { path: 'productos/:id', component: ProductoViewComponent },
-      { path: 'testimonio', component: TestimoniosComponent },
+      { path: 'productos/:id', component: ProductoViewComponent, canActivate: [GuestGuard] },
+      { path: 'testimonio', component: TestimoniosComponent, canActivate: [GuestGuard] },
       { path: 'login', component: LoginsComponent },
       { path: 'login/:id/:cel', component: LoginsComponent },
       { path: 'qz7f3f0888', component: LoginsComponent },
@@ -37,9 +38,9 @@ const routes: Routes = [
       { path: 'info', component: InfoComponent },
       { path: 'infoSupplier', component: InfoSupplierComponent },
       { path: 'portal', component: PortalComponent },
-      {path: 'listproduct/:idStore', component: ListArticleComponent },
-      {path: 'listproduct/categoria/:idCategoria', component: ListArticleComponent },
-      {path: 'listproduct', component: ListArticleComponent },
+      {path: 'listproduct/:idStore', component: ListArticleComponent, canActivate: [GuestGuard] },
+      {path: 'listproduct/categoria/:idCategoria', component: ListArticleComponent, canActivate: [GuestGuard] },
+      {path: 'listproduct', component: ListArticleComponent, canActivate: [GuestGuard] },
     ]
   },
   {
