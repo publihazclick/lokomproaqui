@@ -36,8 +36,11 @@
   <link rel="stylesheet" type="text/css" href="./assets/css/util.css">
   <link rel="stylesheet" type="text/css" href="./assets/css/main.css">
 
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <!-- defer: antes eran sincronos y bloqueaban todo el render de la pagina hasta que
+       terminaran de descargar desde el CDN externo (si el CDN respondia lento, la
+       pagina se quedaba en blanco/"sin cargar" para el usuario). -->
+  <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
   <!--<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>-->
 
 
@@ -102,14 +105,14 @@
   <noscript>Please enable JavaScript to continue using this application.</noscript>
   <!-- SCROLL TOP BUTTON -->
   <a class="scrollToTop" style="background: #819bff;" href="#"><i class="fa fa-chevron-up"></i></a>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
   <!--<script src="./assets/js/bootstrap.js"></script>-->
   <!-- Product view slider -->
-  <script type="text/javascript" src="./assets/js/jquery.simpleGallery.js"></script>
-  <script type="text/javascript" src="./assets/js/jquery.simpleLens.js"></script>
+  <script defer type="text/javascript" src="./assets/js/jquery.simpleGallery.js"></script>
+  <script defer type="text/javascript" src="./assets/js/jquery.simpleLens.js"></script>
   <!-- slick slider -->
-  <script type="text/javascript" src="./assets/js/slick.js"></script>
-  <script src="./assets/js/custom.js"></script>
+  <script defer type="text/javascript" src="./assets/js/slick.js"></script>
+  <script defer src="./assets/js/custom.js"></script>
 </body>
 
 </html>
