@@ -308,6 +308,7 @@ export class VentasService {
 
       const mapped = (resp.cotizaciones || []).map((c: any) => ({
         slug: c.delivery_company_id, // se usa tal cual en createFelte, no es el nombre
+        nombre: c.delivery_company_name || c.delivery_company_id,
         imgTrasp: c.logo_url,
         fleteSin: c.flete_costo,
         fleteValor: c.flete_costo,

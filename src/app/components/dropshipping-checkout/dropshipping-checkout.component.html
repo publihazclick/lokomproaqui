@@ -110,7 +110,7 @@
              (click)="elegirFlete(c)">
           <img *ngIf="c.imgTrasp" [src]="c.imgTrasp" class="dsc-transportadora-logo" alt="" />
           <div class="dsc-transportadora-info">
-            <p class="dsc-transportadora-nombre">{{ c.slug }}</p>
+            <p class="dsc-transportadora-nombre">{{ c.nombre }}</p>
             <p class="dsc-transportadora-tiempo">{{ c.tiempoEstimado }}</p>
           </div>
           <div class="dsc-transportadora-precio">{{ _tools.monedaChange(3, 2, c.fleteTotal) }}</div>
@@ -126,7 +126,7 @@
             <strong>{{ _tools.monedaChange(3, 2, precioUnitario) }}</strong>
           </div>
           <div class="dsc-resumen-row">
-            <span class="dsc-label-muted">Subtotal ({{ cantidad }} und)</span>
+            <span class="dsc-label-muted">Valor producto ({{ cantidad }} und)</span>
             <strong>{{ _tools.monedaChange(3, 2, subtotal) }}</strong>
           </div>
         </div>
@@ -137,11 +137,11 @@
         <p class="dsc-section-title">Resumen y pago</p>
         <div class="dsc-card-soft">
           <div class="dsc-resumen-row">
-            <span class="dsc-label-muted">Subtotal ({{ cantidad }} und)</span>
+            <span class="dsc-label-muted">Valor producto ({{ cantidad }} und)</span>
             <strong>{{ _tools.monedaChange(3, 2, subtotal) }}</strong>
           </div>
           <div class="dsc-resumen-row">
-            <span class="dsc-label-muted">Flete ({{ fleteSeleccionado.slug }})</span>
+            <span class="dsc-label-muted">Flete ({{ fleteSeleccionado.nombre }})</span>
             <strong>{{ _tools.monedaChange(3, 2, fleteSeleccionado.fleteTotal) }}</strong>
           </div>
           <div class="dsc-resumen-row dsc-total">
