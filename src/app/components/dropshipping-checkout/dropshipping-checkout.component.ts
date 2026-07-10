@@ -380,6 +380,9 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
   elegirFlete(c: any) {
     this.fleteSeleccionado = c;
     this.refrescarSaldo();
+    // Persiste freight_value/carrier de inmediato: mipaquete-create-shipment los lee de la
+    // base de datos, no del formulario, para calcular cuanto debe recaudar el mensajero.
+    this._ventas.update({ id: this.orderId, flteTotal: c.fleteTotal, transportadoraSelect: c.slug }).subscribe(() => {});
   }
 
   // ── Cobrar y generar la guia ─────────────────────────────────────────────
@@ -404,7 +407,14 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
         this.refrescarSaldo();
         return;
       }
-      this.generarGuia();
+      // Asegura freight_value/carrier antes de generar la guia (ya se intenta guardar apenas se
+      // elige transportadora en elegirFlete(), esto es un respaldo por si esa llamada no llego a
+      // tiempo): sin esto mipaquete-create-shipment recaudaria de menos o nada al mensajero.
+      this._ventas.update({ id: this.orderId, flteTotal: this.fleteSeleccionado.fleteTotal, transportadoraSelect: this.fleteSeleccionado.slug }).subscribe(() => {
+        this.generarGuia();
+      }, () => {
+        this.generarGuia();
+      });
     }, () => {
       this.loader = false;
       this.error = 'No pudimos procesar el pago con tu billetera';

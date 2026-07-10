@@ -269,6 +269,13 @@ export class VentasService {
       if (data.ven_estado !== undefined && data.ven_estado !== 2) patch.status = LEGACY_TO_STATUS[data.ven_estado] || 'pending';
       if (data.ven_numero_guia !== undefined) patch.tracking_number = data.ven_numero_guia;
       if (data.ven_retiro !== undefined) patch.withdrawn = data.ven_retiro;
+      // Bug real corregido (2026-07-10): freight_value/carrier nunca se guardaban al elegir
+      // transportadora fuera del flujo manual de create() — mipaquete-create-shipment necesita
+      // freight_value real para calcular cuanto debe recaudar el mensajero, y sin esto quedaba
+      // siempre en null/0. Se llenan aca para que cualquier flujo que llame a update() con estos
+      // campos (panel admin al elegir transportadora, dropshipping-checkout) los persista.
+      if (data.flteTotal !== undefined || data.fleteValor !== undefined) patch.freight_value = data.flteTotal ?? data.fleteValor ?? null;
+      if (data.transportadoraSelect !== undefined) patch.carrier = data.transportadoraSelect;
 
       if (Object.keys(patch).length === 0) return { success: true, data: { id: data.id } };
 
