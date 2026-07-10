@@ -109,6 +109,33 @@
   color: #4a4a58;
 }
 
+.recharge-info__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recharge-info__list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #4a4a58;
+}
+
+.recharge-info__list li:last-child {
+  margin-bottom: 0;
+}
+
+.recharge-info__list li i {
+  font-size: 14px;
+  margin-top: 2px;
+  color: #9a9aa8;
+  flex-shrink: 0;
+}
+
 .recharge-info__balance {
   display: flex;
   align-items: center;

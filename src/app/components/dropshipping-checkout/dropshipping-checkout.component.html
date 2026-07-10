@@ -19,6 +19,9 @@
       <p style="color: #6b7280; margin: 4px 0 0;" *ngIf="subtotal">
         Recuerda cobrar <strong style="color:#1f2937;">{{ _tools.monedaChange(3, 2, subtotal) }}</strong> contra entrega al recibir el pedido.
       </p>
+      <p style="color: #6b7280; margin: 4px 0 0;">
+        Apenas el cliente pague, se te devuelve el flete a tu billetera — no es un gasto perdido.
+      </p>
       <p *ngIf="guiaGenerada" style="color: #6b7280;">Guía generada: <strong style="color:#1f2937;">{{ guiaGenerada }}</strong></p>
       <div class="dsc-actions">
         <button type="button" class="dsc-btn dsc-btn-primary" (click)="cerrar()">Cerrar</button>
