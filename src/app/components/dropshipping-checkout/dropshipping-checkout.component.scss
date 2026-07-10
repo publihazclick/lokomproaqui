@@ -534,13 +534,6 @@ $dsc-radius-sm: 10px;
 }
 
 // ── Recarga inline: una sola tarjeta con todos los montos adentro ───────
-.dsc-recarga-montos-card {
-  background: #fff;
-  border: 1px solid $dsc-border;
-  border-radius: $dsc-radius;
-  padding: 14px;
-}
-
 .dsc-recarga-montos-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
