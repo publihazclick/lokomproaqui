@@ -22,6 +22,17 @@
   gap: 8px;
 }
 
+// Flechita que indica que ese item del menu tiene submenu y se puede plegar/desplegar.
+// margin-left:auto la empuja al extremo derecho de la fila (que ya es flex); el rotate
+// avisa visualmente si esta abierto o cerrado sin necesitar dos iconos distintos.
+.flecha-submenu {
+  margin-left: auto;
+  transition: transform 0.3s ease;
+}
+.flecha-submenu-abierta {
+  transform: rotate(180deg);
+}
+
 // Logo y botones de la barra superior: el ancho fijo del logo (177px) mas los botones sin encoger
 // causaba que "Registrarse" quedara cortado fuera de pantalla en celulares chicos (320-400px).
 .header-top-row {
