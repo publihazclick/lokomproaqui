@@ -1,60 +1,26 @@
-<h2 mat-dialog-title class="form-group bg-primary text-white rounded">Crear Guia</h2>
+<h2 mat-dialog-title class="form-group bg-primary text-white rounded">Generar Guía</h2>
 <mat-dialog-content class="mat-typography">
     <div class="form row" *ngIf="!btndisabled">
-        <div class="form-group col-md-6 col-sm-4 col-lg-4 col-xs-6">
-            <label>Empresa de Envio *</label>
-            <input type="text" [(ngModel)]="data.transportadoraSelect" class="form-control form-control-sm" disabled>
+        <div class="form-group col-6">
+            <label>Transportadora</label>
+            <input type="text" [value]="transportadoraNombre" class="form-control form-control-sm" disabled>
         </div>
-        <div class="form-group col-4">
-            <label>Tipo de envio *</label>
-            <select class="form-control form-control-sm" [(ngModel)]="data.selectEnvio" disabled>
-                <option value="contraEntrega">Contra entrega</option>
-                <option value="envioNormal">Envio Normal</option>
-            </select>
+        <div class="form-group col-6">
+            <label>Tipo de envío</label>
+            <input type="text" [value]="data.ven_tipo === 'contraEntrega' ? 'Contra entrega' : (data.ven_tipo || '-')" class="form-control form-control-sm" disabled>
         </div>
-        <div class="form-group col-4">
-            <label for="exampleFormControlInput1">Valor Mercancia</label>
-            <input currencyMask [(ngModel)]="data.valorMercancia" class="form-control form-control-sm" [options]="opcionCurrencys" disabled/>
+        <div class="form-group col-6">
+            <label>Valor mercancía</label>
+            <input currencyMask [ngModel]="data.ven_total" class="form-control form-control-sm" [options]="opcionCurrencys" disabled/>
         </div>
-        <div class="form-group col-4">
-            <label for="exampleFormControlInput1">Valor a segurar</label>
-            <input currencyMask [(ngModel)]="data.valorAsegurado" class="form-control form-control-sm" [options]="opcionCurrencys"/>
-        </div>
-        <div class="form-group col-4">
-            <label for="exampleFormControlInput1">Fecha</label>
-            <input type="date" [(ngModel)]="data.fecha" class="form-control form-control-sm">
-        </div>
-        <!--<div class="form-group col-4">
-            <label for="exampleFormControlInput1">Numero Unidad</label>
-            <input type="number" [(ngModel)]="data.numeroUnidad" class="form-control form-control-sm">
-        </div>-->
-        <div class="form-group col-4">
-            <label for="exampleFormControlInput1">Peso Real</label>
-            <input type="number" [(ngModel)]="data.pesoReal" class="form-control form-control-sm">
-        </div>
-        <div class="form-group col-4">
-            <label for="exampleFormControlInput1">Peso Volumen</label>
-            <input type="number" [(ngModel)]="data.pesoVolumen" class="form-control form-control-sm">
-        </div>
-        <div class="form-group col-4">
-            <label for="exampleFormControlInput1">Alto</label>
-            <input type="number" [(ngModel)]="data.alto" class="form-control form-control-sm">
-        </div>
-        <div class="form-group col-4">
-            <label for="exampleFormControlInput1">Largo</label>
-            <input type="number" [(ngModel)]="data.largo" class="form-control form-control-sm">
-        </div>
-        <div class="form-group col-4">
-            <label for="exampleFormControlInput1">Ancho</label>
-            <input type="number" [(ngModel)]="data.ancho" class="form-control form-control-sm">
-        </div>
-        <div class="form-group col-4">
-            <label for="exampleFormControlInput1">Valor del Envió</label>
-            <input currencyMask [(ngModel)]="data.fleteValor" class="form-control form-control-sm" [options]="opcionCurrencys" disabled/>
+        <div class="form-group col-6">
+            <label>Valor del flete</label>
+            <input currencyMask [ngModel]="data.fleteValor || data.flteTotal" class="form-control form-control-sm" [options]="opcionCurrencys" disabled/>
         </div>
         <div class="form-group col-12">
-            <label for="exampleFormControlInput1">Descripcion</label>
-            <textarea class="form-control" [(ngModel)]="textData" rows="6"></textarea>
+            <p class="text-muted" style="font-size: 12px; margin: 0;">
+                El peso, las dimensiones y el valor declarado los calcula Mipaquete automáticamente a partir del producto. Al confirmar se genera la guía real de envío.
+            </p>
         </div>
     </div>
     <div class="row" *ngIf="btndisabled">
