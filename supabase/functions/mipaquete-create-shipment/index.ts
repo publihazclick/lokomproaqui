@@ -58,8 +58,18 @@ Deno.serve(async (req) => {
     // Necesita la documentacion oficial de Mipaquete para saber el valor/formato correcto
     // antes de seguir adivinando. Mientras tanto, generar guias reales falla en TODO pedido,
     // no solo en los de dropshipping/muestra nuevos.
-    const paymentType = order.order_type === 'contraentrega' ? 101 : 1;
-    const valueCollection = order.order_type === 'contraentrega' ? declaredValue + (Number(order.freight_value) || 0) : 0;
+    //
+    // Recaudo contra entrega (2026-07-10): en pedidos normales 'contraentrega' nadie prepago
+    // nada, asi que el mensajero recauda producto+flete completo. En 'dropshipping'/'muestra'
+    // el dropshipper ya prepago el flete desde su billetera (ver dropshipping-checkout), asi
+    // que aqui el mensajero solo debe recaudar el valor del producto (order.price_total, el
+    // mismo subtotal ya mostrado en el checkout) para no cobrar el flete dos veces.
+    const isMarketplaceCod = order.order_type === 'contraentrega';
+    const isSelfFundedFreight = order.order_type === 'dropshipping' || order.order_type === 'muestra';
+    const paymentType = (isMarketplaceCod || isSelfFundedFreight) ? 101 : 1;
+    const valueCollection = isMarketplaceCod
+      ? declaredValue + (Number(order.freight_value) || 0)
+      : (isSelfFundedFreight ? (Number(order.price_total) || declaredValue) : 0);
 
     const sendingPayload = {
       sender: {

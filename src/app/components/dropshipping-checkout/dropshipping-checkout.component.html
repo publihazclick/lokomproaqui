@@ -14,7 +14,10 @@
       <div class="dsc-exito-icono">✓</div>
       <h4 class="dsc-header-title">¡Pedido #{{ orderId }} creado!</h4>
       <p style="color: #6b7280; margin: 8px 0 0;">
-        Se debitaron <strong style="color:#1f2937;">{{ _tools.monedaChange(3, 2, totalAPagar) }}</strong> de tu billetera.
+        Se descontaron <strong style="color:#1f2937;">{{ _tools.monedaChange(3, 2, totalAPagar) }}</strong> de tu billetera (flete).
+      </p>
+      <p style="color: #6b7280; margin: 4px 0 0;" *ngIf="subtotal">
+        Recuerda cobrar <strong style="color:#1f2937;">{{ _tools.monedaChange(3, 2, subtotal) }}</strong> contra entrega al recibir el pedido.
       </p>
       <p *ngIf="guiaGenerada" style="color: #6b7280;">Guía generada: <strong style="color:#1f2937;">{{ guiaGenerada }}</strong></p>
       <div class="dsc-actions">
@@ -140,12 +143,11 @@
             <span class="dsc-label-muted">Valor producto ({{ cantidad }} und)</span>
             <strong>{{ _tools.monedaChange(3, 2, subtotal) }}</strong>
           </div>
-          <div class="dsc-resumen-row">
-            <span class="dsc-label-muted">Flete ({{ fleteSeleccionado.nombre }})</span>
-            <strong>{{ _tools.monedaChange(3, 2, fleteSeleccionado.fleteTotal) }}</strong>
-          </div>
+          <p style="font-size: 12px; color: #6b7280; margin: -6px 2px 8px;">
+            Lo cobras contra entrega al recibir el pedido, no se descuenta de tu billetera.
+          </p>
           <div class="dsc-resumen-row dsc-total">
-            <span>Total a pagar</span>
+            <span>Flete · se descuenta de tu billetera</span>
             <span>{{ _tools.monedaChange(3, 2, totalAPagar) }}</span>
           </div>
           <div class="dsc-saldo-row">

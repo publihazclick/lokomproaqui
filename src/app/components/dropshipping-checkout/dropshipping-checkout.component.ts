@@ -10,7 +10,8 @@ declare var ePayco: any;
 // Checkout de "Hacer Dropshipping" / "Pedir muestra": todo en una sola ventana. Apenas el
 // formulario queda completo (todos los campos son obligatorios) se crea el pedido y se cotiza
 // el flete automaticamente (las transportadoras aparecen ahi mismo, debajo de la ciudad).
-// Cobra el total (producto + flete) de la billetera prepago 'dropshipper' del propio usuario.
+// Cobra SOLO el flete de la billetera prepago 'dropshipper' del propio usuario (para poder
+// generar la guia); el valor del producto lo cobra el mensajero contra entrega (2026-07-10).
 // Ver plan en C:\Users\MOINS\.claude\plans\linear-napping-noodle.md.
 @Component({
   selector: 'app-dropshipping-checkout',
@@ -113,9 +114,10 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
     return this.precioUnitario * (Number(this.cantidad) || 0);
   }
 
+  // La billetera 'dropshipper' solo cubre el flete (para poder generar la guia): el valor del
+  // producto lo cobra el mensajero contra entrega, no se descuenta del saldo prepago.
   get totalAPagar(): number {
-    if (!this.fleteSeleccionado) return this.subtotal;
-    return this.subtotal + (this.fleteSeleccionado.fleteTotal || 0);
+    return (this.fleteSeleccionado && this.fleteSeleccionado.fleteTotal) || 0;
   }
 
   get saldoInsuficiente(): boolean {
