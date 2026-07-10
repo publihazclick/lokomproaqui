@@ -68,6 +68,7 @@ Deno.serve(async (req) => {
           p_amount: Number(existing.amount),
           p_order_id: null,
           p_pct: null,
+          p_kind: 'recarga',
         });
         if (creditErr) {
           return new Response(JSON.stringify({ error: creditErr.message }), { status: 500 });

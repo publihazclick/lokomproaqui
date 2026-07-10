@@ -3,6 +3,11 @@ import { ServiciosService } from '../services/servicios.service';
 import { supabase } from '../services/supabase.client';
 import { from } from 'rxjs';
 
+// Saldo minimo en la billetera 'dropshipper' para poder generar pedidos de Dropshipping o
+// Muestra (2026-07-10, pedido explicito del usuario) — un piso operativo, distinto del costo
+// de flete de un pedido puntual (eso se valida aparte dentro de cada checkout).
+export const SALDO_MINIMO_DROPSHIPPING = 50000;
+
 @Injectable({
   providedIn: 'root'
 })
@@ -28,11 +33,12 @@ export class WalletService {
     return from(run());
   }
 
-  // Debita producto+flete de la billetera; falla limpio (sin tocar nada) si no hay saldo.
-  debit(profileId: string, amount: number, orderId: number) {
+  // Debita el flete (+ seguro antidevoluciones si aplica) de la billetera; falla limpio
+  // (sin tocar nada) si no hay saldo.
+  debit(profileId: string, amount: number, orderId: number, kind: string = 'flete_pedido') {
     const run = async (): Promise<any> => {
       const { error } = await supabase.rpc('debit_wallet', {
-        p_profile_id: profileId, p_wallet_type: 'dropshipper', p_amount: amount, p_order_id: orderId,
+        p_profile_id: profileId, p_wallet_type: 'dropshipper', p_amount: amount, p_order_id: orderId, p_kind: kind,
       });
       if (error) {
         const msg = error.message && error.message.includes('saldo_insuficiente')
@@ -46,12 +52,30 @@ export class WalletService {
   }
 
   // Reversa un debito (ej. el usuario cancela porque no se pudo generar la guia).
-  refund(profileId: string, amount: number, orderId: number) {
+  refund(profileId: string, amount: number, orderId: number, kind: string = 'flete_cancelado') {
     const run = async (): Promise<any> => {
       const { error } = await supabase.rpc('credit_wallet', {
-        p_profile_id: profileId, p_wallet_type: 'dropshipper', p_amount: amount, p_order_id: orderId, p_pct: null,
+        p_profile_id: profileId, p_wallet_type: 'dropshipper', p_amount: amount, p_order_id: orderId, p_pct: null, p_kind: kind,
       });
       return { success: !error };
+    };
+    return from(run());
+  }
+
+  // Historial de movimientos SOLO de la billetera de fletes (nunca ganancias/comisiones de
+  // producto, esas viven en las billeteras 'referral'/'supplier', separadas).
+  getLedger(profileId: string) {
+    const run = async (): Promise<any> => {
+      if (!profileId) return { success: false, data: [] };
+      const { data, error } = await supabase
+        .from('wallet_ledger')
+        .select('*')
+        .eq('profile_id', profileId)
+        .eq('wallet_type', 'dropshipper')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (error || !data) return { success: false, data: [] };
+      return { success: true, data };
     };
     return from(run());
   }

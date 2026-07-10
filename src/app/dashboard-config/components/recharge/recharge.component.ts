@@ -3,9 +3,18 @@ import { Store } from '@ngrx/store';
 import { STORAGES } from 'src/app/interfaces/sotarage';
 import { ToolsService } from 'src/app/services/tools.service';
 import { RechargeService } from 'src/app/servicesComponents/recharge.service';
-import { WalletService } from 'src/app/servicesComponents/wallet.service';
+import { WalletService, SALDO_MINIMO_DROPSHIPPING } from 'src/app/servicesComponents/wallet.service';
 import { environment } from 'src/environments/environment';
 declare var ePayco: any;
+
+const ETIQUETAS_MOVIMIENTO: any = {
+  recarga: 'Recarga',
+  flete_pedido: 'Flete de pedido',
+  flete_seguro_pedido: 'Flete + seguro de pedido',
+  flete_devuelto: 'Flete devuelto (entrega exitosa)',
+  flete_devuelto_seguro: 'Flete devuelto (seguro antidevoluciones)',
+  flete_cancelado: 'Flete devuelto (pedido cancelado)',
+};
 
 @Component({
   selector: 'app-recharge',
@@ -21,9 +30,15 @@ export class RechargeComponent implements OnInit, OnDestroy {
   selectedItem:any = null;
   dataUser:any = {};
   saldo:number = 0;
+  saldoMinimo = SALDO_MINIMO_DROPSHIPPING;
   keyEpayco = environment.keyEpayco;
   estadoPruebaPagos = environment.estadoPruebaPagos;
   private pollingRecarga:any = null;
+
+  // ── Movimiento fletes (2026-07-10) ────────────────────────────────────────────────────────
+  mostrarMovimientos = false;
+  cargandoMovimientos = false;
+  movimientos:any = [];
 
   constructor(
     private _recharge: RechargeService,
@@ -64,6 +79,25 @@ export class RechargeComponent implements OnInit, OnDestroy {
   selectValue( item:any ){
     if( this.disabedPn ) return false;
     this.selectedItem = item;
+  }
+
+  // Historial de la billetera de fletes: SOLO recargas/fletes/devoluciones de flete, nunca
+  // ganancias ni comisiones por producto (esas viven en las billeteras 'referral'/'supplier').
+  abrirMovimientos(){
+    this.mostrarMovimientos = true;
+    this.cargandoMovimientos = true;
+    this._wallet.getLedger( this.dataUser.id ).subscribe( ( res:any ) =>{
+      this.movimientos = res.data || [];
+      this.cargandoMovimientos = false;
+    }, () => { this.movimientos = []; this.cargandoMovimientos = false; } );
+  }
+
+  cerrarMovimientos(){
+    this.mostrarMovimientos = false;
+  }
+
+  etiquetaMovimiento( m:any ): string {
+    return ( m.kind && ETIQUETAS_MOVIMIENTO[m.kind] ) || ( m.direction === 0 ? 'Abono a tu billetera' : 'Cargo a tu billetera' );
   }
 
   // Recarga la billetera 'dropshipper' (la misma que usan "Hacer Dropshipping"/"Pedir muestra")

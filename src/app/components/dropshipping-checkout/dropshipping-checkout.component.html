@@ -14,10 +14,11 @@
       <div class="dsc-exito-icono">✓</div>
       <h4 class="dsc-header-title">¡Pedido #{{ orderId }} creado!</h4>
       <p style="color: #6b7280; margin: 8px 0 0;">
-        Se descontaron <strong style="color:#1f2937;">{{ _tools.monedaChange(3, 2, totalAPagar) }}</strong> de tu billetera (flete).
+        Se descontaron <strong style="color:#1f2937;">{{ _tools.monedaChange(3, 2, totalAPagar) }}</strong> de tu billetera
+        ({{ mode === 'dropshipping' && seguroActivo ? 'flete + seguro' : 'flete' }}).
       </p>
       <p style="color: #6b7280; margin: 4px 0 0;" *ngIf="subtotal">
-        Recuerda cobrar <strong style="color:#1f2937;">{{ _tools.monedaChange(3, 2, subtotal) }}</strong> contra entrega al recibir el pedido.
+        Recuerda cobrar <strong style="color:#1f2937;">{{ _tools.monedaChange(3, 2, totalRecaudo) }}</strong> contra entrega al recibir el pedido.
       </p>
       <p style="color: #6b7280; margin: 4px 0 0;">
         Apenas el cliente pague, se te devuelve el flete a tu billetera — no es un gasto perdido.
@@ -45,6 +46,32 @@
         </div>
         <p style="font-size: 12.5px; color: #6b7280; margin: 8px 2px 0;" *ngIf="mode === 'muestra'">
           Esta muestra llega a tu propia dirección de registro (no a un cliente).
+        </p>
+      </div>
+
+      <!-- Precio editable y envío incluido/aparte (solo Hacer Dropshipping) -->
+      <div class="dsc-section" *ngIf="mode === 'dropshipping'">
+        <p class="dsc-section-title">Precio y envío</p>
+        <div class="dsc-field">
+          <label>Precio a cobrar al cliente (COP) *</label>
+          <input class="dsc-input" type="text" inputmode="numeric"
+                 [value]="precioVentaClienteStr" (input)="onPrecioInput($any($event.target).value)"
+                 [disabled]="camposBloqueados" placeholder="Ej: 80.000" required />
+        </div>
+        <div class="dsc-recarga-montos-grid" style="grid-template-columns: repeat(2, 1fr); margin-top: 10px;">
+          <button type="button" class="dsc-monto-tile" [class.dsc-monto-tile-activo]="envioIncluido"
+                  [disabled]="camposBloqueados" (click)="envioIncluido = true">
+            Envío incluido
+          </button>
+          <button type="button" class="dsc-monto-tile" [class.dsc-monto-tile-activo]="!envioIncluido"
+                  [disabled]="camposBloqueados" (click)="envioIncluido = false">
+            Envío aparte
+          </button>
+        </div>
+        <p style="font-size: 11.5px; color: #6b7280; margin: 8px 2px 0;">
+          {{ envioIncluido
+            ? 'El precio de arriba ya incluye el flete: el mensajero solo cobra ese valor.'
+            : 'El mensajero cobrará el precio de arriba MÁS el flete, por separado.' }}
         </p>
       </div>
 
@@ -147,10 +174,16 @@
             <strong>{{ _tools.monedaChange(3, 2, subtotal) }}</strong>
           </div>
           <p style="font-size: 12px; color: #6b7280; margin: -6px 2px 8px;">
-            Lo cobras contra entrega al recibir el pedido, no se descuenta de tu billetera.
+            Cobras <strong>{{ _tools.monedaChange(3, 2, totalRecaudo) }}</strong> contra entrega al recibir el pedido
+            <ng-container *ngIf="mode === 'dropshipping' && !envioIncluido"> (producto + flete por separado)</ng-container>.
+            No se descuenta de tu billetera.
           </p>
+          <div class="dsc-resumen-row" *ngIf="mode === 'dropshipping' && seguroActivo">
+            <span class="dsc-label-muted">Seguro antidevoluciones</span>
+            <strong>+ {{ _tools.monedaChange(3, 2, 5000) }}</strong>
+          </div>
           <div class="dsc-resumen-row dsc-total">
-            <span>Flete · se descuenta de tu billetera</span>
+            <span>{{ mode === 'dropshipping' && seguroActivo ? 'Flete + seguro · se descuenta de tu billetera' : 'Flete · se descuenta de tu billetera' }}</span>
             <span>{{ _tools.monedaChange(3, 2, totalAPagar) }}</span>
           </div>
           <div class="dsc-saldo-row">
@@ -158,6 +191,22 @@
             <strong [class.text-danger]="saldoInsuficiente">{{ _tools.monedaChange(3, 2, saldo) }}</strong>
           </div>
         </div>
+
+        <!-- Seguro antidevoluciones (solo Hacer Dropshipping) -->
+        <label class="dsc-card" style="margin-top: 10px; display: flex; align-items: flex-start; gap: 10px; cursor: pointer;"
+               [style.background]="seguroActivo ? '#fffbeb' : '#fff'" [style.border-color]="seguroActivo ? '#fde68a' : ''"
+               *ngIf="mode === 'dropshipping'">
+          <input type="checkbox" [checked]="seguroActivo" (change)="seguroActivo = !seguroActivo" style="margin-top: 2px;" />
+          <div>
+            <p style="margin: 0; font-weight: 700; font-size: 13px; color: #1f2937;">
+              🛡️ Seguro antidevoluciones <span style="color: #92400e;">+ {{ _tools.monedaChange(3, 2, 5000) }}</span>
+            </p>
+            <p style="margin: 4px 0 0; font-size: 12px; color: #6b7280; line-height: 1.4;">
+              Si el pedido se marca como devolución, con este seguro <strong>igual se te devuelve el flete completo</strong>.
+              Sin el seguro, una devolución <strong>no te devuelve el flete</strong> que ya prepagaste.
+            </p>
+          </div>
+        </label>
 
         <div *ngIf="saldoInsuficiente && !mostrarRecarga" class="dsc-alert dsc-alert-danger" style="margin-top: 10px;">
           <p style="margin: 0 0 8px;">Saldo insuficiente para confirmar el pedido.</p>

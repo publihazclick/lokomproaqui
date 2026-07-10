@@ -46,6 +46,10 @@
               <span>Saldo actual en tu billetera</span>
               <strong>{{ _tools.monedaChange( 3,2, ( saldo || 0 ) ) }}</strong>
             </div>
+            <div class="recharge-info__minimo" *ngIf="saldo < saldoMinimo">
+              <i class="material-icons">error_outline</i>
+              Necesitas mínimo <strong>{{ _tools.monedaChange( 3,2, saldoMinimo ) }}</strong> en tu billetera para poder generar pedidos de Dropshipping o Muestra.
+            </div>
           </div>
 
           <div *ngIf="loader" class="loader">
@@ -106,9 +110,47 @@
                 </button>
               </div>
 
+              <button type="button" class="bank-card__ledger-btn" (click)="abrirMovimientos()">
+                <i class="material-icons">receipt_long</i> Movimiento fletes
+              </button>
+
             </div>
           </div>
 
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal "Movimiento fletes": SOLO recargas/fletes/devoluciones de flete, nunca ganancias ni comisiones -->
+<div class="movimientos-overlay" *ngIf="mostrarMovimientos" (click)="cerrarMovimientos()">
+  <div class="movimientos-modal" (click)="$event.stopPropagation()">
+    <div class="movimientos-modal__header">
+      <div>
+        <h4>Movimiento fletes</h4>
+        <p>Aquí solo verás movimientos de flete — tus ganancias y comisiones por producto están en otra sección.</p>
+      </div>
+      <button type="button" class="movimientos-modal__close" (click)="cerrarMovimientos()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+
+    <div class="movimientos-modal__body">
+      <div *ngIf="cargandoMovimientos" class="movimientos-empty">Cargando…</div>
+      <div *ngIf="!cargandoMovimientos && movimientos.length === 0" class="movimientos-empty">
+        Todavía no tienes movimientos en tu billetera de fletes.
+      </div>
+      <div class="movimientos-row" *ngFor="let m of movimientos">
+        <div class="movimientos-row__icon" [class.movimientos-row__icon--in]="m.direction === 0">
+          <i class="material-icons">{{ m.direction === 0 ? 'add' : 'remove' }}</i>
+        </div>
+        <div class="movimientos-row__info">
+          <span class="movimientos-row__kind">{{ etiquetaMovimiento( m ) }}</span>
+          <span class="movimientos-row__date">{{ m.created_at | date:'dd/MM/yy HH:mm' }}</span>
+        </div>
+        <div class="movimientos-row__amount" [class.movimientos-row__amount--in]="m.direction === 0">
+          {{ m.direction === 0 ? '+' : '-' }}{{ _tools.monedaChange( 3,2, ( m.amount < 0 ? -m.amount : m.amount ) ) }}
         </div>
       </div>
     </div>

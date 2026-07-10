@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 import { VentasService } from 'src/app/servicesComponents/ventas.service';
-import { WalletService } from 'src/app/servicesComponents/wallet.service';
+import { WalletService, SALDO_MINIMO_DROPSHIPPING } from 'src/app/servicesComponents/wallet.service';
 import { ToolsService } from 'src/app/services/tools.service';
 import { environment } from 'src/environments/environment';
 
@@ -33,6 +33,18 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
   cantidad: number = 1;
   colorProducto: string = '';
   tallaProducto: string = '';
+
+  // ── Solo "Hacer Dropshipping" (2026-07-10, puerto de Landazury) ──────────────────────────
+  // Precio TOTAL (no unitario) que el vendedor va a cobrarle a su cliente final, editable.
+  precioVentaCliente: number | null = null;
+  precioVentaClienteStr: string = '';
+  private precioDebounce: any = null;
+  // true = el precio de arriba ya incluye el flete (el mensajero solo recauda ese valor).
+  // false = "envio aparte": el mensajero recauda precio + flete por separado.
+  envioIncluido: boolean = true;
+  // Seguro antidevoluciones (+$5.000, no reembolsable): si el pedido se marca "Devolucion",
+  // se devuelve igual el flete prepagado. Sin el seguro, una devolucion pierde ese flete.
+  seguroActivo: boolean = false;
 
   cliente = {
     nombre: '',
@@ -99,6 +111,10 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
       this.cliente.telefono = this.dataUser.usu_telefono || '';
       this.cliente.direccion = this.dataUser.usu_direccion || '';
       this.ciudadQuery = this.dataUser.usu_ciudad || '';
+    } else {
+      // Dropshipping: precarga el precio editable con el precio sugerido, el vendedor lo cambia si quiere.
+      this.precioVentaCliente = this.precioUnitario * this.cantidad;
+      this.precioVentaClienteStr = this.formatearMonto(this.precioVentaCliente);
     }
 
     this.refrescarSaldo();
@@ -110,14 +126,29 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
     if (this.pollingRecarga) clearInterval(this.pollingRecarga);
   }
 
+  // Dropshipping: el vendedor edita el TOTAL a cobrar (precioVentaCliente). Muestra: sigue
+  // siendo precio de catalogo * cantidad, sin editar.
   get subtotal(): number {
+    if (this.mode === 'dropshipping' && this.precioVentaCliente != null) return this.precioVentaCliente;
     return this.precioUnitario * (Number(this.cantidad) || 0);
   }
 
-  // La billetera 'dropshipper' solo cubre el flete (para poder generar la guia): el valor del
-  // producto lo cobra el mensajero contra entrega, no se descuenta del saldo prepago.
-  get totalAPagar(): number {
+  get flete(): number {
     return (this.fleteSeleccionado && this.fleteSeleccionado.fleteTotal) || 0;
+  }
+
+  // La billetera 'dropshipper' solo cubre el flete (+ el seguro antidevoluciones si esta
+  // activo): el valor del producto lo cobra el mensajero contra entrega, no se descuenta del
+  // saldo prepago.
+  get totalAPagar(): number {
+    return this.flete + (this.mode === 'dropshipping' && this.seguroActivo ? 5000 : 0);
+  }
+
+  // Lo que el mensajero recauda contra entrega: si el precio ya incluye flete, es tal cual;
+  // si es "envio aparte", se le suma el flete (el vendedor prepago el flete, no el cliente).
+  get totalRecaudo(): number {
+    if (this.mode !== 'dropshipping') return this.subtotal;
+    return this.envioIncluido ? this.subtotal : this.subtotal + this.flete;
   }
 
   get saldoInsuficiente(): boolean {
@@ -132,12 +163,28 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
 
   // Todos los campos son obligatorios, ninguno opcional.
   formValido(): boolean {
+    const precioOk = this.mode !== 'dropshipping' || (this.precioVentaCliente != null && Number(this.precioVentaCliente) > 0);
     return !!this.cliente.nombre.trim()
       && !!this.cliente.telefono.trim()
       && !!this.cliente.direccion.trim()
       && !!this.cliente.barrio.trim()
       && !!this.ciudadSeleccionada
-      && (Number(this.cantidad) || 0) >= 1;
+      && (Number(this.cantidad) || 0) >= 1
+      && precioOk;
+  }
+
+  // ── Precio editable (solo dropshipping) ──────────────────────────────────────────────────
+  private formatearMonto(n: number): string {
+    return n != null ? n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
+  }
+
+  onPrecioInput(valor: string) {
+    const digits = (valor || '').replace(/[^\d]/g, '');
+    const num = digits ? parseInt(digits, 10) : null;
+    this.precioVentaCliente = num;
+    this.precioVentaClienteStr = num != null ? this.formatearMonto(num) : '';
+    if (this.precioDebounce) clearTimeout(this.precioDebounce);
+    this.precioDebounce = setTimeout(() => this.onCampoChange(), 500);
   }
 
   // Se llama en cada cambio de cualquier campo (con debounce): apenas el formulario queda
@@ -284,6 +331,9 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
       ven_cantidad: this.cantidad,
       ven_precio: this.precioUnitario,
       ven_total: this.subtotal,
+      ven_totalManual: this.mode === 'dropshipping' ? this.subtotal : undefined,
+      shipping_included: this.mode === 'dropshipping' ? this.envioIncluido : undefined,
+      insurance_active: this.mode === 'dropshipping' ? this.seguroActivo : undefined,
       nombreProducto: this.producto.pro_nombre,
       ven_nombre_cliente: this.cliente.nombre.trim(),
       ven_telefono_cliente: this.cliente.telefono.trim(),
@@ -335,11 +385,19 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
   // ── Cobrar y generar la guia ─────────────────────────────────────────────
   confirmarPago() {
     if (this.loader || !this.fleteSeleccionado) return;
+    // Recheck defensivo del piso operativo (pudo bajar el saldo entre que se abrio el
+    // formulario y este momento, ej. otra pestaña recargando/gastando a la vez).
+    if (this.saldo < SALDO_MINIMO_DROPSHIPPING) {
+      this.error = `Necesitas mínimo ${this._tools.monedaChange(3, 2, SALDO_MINIMO_DROPSHIPPING)} en tu billetera para continuar.`;
+      this.abrirRecarga();
+      return;
+    }
     if (this.saldoInsuficiente) { this.abrirRecarga(); return; }
 
     this.loader = true;
     this.error = '';
-    this._wallet.debit(this.dataUser.id, this.totalAPagar, this.orderId).subscribe((res: any) => {
+    const kind = this.mode === 'dropshipping' && this.seguroActivo ? 'flete_seguro_pedido' : 'flete_pedido';
+    this._wallet.debit(this.dataUser.id, this.totalAPagar, this.orderId, kind).subscribe((res: any) => {
       if (!res.success) {
         this.loader = false;
         this.error = res.message || 'No pudimos procesar el pago';

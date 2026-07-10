@@ -233,6 +233,17 @@ export class VentasService {
       });
 
       if (error || !orderId) return { success: false, id: null };
+
+      // "Hacer Dropshipping": precio editable por el vendedor (puede no coincidir con
+      // unitPrice*cantidad por redondeo) + envio incluido/aparte + seguro antidevoluciones.
+      // create_order ya calculo price_total = unit_price*quantity; si el vendedor escribio un
+      // total manual se sobrescribe aca, mismo patron que el freight_value/carrier de create().
+      const patch: any = {};
+      if (data.ven_totalManual != null) patch.price_total = Number(data.ven_totalManual);
+      if (data.shipping_included !== undefined) patch.shipping_included = data.shipping_included;
+      if (data.insurance_active !== undefined) patch.insurance_active = data.insurance_active;
+      if (Object.keys(patch).length) await supabase.from('orders').update(patch).eq('id', orderId);
+
       return { success: true, id: orderId };
     };
     return from(run());
@@ -240,6 +251,8 @@ export class VentasService {
 
   // Cambia el estado del pedido (usado por el panel admin). Al aprobar (ven_estado:1, "exitosa")
   // dispara el RPC approve_order que paga las comisiones multinivel de referidos y proveedores.
+  // Al marcar "Devolucion" (ven_estado:2) dispara reject_order, que devuelve el flete prepagado
+  // de dropshipping/muestra SOLO si el pedido tenia seguro antidevoluciones.
   update(data: any) {
     const run = async (): Promise<any> => {
       if (data.ven_estado === 1) {
@@ -247,10 +260,17 @@ export class VentasService {
         return { success: !error, data: { id: data.id } };
       }
 
+      if (data.ven_estado === 2) {
+        const { error } = await supabase.rpc('reject_order', { p_order_id: data.id });
+        if (error) return { success: false, data: { id: data.id } };
+      }
+
       const patch: any = {};
-      if (data.ven_estado !== undefined) patch.status = LEGACY_TO_STATUS[data.ven_estado] || 'pending';
+      if (data.ven_estado !== undefined && data.ven_estado !== 2) patch.status = LEGACY_TO_STATUS[data.ven_estado] || 'pending';
       if (data.ven_numero_guia !== undefined) patch.tracking_number = data.ven_numero_guia;
       if (data.ven_retiro !== undefined) patch.withdrawn = data.ven_retiro;
+
+      if (Object.keys(patch).length === 0) return { success: true, data: { id: data.id } };
 
       const { error } = await supabase.from('orders').update(patch).eq('id', data.id);
       return { success: !error, data: { id: data.id } };

@@ -64,12 +64,19 @@ Deno.serve(async (req) => {
     // el dropshipper ya prepago el flete desde su billetera (ver dropshipping-checkout), asi
     // que aqui el mensajero solo debe recaudar el valor del producto (order.price_total, el
     // mismo subtotal ya mostrado en el checkout) para no cobrar el flete dos veces.
+    // Envio incluido/aparte (2026-07-10, solo aplica a 'dropshipping'): el vendedor elige si el
+    // precio que escribio en el checkout ya incluye el flete o no. Si NO lo incluye, hay que
+    // sumarle el flete al recaudo para que el mensajero cobre el valor total real en destino.
+    // 'muestra' no tiene este toggle (shipping_included siempre true ahi), se comporta igual que
+    // antes de este cambio.
     const isMarketplaceCod = order.order_type === 'contraentrega';
     const isSelfFundedFreight = order.order_type === 'dropshipping' || order.order_type === 'muestra';
     const paymentType = (isMarketplaceCod || isSelfFundedFreight) ? 101 : 1;
+    const selfFundedCollection = (Number(order.price_total) || declaredValue)
+      + (order.order_type === 'dropshipping' && order.shipping_included === false ? (Number(order.freight_value) || 0) : 0);
     const valueCollection = isMarketplaceCod
       ? declaredValue + (Number(order.freight_value) || 0)
-      : (isSelfFundedFreight ? (Number(order.price_total) || declaredValue) : 0);
+      : (isSelfFundedFreight ? selfFundedCollection : 0);
 
     const sendingPayload = {
       sender: {

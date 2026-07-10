@@ -10,6 +10,7 @@ import { NgImageSliderComponent } from 'ng-image-slider';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProductoService } from 'src/app/servicesComponents/producto.service';
 import { DropshippingCheckoutComponent } from 'src/app/components/dropshipping-checkout/dropshipping-checkout.component';
+import { WalletService, SALDO_MINIMO_DROPSHIPPING } from 'src/app/servicesComponents/wallet.service';
 
 @Component({
   selector: 'app-view-productos',
@@ -73,7 +74,8 @@ export class ViewProductosComponent implements OnInit {
     public dialog: MatDialog,
     private activate: ActivatedRoute,
     private _router: Router,
-    private _products: ProductoService
+    private _products: ProductoService,
+    private _wallet: WalletService
   ) {
 
     this._store.subscribe((store: any) => {
@@ -347,9 +349,20 @@ export class ViewProductosComponent implements OnInit {
     if (necesitaTalla && !this.data.tallas) {
       return this._tools.tooast({ title: 'Primero debes seleccionar talla y color', icon: 'warning' });
     }
-    this.dialog.open(DropshippingCheckoutComponent, {
-      width: this.breakpoint === 6 ? '60%' : '95%',
-      data: { producto: this.data, dataUser: this.dataUser, mode }
+    // Piso operativo: sin al menos SALDO_MINIMO_DROPSHIPPING en la billetera 'dropshipper' no se
+    // deja ni abrir el formulario (2026-07-10, pedido explicito del usuario).
+    this._wallet.getBalance(this.dataUser.id).subscribe((res: any) => {
+      const saldo = (res.data && res.data.balance) || 0;
+      if (saldo < SALDO_MINIMO_DROPSHIPPING) {
+        return this._tools.error({
+          mensaje: `Necesitas mínimo ${this._tools.monedaChange(3, 2, SALDO_MINIMO_DROPSHIPPING)} en tu billetera para generar pedidos. Tu saldo actual es ${this._tools.monedaChange(3, 2, saldo)}.`,
+          footer: `<a target="_blank" href="${window.location.origin}/config/recharge">Recargar billetera</a>`,
+        });
+      }
+      this.dialog.open(DropshippingCheckoutComponent, {
+        width: this.breakpoint === 6 ? '60%' : '95%',
+        data: { producto: this.data, dataUser: this.dataUser, mode }
+      });
     });
   }
 
