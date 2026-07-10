@@ -158,31 +158,44 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
     return (v || '').replace(/[^A-Za-z0-9À-ÿ\s#.,-]/g, '');
   }
 
-  onNombreChange(v: string) {
-    this.cliente.nombre = this.soloLetras(v);
+  // Se escribe el valor saneado directamente en el input nativo (event.target.value) en vez de
+  // confiar solo en el binding de Angular: si el texto saneado coincide por casualidad con el
+  // valor anterior (ej. se borra el unico caracter invalido tecleado), Angular no detecta cambio
+  // en el binding y no vuelve a pintar el campo, dejando visible el caracter invalido tecleado.
+  onNombreChange(event: any) {
+    const sanitized = this.soloLetras(event.target.value);
+    this.cliente.nombre = sanitized;
+    event.target.value = sanitized;
     this.onCampoChange();
   }
 
-  onTelefonoChange(v: string) {
-    this.cliente.telefono = this.soloNumeros(v);
+  onTelefonoChange(event: any) {
+    const sanitized = this.soloNumeros(event.target.value);
+    this.cliente.telefono = sanitized;
+    event.target.value = sanitized;
     this.onCampoChange();
   }
 
-  onDireccionChange(v: string) {
-    this.cliente.direccion = this.letrasYNumeros(v);
+  onDireccionChange(event: any) {
+    const sanitized = this.letrasYNumeros(event.target.value);
+    this.cliente.direccion = sanitized;
+    event.target.value = sanitized;
     this.onCampoChange();
   }
 
-  onBarrioChange(v: string) {
-    this.cliente.barrio = this.letrasYNumeros(v);
+  onBarrioChange(event: any) {
+    const sanitized = this.letrasYNumeros(event.target.value);
+    this.cliente.barrio = sanitized;
+    event.target.value = sanitized;
     this.onCampoChange();
   }
 
   // ── Cantidad: flechas para subir/bajar (el precio se recalcula solo via los getters subtotal/totalAPagar) ──
-  onCantidadChange(v: any) {
-    let n = parseInt(v, 10);
+  onCantidadChange(event: any) {
+    let n = parseInt(event.target.value, 10);
     if (isNaN(n) || n < 1) n = 1;
     this.cantidad = n;
+    event.target.value = String(n);
     this.onCampoChange();
   }
 
@@ -215,8 +228,10 @@ export class DropshippingCheckoutComponent implements OnInit, OnDestroy {
   }
 
   // ── Ciudad (autocompletar contra Mipaquete) ─────────────────────────────
-  onCiudadInput(v: string) {
-    this.ciudadQuery = this.soloLetras(v);
+  onCiudadInput(event: any) {
+    const sanitized = this.soloLetras(event.target.value);
+    this.ciudadQuery = sanitized;
+    event.target.value = sanitized;
     this.ciudadSeleccionada = null;
     this.fleteSeleccionado = null;
     this.cotizaciones = [];
