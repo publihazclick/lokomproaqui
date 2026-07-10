@@ -483,14 +483,14 @@ export class HeaderComponent implements OnInit {
       {
         icons: 'home',
         nombre: 'Inicio',
-        disable: true,
+        disable: this.rolUser !== 'visitante',
         url: '/articulo',
         submenus:[]
       },
       {
         icons: 'category',
         nombre: 'Productos',
-        disable: ( this.rolUser != 'proveedor' ),
+        disable: ( this.rolUser !== 'visitante' ) && ( this.rolUser != 'proveedor' ),
         disabled: true,
         url: '/pedidos',
         submenus: submenus
@@ -857,8 +857,9 @@ export class HeaderComponent implements OnInit {
 
   navegar( item:any, obj:any = null ){
     console.log("*", item, item.url[1])
+    const yaAbierto = item.check;
     for( let row of this.menus ) row.check = false;
-    item.check = true;
+    item.check = !yaAbierto;
     if( obj ) obj.check = true;
     if( item.url == 'handleShop()' ) return this.handleShop();
     if( item.url == 'handleRechargeNalance()' ) return this.handleRechargeNalance();
