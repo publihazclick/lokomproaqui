@@ -74,6 +74,8 @@ import { ShopifyConnectComponent } from './components/shopify-connect/shopify-co
 import { ShopifyPendingComponent } from './components/shopify-pending/shopify-pending.component';
 import { WoocommerceConnectComponent } from './components/woocommerce-connect/woocommerce-connect.component';
 import { WoocommercePendingComponent } from './components/woocommerce-pending/woocommerce-pending.component';
+import { AceleradorAdminComponent } from './components/acelerador-admin/acelerador-admin.component';
+import { FormaceleradorLeccionComponent } from './form/formacelerador-leccion/formacelerador-leccion.component';
 
 @NgModule({
   entryComponents: [
@@ -93,7 +95,8 @@ import { WoocommercePendingComponent } from './components/woocommerce-pending/wo
     FormcrearguiaComponent,
     FormlistventasComponent,
     FormPosiblesVentasComponent,
-    FormProductComponent
+    FormProductComponent,
+    FormaceleradorLeccionComponent
   ],
   declarations: [
     MainComponent,
@@ -148,7 +151,9 @@ import { WoocommercePendingComponent } from './components/woocommerce-pending/wo
     ShopifyConnectComponent,
     ShopifyPendingComponent,
     WoocommerceConnectComponent,
-    WoocommercePendingComponent
+    WoocommercePendingComponent,
+    AceleradorAdminComponent,
+    FormaceleradorLeccionComponent
   ],
   imports: [
     CommonModule,

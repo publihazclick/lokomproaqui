@@ -35,6 +35,7 @@ import { ShopifyConnectComponent } from './components/shopify-connect/shopify-co
 import { ShopifyPendingComponent } from './components/shopify-pending/shopify-pending.component';
 import { WoocommerceConnectComponent } from './components/woocommerce-connect/woocommerce-connect.component';
 import { WoocommercePendingComponent } from './components/woocommerce-pending/woocommerce-pending.component';
+import { AceleradorAdminComponent } from './components/acelerador-admin/acelerador-admin.component';
 
 const dashboardRoutes: Routes = [
  {
@@ -74,6 +75,10 @@ const dashboardRoutes: Routes = [
      {path: 'shopifyPendientes', component: ShopifyPendingComponent },
      {path: 'woocommerce', component: WoocommerceConnectComponent },
      {path: 'woocommercePendientes', component: WoocommercePendingComponent },
+     // Va ANTES del comodin '**' de mas abajo (linea ~98): un path listado despues de un
+     // wildcard nunca se alcanza, Angular prueba las rutas en orden y el comodin gana primero
+     // (mismo problema real que ya tenia 'cursosView/:id', no se replica aqui).
+     {path: 'aceleradorAdmin', component: AceleradorAdminComponent},
      {
         path: 'store',
         children: [{

@@ -34,6 +34,8 @@ import { ListmenuComponent } from '../layout/listmenu/listmenu.component';
 import { SignUpComponent } from '../layout/sign-up/sign-up.component';
 import { ListArticleComponent } from '../components/list-article/list-article.component';
 import { SwiperModule } from "swiper/angular";
+import { AceleradorComponent } from '../components/acelerador/acelerador.component';
+import { AceleradorPlayerComponent } from '../components/acelerador-player/acelerador-player.component';
 
 @NgModule({
   entryComponents:[
@@ -66,7 +68,9 @@ import { SwiperModule } from "swiper/angular";
     PortalComponent,
     ListmenuComponent,
     SignUpComponent,
-    ListArticleComponent
+    ListArticleComponent,
+    AceleradorComponent,
+    AceleradorPlayerComponent
 
   ],
   imports: [

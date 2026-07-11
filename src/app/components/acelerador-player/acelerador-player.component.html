@@ -1,0 +1,18 @@
+<div class="container-fluid p-4">
+    <div *ngIf="cargando" class="text-center py-5">Cargando video...</div>
+
+    <div *ngIf="error" class="alert alert-danger text-center">{{ error }}</div>
+
+    <div *ngIf="videoUrl" class="video-wrapper" (contextmenu)="bloquearMenu($event)">
+        <video
+            [src]="videoUrl"
+            controls
+            controlsList="nodownload"
+            disablePictureInPicture
+            style="width: 100%; max-height: 80vh;"
+        ></video>
+        <div class="marca-agua" [style.top.%]="marcaAguaTop" [style.left.%]="marcaAguaLeft">
+            {{ dataUser.usu_nombre }} {{ dataUser.usu_apellido }} · {{ dataUser.usu_telefono }}
+        </div>
+    </div>
+</div>

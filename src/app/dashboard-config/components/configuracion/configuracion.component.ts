@@ -40,7 +40,8 @@ export class ConfiguracionComponent implements OnInit {
       clInformacion: this.data.clInformacion,
       cdPedidos: this.data.cdPedidos,
       cdVentas: this.data.cdVentas,
-      cdRetiros: this.data.cdRetiros
+      cdRetiros: this.data.cdRetiros,
+      aceleradorPrecioMensual: this.data.aceleradorPrecioMensual
     };
     this._admin.update( data ).subscribe(( res:any )=>{
       let accion = new ConfiguracionAction( res, 'post' );

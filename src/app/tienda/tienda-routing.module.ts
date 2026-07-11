@@ -13,6 +13,9 @@ import { PortalComponent } from '../layout/portal/portal.component';
 import { SignUpComponent } from '../layout/sign-up/sign-up.component';
 import { ListArticleComponent } from '../components/list-article/list-article.component';
 import { GuestGuard } from '../services/guest.guard';
+import { AceleradorGuard } from '../services/acelerador.guard';
+import { AceleradorComponent } from '../components/acelerador/acelerador.component';
+import { AceleradorPlayerComponent } from '../components/acelerador-player/acelerador-player.component';
 
 const routes: Routes = [
   {
@@ -41,6 +44,10 @@ const routes: Routes = [
       {path: 'listproduct/:idStore', component: ListArticleComponent, canActivate: [GuestGuard] },
       {path: 'listproduct/categoria/:idCategoria', component: ListArticleComponent, canActivate: [GuestGuard] },
       {path: 'listproduct', component: ListArticleComponent, canActivate: [GuestGuard] },
+      // Publica (la vitrina/login se resuelve adentro segun sesion): no lleva GuestGuard a
+      // proposito, un visitante sin loguear debe poder ver la vitrina de venta del curso.
+      { path: 'acelerador', component: AceleradorComponent },
+      { path: 'acelerador/leccion/:id', component: AceleradorPlayerComponent, canActivate: [AceleradorGuard] },
     ]
   },
   {

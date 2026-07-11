@@ -1,0 +1,67 @@
+<h2 mat-dialog-title>{{ titulo }} Leccion</h2>
+<mat-dialog-content class="mat-typography">
+    <div class="form row">
+        <div class="form-group col-12">
+            <label>Modulo</label>
+            <select class="form-control form-control-sm" [(ngModel)]="data.module_id">
+                <option *ngFor="let m of listModules" [value]="m.id">{{ m.title }}</option>
+            </select>
+        </div>
+        <div class="form-group col-12">
+            <label>Titulo</label>
+            <input type="text" [(ngModel)]="data.title" class="form-control form-control-sm">
+        </div>
+        <div class="form-group col-12">
+            <label>Descripcion</label>
+            <textarea class="form-control" [(ngModel)]="data.description" rows="3"></textarea>
+        </div>
+        <div class="form-group col-12">
+            <label>Orden</label>
+            <input type="number" [(ngModel)]="data.sort_order" class="form-control form-control-sm">
+        </div>
+
+        <div class="form-group col-12">
+            <label>Miniatura (publica, solo de vitrina)</label>
+            <div *ngIf="data.thumbnail_url" class="mb-2">
+                <img [src]="data.thumbnail_url" style="width: 120px;">
+            </div>
+            <div class="row">
+                <label class="col">Subir miniatura</label>
+                <button class="btn btn-primary btn-sm" (click)="subirThumbnail()" *ngIf="thumbnailFiles.length > 0" [disabled]="subiendoThumbnail">
+                    Subir
+                </button>
+            </div>
+            <ngx-dropzone (change)="onSelectThumbnail($event)">
+                <ngx-dropzone-label>Abrir archivo</ngx-dropzone-label>
+                <ngx-dropzone-image-preview ngProjectAs="ngx-dropzone-preview" *ngFor="let f of thumbnailFiles" [file]="f"
+                    [removable]="true" (removed)="onRemoveThumbnail()">
+                    <ngx-dropzone-label>{{ f.name }}</ngx-dropzone-label>
+                </ngx-dropzone-image-preview>
+            </ngx-dropzone>
+        </div>
+
+        <div class="form-group col-12">
+            <label>Video de la leccion (bucket PRIVADO, nunca queda con link publico)</label>
+            <div *ngIf="data.video_path" class="mb-2 text-success">Video cargado: {{ data.video_path }}</div>
+            <div class="row">
+                <label class="col">Subir video</label>
+                <button class="btn btn-primary btn-sm" (click)="subirVideo()" *ngIf="videoFiles.length > 0" [disabled]="subiendoVideo">
+                    {{ subiendoVideo ? 'Subiendo...' : 'Subir' }}
+                </button>
+            </div>
+            <ngx-dropzone (change)="onSelectVideo($event)">
+                <ngx-dropzone-label>Abrir archivo de video</ngx-dropzone-label>
+                <ngx-dropzone-preview ngProjectAs="ngx-dropzone-preview" *ngFor="let f of videoFiles" [removable]="true" (removed)="onRemoveVideo()">
+                    <ngx-dropzone-label>{{ f.name }}</ngx-dropzone-label>
+                </ngx-dropzone-preview>
+            </ngx-dropzone>
+        </div>
+    </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close>Cerrar</button>
+    <button mat-button cdkFocusInitial (click)="submit()">
+        <span *ngIf="!id">Guardar</span>
+        <span *ngIf="id">Actualizar</span>
+    </button>
+</mat-dialog-actions>

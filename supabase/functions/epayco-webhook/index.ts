@@ -78,6 +78,41 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ ok: true }), { status: 200 });
     }
 
+    // Suscripcion mensual del curso "Acelerador de Ventas": el invoice se genera como
+    // "SUB-<codigo>" desde AceleradorService.createPayment. A diferencia de TOPUP-, en vez de
+    // acreditar una billetera, extiende (o inicia) acelerador_subscriptions.current_period_end.
+    if (invoice && invoice.startsWith('SUB-')) {
+      const { data: existing, error: fetchErr } = await supabase
+        .from('acelerador_payments')
+        .select('profile_id, status')
+        .eq('code', invoice)
+        .maybeSingle();
+
+      if (fetchErr || !existing) {
+        return new Response(JSON.stringify({ error: 'Pago no encontrado' }), { status: 404 });
+      }
+
+      // ePayco puede reintentar el mismo webhook: solo extender si todavia no estaba pagado.
+      const alreadyPaid = existing.status === 2;
+
+      await supabase
+        .from('acelerador_payments')
+        .update({ status: newStatus, epayco_transaction_id: transactionId })
+        .eq('code', invoice);
+
+      if (newStatus === 2 && !alreadyPaid) {
+        const { error: extendErr } = await supabase.rpc('acelerador_extend_subscription', {
+          p_profile_id: existing.profile_id,
+          p_days: 30,
+        });
+        if (extendErr) {
+          return new Response(JSON.stringify({ error: extendErr.message }), { status: 500 });
+        }
+      }
+
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    }
+
     const { error } = await supabase
       .from('recharge_purchases')
       .update({ status: newStatus, epayco_transaction_id: transactionId })

@@ -1,0 +1,14 @@
+.video-wrapper {
+  position: relative;
+}
+
+.marca-agua {
+  position: absolute;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 13px;
+  font-weight: 600;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  transition: top 1s ease, left 1s ease;
+  white-space: nowrap;
+}
