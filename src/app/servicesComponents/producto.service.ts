@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { ServiciosService } from '../services/servicios.service';
 import { supabase } from '../services/supabase.client';
 import { from } from 'rxjs';
+import * as moment from 'moment';
 
 // Convierte una fila de `products` (+ variantes/categoria) al formato viejo de Tblproductos,
 // reconstruyendo el JSON `listColor` que las plantillas existentes todavia leen.
@@ -149,6 +150,16 @@ export class ProductoService {
         const override = overrides.find((o) => o.product_id === p.id);
         return mapProductToLegacy(p, override ? override.price : undefined);
       });
+
+      // Fetch de un solo producto (pagina de detalle): trae tambien sus comentarios publicos.
+      if (where.id && mapped.length) {
+        const { data: comments } = await supabase.from('product_comments').select('*')
+          .eq('product_id', where.id).eq('status', 0).order('created_at', { ascending: false });
+        mapped[0].listComment = (comments || []).map((c: any) => ({
+          nombre: c.name, fecha: moment(c.created_at).format('DD/MM/YYYY'),
+          descripcion: c.description, foto: './assets/noimagen.jpg',
+        }));
+      }
 
       return { success: true, data: mapped, count: count != null ? count : mapped.length };
     };
@@ -482,11 +493,20 @@ export class ProductoService {
     const run = async (): Promise<any> => this._supplierOrderItems(profileId, ['preparing']);
     return from(run());
   }
-  // Pendiente: comentario publico (anonimo, con nombre/email libres) sobre un producto especifico.
-  // Necesita una tabla nueva (`testimonials` no sirve: es por profile_id, sin product_id/nombre/email
-  // libres) — requiere autorizacion explicita del usuario para la migracion de esquema, pendiente.
+  // Comentario publico (anonimo, con nombre/email libres) sobre un producto especifico. Distinto de
+  // `testimonials` (curados del sitio, ligados a un profile_id) — usa la tabla `product_comments`.
   createTestimonio(query: any) {
-    return from(Promise.resolve({ success: false, data: null }));
+    const run = async (): Promise<any> => {
+      const { data, error } = await supabase.from('product_comments').insert({
+        product_id: query.productos,
+        name: query.nombre || null,
+        email: query.email || null,
+        description: query.descripcion,
+      }).select().single();
+      if (error || !data) return { success: false, data: null };
+      return { success: true, nombre: data.name, email: data.email, descripcion: data.description, createdAt: data.created_at };
+    };
+    return from(run());
   }
 
   // Agrega/reactiva un producto en la tienda propia del revendedor con su precio de venta
