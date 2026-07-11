@@ -6,17 +6,19 @@
 .iphone-menu ul {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: space-evenly;
   align-items: stretch;
   list-style: none;
   gap: 10px;
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 6px 12px;
+  width: 100%;
+  margin: 0;
+  padding: 6px 4%;
+  box-sizing: border-box;
 }
 
 .iphone-menu li {
   display: flex;
+  flex: 1 1 auto;
 }
 
 .iphone-menu a {
@@ -26,6 +28,7 @@
   text-align: center;
   text-decoration: none;
   white-space: nowrap;
+  width: 100%;
   color: #024a70;
   background-color: #f2f8fc;
   border: 1px solid #d9edf9;
