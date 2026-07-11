@@ -801,7 +801,7 @@ export class HeaderComponent implements OnInit {
       },
       {
         icons: 'supervisor_account',
-        nombre: 'Inicia tu propio negocio',
+        nombre: 'Registrate',
         disable: this.rolUser === 'visitante',
         url: 'registrar()',
         submenus:[]
