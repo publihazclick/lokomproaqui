@@ -1,0 +1,16 @@
+// Bug real corregido (2026-07-11): las tablas de resumen del pedido (producto-table,
+// total-line-table) vienen de un tema Shopify pegado con width:418px fijo via inline style,
+// dentro de un contenedor con overflow:hidden — en cualquier celular real (viewport util menor a
+// ~360px tras el padding de Bootstrap) el precio/total quedaba recortado y no habia forma de
+// hacer scroll para verlo antes de pagar. !important porque los estilos originales estan inline
+// en el HTML (mayor especificidad que una clase normal de hoja de estilos).
+@media (max-width: 480px) {
+  .product-table,
+  .total-line-table {
+    width: 100% !important;
+  }
+
+  .order-summary__section__content {
+    overflow-x: auto !important;
+  }
+}

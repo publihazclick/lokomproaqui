@@ -1,0 +1,33 @@
+// Bug real corregido (2026-07-11): este HTML viene de un tema Shopify pegado con anchos fijos
+// en px via style inline (nunca se penso para celular). Sin esto, el subtotal y el boton
+// "Finalizar Pedido" quedaban fuera del area visible/tactil en cualquier celular real, porque
+// styles.scss fuerza overflow-x:hidden global — el contenido que se desborda queda recortado en
+// vez de generar scroll, haciendo la compra imposible de completar desde el celular.
+// !important porque los estilos originales estan inline en el HTML (mayor especificidad que una
+// clase normal de hoja de estilos).
+@media (max-width: 768px) {
+  .page-width {
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+  }
+
+  .grid__item.text-right {
+    width: 100% !important;
+    float: none !important;
+    padding-left: 0 !important;
+  }
+
+  .cart-subtotal__price {
+    padding-left: 15px !important;
+    min-width: 0 !important;
+  }
+
+  .cart__submit-controls {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .cart__submit-controls .btn {
+    width: 100%;
+  }
+}
