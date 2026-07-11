@@ -23,10 +23,10 @@ export class ContadorShippingComponent implements OnInit {
 
   ngOnInit(): void {
     setInterval(()=>{
-      if( this.contect.contadorC <= 7000 ) this.contect.contadorC++;
-      if( this.contect.contadorD <= 50 ) this.contect.contadorD++;
-      if( this.contect.contadorE <= 3200 ) this.contect.contadorE+=10;
-      if( this.contect.contadorM <= 520 ) this.contect.contadorM++;
+      if( this.contect.contadorC < 12103 ) this.contect.contadorC = Math.min( this.contect.contadorC + 2, 12103 );
+      if( this.contect.contadorD < 236 ) this.contect.contadorD++;
+      if( this.contect.contadorE < 2457 ) this.contect.contadorE = Math.min( this.contect.contadorE + 10, 2457 );
+      if( this.contect.contadorM < 1100 ) this.contect.contadorM++;
     }, 5 )
   }
 
