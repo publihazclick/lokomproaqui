@@ -26,6 +26,11 @@ function mapOrderToLegacy(order: any) {
     slug: String(order.id),
     createdAt: order.created_at,
     ven_retiro: order.withdrawn,
+    // Estado REAL de la guia en la transportadora (2026-07-10), separado de ven_estado (interno
+    // de negocio, lo cambia el admin a mano). Se actualiza solo via el cron mipaquete-sync-tracking
+    // o el boton "Actualizar estado" (refreshTracking) — nunca a mano.
+    ven_tracking_status: order.tracking_status,
+    ven_tracking_synced_at: order.tracking_synced_at,
   };
 }
 
@@ -303,6 +308,21 @@ export class VentasService {
         return { data: { status: 500, message: (resp && resp.error) || 'No se pudo generar la guia' } };
       }
       return { data: { status: 200, nRemesa: resp.guia, sending_id: resp.sending_id } };
+    };
+    return from(run());
+  }
+
+  // Consulta el estado REAL de la guia en Mipaquete y lo guarda en orders.tracking_* (boton
+  // "Actualizar estado" del panel admin, para no esperar la proxima corrida del cron cada 30 min).
+  refreshTracking(orderId: number) {
+    const run = async (): Promise<any> => {
+      const { data: resp, error } = await supabase.functions.invoke('mipaquete-track', {
+        body: { order_id: orderId },
+      });
+      if (error || !resp || resp.error) {
+        return { success: false, message: (resp && resp.error) || 'No se pudo actualizar el estado' };
+      }
+      return { success: true, estado: resp.estado_actual || null, tracking: resp.tracking || [] };
     };
     return from(run());
   }

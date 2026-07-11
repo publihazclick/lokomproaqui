@@ -158,8 +158,8 @@
                           </button><br>
                         </div>
                         <div *ngIf="row['ven_numero_guia']">
-                          <button  (click)="verDetalles( row['ven_numero_guia'], row )" class="btn btn-info btn-just-icon btn-round">
-                            Estado Guia
+                          <button (click)="refrescarEstadoEnvio( row )" [disabled]="refrescandoTracking[row.id]" class="btn btn-info btn-just-icon btn-round">
+                            {{ refrescandoTracking[row.id] ? 'Actualizando…' : 'Actualizar estado' }}
                           </button><br>
                         </div>
                         <div *ngIf="row['ven_imagen_tiket']">
@@ -214,6 +214,15 @@
                       <td *ngIf="row['ven_estado'] == 3">Despachado</td>
                       <td *ngIf="row['ven_estado'] == 5">Eliminado</td>
                       <td *ngIf="row['ven_estado'] == 6">Preparación</td>
+                      <td>
+                        <span *ngIf="!row['ven_numero_guia']" class="text-muted">Sin guía aún</span>
+                        <span *ngIf="row['ven_numero_guia'] && !row['ven_tracking_status']" class="text-muted">Sin datos aún</span>
+                        <span *ngIf="row['ven_tracking_status']">
+                          {{ row['ven_tracking_status'] }}
+                          <br>
+                          <small class="text-muted">{{ row['ven_tracking_synced_at'] | date:'short' }}</small>
+                        </span>
+                      </td>
                       <td>
                         <img src="./assets/icons/pago.png" alt="" *ngIf="row['ven_retirado'] == 1" style="width: 25%;">
                         <span *ngIf="row['ven_imagen_tiket'] && row['ven_retirado'] == 0">lista para cobrar</span>

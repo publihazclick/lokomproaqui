@@ -44,7 +44,8 @@ export class VentasComponent implements OnInit {
     page: 0,
     limit: 10
   };
-  Header:any = [ '','Acciones','Numero Guia','Re: Producto','Nombre de la tienda', 'Fecha Venta','Estado', 'Pagado', 'Ganancia'];
+  Header:any = [ '','Acciones','Numero Guia','Re: Producto','Nombre de la tienda', 'Fecha Venta','Estado', 'Estado Envío', 'Pagado', 'Ganancia'];
+  refrescandoTracking:any = {};
   $:any;
   public datoBusqueda = '';
 
@@ -376,9 +377,22 @@ export class VentasComponent implements OnInit {
     window.open( foto );
   }
 
-  verDetalles( url:string, item:any ){
-    if( item.transportadoraSelect == 'CORDINADORA' ) window.open( "https://www.coordinadora.com/portafolio-de-servicios/servicios-en-linea/rastrear-guias/?guia=" + url )
-    else window.open( "https://enviosrrapidoscom.web.app/portada/guiadetalles/" + url )
+  // Estado REAL del envio en Mipaquete (2026-07-10). Reemplaza el viejo verDetalles(), que abria
+  // un link externo muerto (Coordinadora / una app del backend Sails ya borrado). Se actualiza
+  // solo cada 30 min por el cron mipaquete-sync-tracking; este boton fuerza un refresco inmediato
+  // sobre esta fila especifica sin esperar la proxima corrida.
+  refrescarEstadoEnvio( row:any ){
+    if( this.refrescandoTracking[row.id] ) return false;
+    this.refrescandoTracking[row.id] = true;
+    this._ventas.refreshTracking( row.id ).subscribe( ( res:any ) =>{
+      this.refrescandoTracking[row.id] = false;
+      if( !res.success ){ this._tools.tooast( res.message || "No pudimos actualizar el estado" ); return; }
+      row.ven_tracking_status = res.estado;
+      row.ven_tracking_synced_at = new Date().toISOString();
+    }, () =>{
+      this.refrescandoTracking[row.id] = false;
+      this._tools.tooast( "No pudimos actualizar el estado" );
+    } );
   }
 
   openEvidencia( url:string, item:any  ){
