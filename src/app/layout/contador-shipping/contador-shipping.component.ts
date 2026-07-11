@@ -30,7 +30,7 @@ export class ContadorShippingComponent implements OnInit, OnDestroy {
   // nuevo a mitad de camino) + una bandera que evita arrancar dos veces si ngOnInit se llega a
   // disparar mas de una vez.
   private secuencia = [
-    { key: 'contadorC', target: 12103, step: 160 },
+    { key: 'contadorC', target: 12317, step: 160 },
     { key: 'contadorD', target: 236, step: 5 },
     { key: 'contadorE', target: 2457, step: 33 },
     { key: 'contadorM', target: 1100, step: 22 },
