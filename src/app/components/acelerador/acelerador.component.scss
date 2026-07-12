@@ -33,6 +33,7 @@
 
 .precio-banner__tag {
   display: inline-block;
+  color: #fff;
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 1.5px;
@@ -42,19 +43,26 @@
 
 .precio-banner__price {
   margin: 4px 0 8px;
+  color: #fff;
   font-weight: 800;
   font-size: 1.5rem;
 }
 
 .precio-banner__price strong {
+  color: #fff;
   font-size: 1.7rem;
 }
 
 .precio-banner__desc {
   margin: 0;
+  color: #fff;
   font-size: 0.92rem;
   line-height: 1.5;
   opacity: 0.95;
+}
+
+.precio-banner__desc strong {
+  color: #fff;
 }
 
 @media (max-width: 576px) {
