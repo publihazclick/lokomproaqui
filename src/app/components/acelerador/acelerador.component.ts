@@ -34,6 +34,7 @@ export class AceleradorComponent implements OnInit, OnDestroy {
   // registro normal) y se continua al pago sin que el usuario note que "se registro".
   mostrarFormAnon = false;
   procesandoCuenta = false;
+  pagoFueAnonimo = false;
   anonData: any = { usu_nombre: '', usu_email: '', usu_telefono: '', usu_documento: '', usu_ciudad: '' };
 
   constructor(
@@ -103,6 +104,7 @@ export class AceleradorComponent implements OnInit, OnDestroy {
         return;
       }
       this.dataUser = res.data;
+      this.pagoFueAnonimo = true;
       this._store.dispatch(new UserAction(res.data, 'post'));
       this._store.dispatch(new TokenAction({ token: res.data.tokens }, 'post'));
 
@@ -188,7 +190,15 @@ export class AceleradorComponent implements OnInit, OnDestroy {
           this.pollingPago = null;
           this.procesandoPago = false;
           this.tieneAcceso = true;
-          this._tools.tooast({ title: 'Suscripcion activada', icon: 'success' });
+          if (this.pagoFueAnonimo) {
+            this._tools.basicIcons({
+              header: 'Suscripcion activada',
+              subheader: `Guardamos tu acceso con el correo ${this.dataUser.usu_email}. Para volver a entrar mas adelante desde otro dispositivo, usa "Olvide mi contrasena" en el login con ese mismo correo.`,
+              icon: 'success',
+            });
+          } else {
+            this._tools.tooast({ title: 'Suscripcion activada', icon: 'success' });
+          }
         } else if (intentos > 60) {
           clearInterval(this.pollingPago);
           this.pollingPago = null;
