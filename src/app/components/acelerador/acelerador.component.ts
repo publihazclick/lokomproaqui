@@ -3,6 +3,8 @@ import { Store } from '@ngrx/store';
 import { STORAGES } from 'src/app/interfaces/sotarage';
 import { ToolsService } from 'src/app/services/tools.service';
 import { AceleradorService } from 'src/app/servicesComponents/acelerador.service';
+import { UsuariosService } from 'src/app/servicesComponents/usuarios.service';
+import { UserAction, TokenAction } from 'src/app/redux/app.actions';
 import { environment } from 'src/environments/environment';
 declare var ePayco: any;
 
@@ -27,9 +29,17 @@ export class AceleradorComponent implements OnInit, OnDestroy {
   estadoPruebaPagos = environment.estadoPruebaPagos;
   private pollingPago: any = null;
 
+  // Pago sin sesion: se pide solo lo que ePayco ya necesita para el cobro (nombre, correo,
+  // telefono, documento, ciudad). Con eso se crea la cuenta por detras (misma via que el
+  // registro normal) y se continua al pago sin que el usuario note que "se registro".
+  mostrarFormAnon = false;
+  procesandoCuenta = false;
+  anonData: any = { usu_nombre: '', usu_email: '', usu_telefono: '', usu_documento: '', usu_ciudad: '' };
+
   constructor(
     private _store: Store<STORAGES>,
     private _acelerador: AceleradorService,
+    private _usuarios: UsuariosService,
     public _tools: ToolsService,
   ) {
     this._store.subscribe((store: any) => {
@@ -69,6 +79,57 @@ export class AceleradorComponent implements OnInit, OnDestroy {
     this._acelerador.hasAccess(this.dataUser.id).subscribe((res: any) => {
       this.tieneAcceso = !!res.data;
       this.verificandoAcceso = false;
+    });
+  }
+
+  pagarAnonimo() {
+    if (this.procesandoCuenta || this.procesandoPago) return;
+    const d = this.anonData;
+    if (!d.usu_nombre || !d.usu_email || !d.usu_telefono || !d.usu_documento) {
+      this._tools.tooast('Completa nombre, correo, telefono y documento');
+      return;
+    }
+    this.procesandoCuenta = true;
+    const claveTemp = this._tools.codigo() + this._tools.codigo().toLowerCase();
+    this._usuarios.create({
+      usu_email: d.usu_email.trim(),
+      usu_clave: claveTemp,
+      usu_nombre: d.usu_nombre,
+      usu_telefono: d.usu_telefono,
+    }).subscribe((res: any) => {
+      if (!res.success) {
+        this.procesandoCuenta = false;
+        this._tools.tooast(res.message || 'No pudimos continuar, intenta de nuevo');
+        return;
+      }
+      this.dataUser = res.data;
+      this._store.dispatch(new UserAction(res.data, 'post'));
+      this._store.dispatch(new TokenAction({ token: res.data.tokens }, 'post'));
+
+      // Guarda documento/ciudad que la cuenta recien creada aun no tiene (el trigger de signup
+      // solo copia nombre/telefono) -- ePayco los necesita como datos de facturacion.
+      this._usuarios.update({
+        id: res.data.id,
+        usu_email: res.data.usu_email,
+        tokens: res.data.tokens,
+        usu_documento: d.usu_documento,
+        usu_ciudad: d.usu_ciudad,
+      }).subscribe((res2: any) => {
+        if (res2 && res2.id) {
+          this.dataUser = res2;
+          this._store.dispatch(new UserAction(res2, 'put'));
+        }
+        this.procesandoCuenta = false;
+        this.mostrarFormAnon = false;
+        this.suscribirme();
+      }, () => {
+        this.procesandoCuenta = false;
+        this.mostrarFormAnon = false;
+        this.suscribirme();
+      });
+    }, () => {
+      this.procesandoCuenta = false;
+      this._tools.tooast('No pudimos continuar, intenta de nuevo');
     });
   }
 
