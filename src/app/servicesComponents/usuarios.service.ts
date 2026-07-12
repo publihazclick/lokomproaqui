@@ -6,6 +6,12 @@ import { Store } from '@ngrx/store';
 import { supabase } from '../services/supabase.client';
 import { from, of } from 'rxjs';
 
+// roles.name en Supabase usa nombres nuevos ('admin'); el resto de la app compara
+// contra el nombre viejo ('administrador'). Traducimos aca en el unico punto de entrada.
+function legacyRoleName(name: string) {
+  return name === 'admin' ? 'administrador' : name;
+}
+
 // Convierte una fila de `profiles` (+ join de roles) al formato viejo de Tblusuario
 // para que los componentes existentes (usu_nombre, usu_perfil.prf_descripcion, etc.) no cambien.
 function mapProfileToLegacyUser(profile: any, email: string, token?: string) {
@@ -22,7 +28,7 @@ function mapProfileToLegacyUser(profile: any, email: string, token?: string) {
     usu_imagen: profile.avatar_url,
     codigo: profile.referral_code,
     cabeza: profile.referrer_id,
-    usu_perfil: { prf_descripcion: profile.roles ? profile.roles.name : 'vendedor' },
+    usu_perfil: { prf_descripcion: profile.roles ? legacyRoleName(profile.roles.name) : 'vendedor' },
     tokens: token,
   };
 }

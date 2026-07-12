@@ -14,6 +14,12 @@ const headers = new HttpHeaders({
   'X-Api-Key': ""
 });
 
+// roles.name en Supabase usa nombres nuevos ('admin'); el resto de la app compara
+// contra el nombre viejo ('administrador').
+function legacyRoleName(name: string) {
+  return name === 'admin' ? 'administrador' : name;
+}
+
 const URL = environment.url;
 const URL2 = environment.urlEnvios;
 
@@ -80,7 +86,7 @@ export class ServiciosService {
           this.Router.navigate(['/login']);
           setTimeout(function(){ location.reload(); }, 3000);
         }else{
-          let accion = new UserAction( { ...this.dataUser, usu_nombre: res.data.full_name, usu_perfil: { prf_descripcion: res.data.roles ? res.data.roles.name : 'vendedor' } }, 'post');
+          let accion = new UserAction( { ...this.dataUser, usu_nombre: res.data.full_name, usu_perfil: { prf_descripcion: res.data.roles ? legacyRoleName(res.data.roles.name) : 'vendedor' } }, 'post');
           this._store.dispatch( accion );
         }
       });
