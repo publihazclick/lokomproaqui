@@ -13,12 +13,12 @@
         <!-- Sin suscripcion vigente (con o sin sesion): vitrina de venta con los videos gancho -->
         <div *ngIf="!tieneAcceso" class="row justify-content-center py-4">
 
-            <div class="col-12 col-md-6 mb-3" *ngIf="videoGancho1">
+            <div class="col-12 mb-3" *ngIf="videoGancho1">
                 <div class="ratio ratio-16x9">
                     <iframe [src]="videoGancho1" frameborder="0" allowfullscreen></iframe>
                 </div>
             </div>
-            <div class="col-12 col-md-6 mb-3" *ngIf="videoGancho2">
+            <div class="col-12 mb-3" *ngIf="videoGancho2">
                 <div class="ratio ratio-16x9">
                     <iframe [src]="videoGancho2" frameborder="0" allowfullscreen></iframe>
                 </div>
