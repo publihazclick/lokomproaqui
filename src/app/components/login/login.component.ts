@@ -54,9 +54,10 @@ export class LoginComponent implements OnInit {
         this._store.dispatch( accion );
         this._router.navigate(['/pedidos']);
         this._tools.basicIcons({header: "Hola Bienvenido!", subheader: `Hola ${ res.data.usu_nombre } Que tengas un buen dia`});
-        setTimeout(()=>{
-          location.reload();
-        }, 3000);
+        // Antes esperaba 3s antes de recargar: el store ya actualiza el menu al instante (ver
+        // header.component.ts), asi que esa espera solo hacia que el menu de "antes de loguearse"
+        // se viera pegado mas tiempo del necesario. Se recarga de una vez (2026-07-12).
+        location.reload();
         this.dialog.closeAll();
       }else{
         this._tools.presentToast( res.message )

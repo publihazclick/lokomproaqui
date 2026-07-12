@@ -267,9 +267,10 @@ async submit( opt:boolean ){
       this._tools.basicIcons({ header: "Hola Bienvenido!", subheader: `Hola ${res.data.usu_nombre} Que tengas un buen dia` });
       accion = new UserCabezaAction( this.dataUser, 'drop' );
       this._store.dispatch(accion);
-      setTimeout(() => {
-        location.reload();
-      }, 3000);
+      // Antes esperaba 3s antes de recargar: el store ya actualiza el menu al instante (ver
+      // header.component.ts), asi que esa espera solo hacia que el menu de "antes de loguearse"
+      // se viera pegado mas tiempo del necesario. Se recarga de una vez (2026-07-12).
+      location.reload();
     } else this._tools.tooast({ title: res.data, icon: "error" });
   }, (error) => { console.error(error); this.disableSubmit = true; this._tools.presentToast("Error de servidor") });
 }
