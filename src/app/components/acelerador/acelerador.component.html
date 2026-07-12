@@ -44,11 +44,9 @@
 
                 <!-- Logueado, sin suscripcion vigente -->
                 <div *ngIf="dataUser.id">
-                    <p *ngIf="precioMensual">Suscripcion mensual: <strong>${{ precioMensual | number }}</strong></p>
-                    <button class="btn btn-success btn-lg" (click)="suscribirme()" [disabled]="procesandoPago || !precioMensual">
-                        {{ procesandoPago ? 'Procesando...' : 'Suscribirme' }}
+                    <button class="btn btn-success btn-lg" (click)="suscribirme()" [disabled]="procesandoPago">
+                        {{ procesandoPago ? 'Procesando...' : 'Pagar Suscripcion' }}
                     </button>
-                    <p *ngIf="!precioMensual" class="text-muted mt-2">El precio aun no esta configurado.</p>
                 </div>
             </div>
 

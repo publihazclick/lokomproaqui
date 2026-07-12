@@ -13,8 +13,10 @@ declare var ePayco: any;
 })
 export class AceleradorComponent implements OnInit, OnDestroy {
 
+  // Precio fijo de la suscripcion mensual, cobrado en USD por ePayco.
+  readonly PRECIO_USD = 35;
+
   dataUser: any = {};
-  precioMensual = 0;
   tieneAcceso = false;
   verificandoAcceso = true;
   listModules: any[] = [];
@@ -34,7 +36,6 @@ export class AceleradorComponent implements OnInit, OnDestroy {
       store = store.name;
       if (!store) return;
       this.dataUser = store.user || {};
-      this.precioMensual = (store.configuracion && store.configuracion.aceleradorPrecioMensual) || 0;
       const config = store.configuracion || {};
       // Videos "gancho" de YouTube no listados: se muestran a CUALQUIERA sin suscripcion activa
       // (incluso sin sesion), a proposito -- son marketing top-of-funnel, no contenido pago. Nada
@@ -72,10 +73,10 @@ export class AceleradorComponent implements OnInit, OnDestroy {
   }
 
   suscribirme() {
-    if (this.procesandoPago || !this.dataUser.id || !this.precioMensual) return;
+    if (this.procesandoPago || !this.dataUser.id) return;
     this.procesandoPago = true;
     const codigo = 'SUB-' + this._tools.codigo();
-    this._acelerador.createPayment(this.dataUser.id, this.precioMensual, codigo).subscribe((res: any) => {
+    this._acelerador.createPayment(this.dataUser.id, this.PRECIO_USD, codigo).subscribe((res: any) => {
       if (!res.success) {
         this.procesandoPago = false;
         this._tools.tooast('No pudimos iniciar el pago, intenta de nuevo');
@@ -93,8 +94,8 @@ export class AceleradorComponent implements OnInit, OnDestroy {
     const obj: any = {
       name: 'Suscripcion Acelerador de Ventas',
       invoice: codigo,
-      currency: 'cop',
-      amount: this.precioMensual,
+      currency: 'usd',
+      amount: this.PRECIO_USD,
       tax_base: '0',
       tax: '0',
       country: 'co',

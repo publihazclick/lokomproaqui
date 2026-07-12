@@ -43,7 +43,6 @@ export class ConfiguracionComponent implements OnInit {
       cdPedidos: this.data.cdPedidos,
       cdVentas: this.data.cdVentas,
       cdRetiros: this.data.cdRetiros,
-      aceleradorPrecioMensual: this.data.aceleradorPrecioMensual,
       aceleradorVideoGancho1: this.data.aceleradorVideoGancho1,
       aceleradorVideoGancho2: this.data.aceleradorVideoGancho2
     };
