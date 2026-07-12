@@ -10,23 +10,37 @@
 
     <ng-container *ngIf="!verificandoAcceso">
 
-        <!-- Sin sesion: invita a loguearse -->
-        <div *ngIf="!dataUser.id" class="row justify-content-center py-4">
-            <div class="col-12 col-md-6 text-center">
-                <p>Inicia sesion para suscribirte y ver el curso.</p>
-                <a routerLink="/login" class="btn btn-primary">Inicia sesion</a>
-            </div>
-        </div>
+        <!-- Sin suscripcion vigente (con o sin sesion): vitrina de venta con los videos gancho -->
+        <div *ngIf="!tieneAcceso" class="row justify-content-center py-4">
 
-        <!-- Logueado, sin suscripcion vigente: vitrina de venta -->
-        <div *ngIf="dataUser.id && !tieneAcceso" class="row justify-content-center py-4">
-            <div class="col-12 col-md-8 text-center">
-                <p *ngIf="precioMensual">Suscripcion mensual: <strong>${{ precioMensual | number }}</strong></p>
-                <button class="btn btn-success btn-lg" (click)="suscribirme()" [disabled]="procesandoPago || !precioMensual">
-                    {{ procesandoPago ? 'Procesando...' : 'Suscribirme' }}
-                </button>
-                <p *ngIf="!precioMensual" class="text-muted mt-2">El precio aun no esta configurado.</p>
+            <div class="col-12 col-md-6 mb-3" *ngIf="videoGancho1">
+                <div class="ratio ratio-16x9">
+                    <iframe [src]="videoGancho1" frameborder="0" allowfullscreen></iframe>
+                </div>
             </div>
+            <div class="col-12 col-md-6 mb-3" *ngIf="videoGancho2">
+                <div class="ratio ratio-16x9">
+                    <iframe [src]="videoGancho2" frameborder="0" allowfullscreen></iframe>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-8 text-center">
+                <!-- Sin sesion: invita a loguearse -->
+                <div *ngIf="!dataUser.id">
+                    <p>Inicia sesion para suscribirte y ver el curso completo.</p>
+                    <a routerLink="/login" class="btn btn-primary">Inicia sesion</a>
+                </div>
+
+                <!-- Logueado, sin suscripcion vigente -->
+                <div *ngIf="dataUser.id">
+                    <p *ngIf="precioMensual">Suscripcion mensual: <strong>${{ precioMensual | number }}</strong></p>
+                    <button class="btn btn-success btn-lg" (click)="suscribirme()" [disabled]="procesandoPago || !precioMensual">
+                        {{ procesandoPago ? 'Procesando...' : 'Suscribirme' }}
+                    </button>
+                    <p *ngIf="!precioMensual" class="text-muted mt-2">El precio aun no esta configurado.</p>
+                </div>
+            </div>
+
             <div class="col-12 mt-4">
                 <h4 class="text-center">Contenido del curso</h4>
                 <div class="row">

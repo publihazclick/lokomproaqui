@@ -19,6 +19,8 @@ export class AceleradorComponent implements OnInit, OnDestroy {
   verificandoAcceso = true;
   listModules: any[] = [];
   procesandoPago = false;
+  videoGancho1: any = null;
+  videoGancho2: any = null;
   keyEpayco = environment.keyEpayco;
   estadoPruebaPagos = environment.estadoPruebaPagos;
   private pollingPago: any = null;
@@ -33,6 +35,16 @@ export class AceleradorComponent implements OnInit, OnDestroy {
       if (!store) return;
       this.dataUser = store.user || {};
       this.precioMensual = (store.configuracion && store.configuracion.aceleradorPrecioMensual) || 0;
+      const config = store.configuracion || {};
+      // Videos "gancho" de YouTube no listados: se muestran a CUALQUIERA sin suscripcion activa
+      // (incluso sin sesion), a proposito -- son marketing top-of-funnel, no contenido pago. Nada
+      // que ver con la protección de las lecciones reales (esas usan el bucket privado + URL firmada).
+      this.videoGancho1 = config.aceleradorVideoGancho1
+        ? this._tools.seguridadIfrane(`https://www.youtube-nocookie.com/embed/${config.aceleradorVideoGancho1}`)
+        : null;
+      this.videoGancho2 = config.aceleradorVideoGancho2
+        ? this._tools.seguridadIfrane(`https://www.youtube-nocookie.com/embed/${config.aceleradorVideoGancho2}`)
+        : null;
     });
   }
 
