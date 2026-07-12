@@ -1,0 +1,74 @@
+.precio-banner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 22px 28px;
+  border-radius: 20px;
+  color: #fff;
+  background: linear-gradient(135deg, #581f87 0%, #8e2de2 55%, #c33bd0 100%);
+  box-shadow: 0 14px 30px -12px rgba(88, 31, 135, 0.55), 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.precio-banner__icon {
+  flex: 0 0 auto;
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(4px);
+}
+
+.precio-banner__icon i {
+  font-size: 32px;
+}
+
+.precio-banner__text {
+  min-width: 0;
+}
+
+.precio-banner__tag {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.precio-banner__price {
+  margin: 4px 0 8px;
+  font-weight: 800;
+  font-size: 1.5rem;
+}
+
+.precio-banner__price strong {
+  font-size: 1.7rem;
+}
+
+.precio-banner__desc {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  opacity: 0.95;
+}
+
+@media (max-width: 576px) {
+  .precio-banner {
+    flex-direction: column;
+    text-align: center;
+    padding: 22px 20px;
+  }
+
+  .precio-banner__price {
+    font-size: 1.3rem;
+  }
+
+  .precio-banner__price strong {
+    font-size: 1.5rem;
+  }
+}

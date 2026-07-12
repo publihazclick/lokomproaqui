@@ -24,6 +24,17 @@
                 </div>
             </div>
 
+            <div class="col-12 mb-4" *ngIf="videoGancho1 || videoGancho2">
+                <div class="precio-banner">
+                    <div class="precio-banner__icon"><i class="material-icons">workspace_premium</i></div>
+                    <div class="precio-banner__text">
+                        <span class="precio-banner__tag">Suscripcion mensual</span>
+                        <h3 class="precio-banner__price">Tan solo <strong>$35 USD</strong></h3>
+                        <p class="precio-banner__desc">Encontraras <strong>clases grabadas</strong> + <strong>acompañamiento personalizado</strong> para llevar tu negocio al siguiente nivel.</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="col-12 col-md-8 text-center">
                 <!-- Sin sesion: invita a loguearse -->
                 <div *ngIf="!dataUser.id">
