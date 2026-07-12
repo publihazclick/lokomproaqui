@@ -324,6 +324,15 @@ export class ToolsService {
     return this.sanitizer.bypassSecurityTrustResourceUrl( url );
   }
 
+  // Acepta el link completo de YouTube (watch?v=, youtu.be/, embed/, shorts/, con o sin
+  // parametros extra) o el ID pelado, y siempre devuelve solo el ID.
+  extraerIdYoutube( input: string ): string {
+    if( !input ) return input;
+    input = input.trim();
+    const match = input.match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]+)/);
+    return match ? match[1] : input;
+  }
+
   dataURItoBlob(dataURI) {
     const byteString = window.atob(dataURI);
     const arrayBuffer = new ArrayBuffer(byteString.length);

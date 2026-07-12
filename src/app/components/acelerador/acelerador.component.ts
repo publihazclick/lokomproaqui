@@ -40,10 +40,10 @@ export class AceleradorComponent implements OnInit, OnDestroy {
       // (incluso sin sesion), a proposito -- son marketing top-of-funnel, no contenido pago. Nada
       // que ver con la protección de las lecciones reales (esas usan el bucket privado + URL firmada).
       this.videoGancho1 = config.aceleradorVideoGancho1
-        ? this._tools.seguridadIfrane(`https://www.youtube-nocookie.com/embed/${config.aceleradorVideoGancho1}`)
+        ? this._tools.seguridadIfrane(`https://www.youtube-nocookie.com/embed/${this._tools.extraerIdYoutube(config.aceleradorVideoGancho1)}`)
         : null;
       this.videoGancho2 = config.aceleradorVideoGancho2
-        ? this._tools.seguridadIfrane(`https://www.youtube-nocookie.com/embed/${config.aceleradorVideoGancho2}`)
+        ? this._tools.seguridadIfrane(`https://www.youtube-nocookie.com/embed/${this._tools.extraerIdYoutube(config.aceleradorVideoGancho2)}`)
         : null;
     });
   }

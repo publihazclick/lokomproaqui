@@ -34,18 +34,9 @@ export class ConfiguracionComponent implements OnInit {
     this.getComentario();
   }
 
-  // Acepta el link completo de YouTube (watch?v=, youtu.be/, embed/, shorts/, con o sin
-  // parametros extra) o el ID pelado, y siempre deja guardado solo el ID.
-  private extraerIdYoutube(input: string): string {
-    if (!input) return input;
-    input = input.trim();
-    const match = input.match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]+)/);
-    return match ? match[1] : input;
-  }
-
   guardar() {
-    this.data.aceleradorVideoGancho1 = this.extraerIdYoutube(this.data.aceleradorVideoGancho1);
-    this.data.aceleradorVideoGancho2 = this.extraerIdYoutube(this.data.aceleradorVideoGancho2);
+    this.data.aceleradorVideoGancho1 = this._tools.extraerIdYoutube(this.data.aceleradorVideoGancho1);
+    this.data.aceleradorVideoGancho2 = this._tools.extraerIdYoutube(this.data.aceleradorVideoGancho2);
     let data:any = {
       id: this.data.id,
       clInformacion: this.data.clInformacion,
