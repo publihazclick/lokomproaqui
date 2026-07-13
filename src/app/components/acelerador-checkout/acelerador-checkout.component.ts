@@ -61,8 +61,8 @@ export class AceleradorCheckoutComponent implements OnDestroy {
   pagarAnonimo() {
     if (this.procesandoCuenta || this.procesandoPago) return;
     const d = this.anonData;
-    if (!d.usu_nombre || !d.usu_email || !d.usu_telefono || !d.usu_documento) {
-      this._tools.tooast('Completa nombre, correo, telefono y documento');
+    if (!d.usu_nombre || !d.usu_email || !d.usu_telefono || !d.usu_documento || !d.usu_ciudad) {
+      this._tools.tooast('Completa todos los campos para continuar');
       return;
     }
     this.procesandoCuenta = true;

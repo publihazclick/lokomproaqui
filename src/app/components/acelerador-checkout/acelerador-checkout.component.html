@@ -6,12 +6,13 @@
 
 <div *ngIf="mostrarFormAnon" class="checkout-anon">
     <h5 class="checkout-anon__title">Completa tus datos para continuar</h5>
-    <input type="text" [(ngModel)]="anonData.usu_nombre" placeholder="Nombre completo" class="form-control mb-2">
-    <input type="email" [(ngModel)]="anonData.usu_email" placeholder="Correo electronico" class="form-control mb-2">
-    <input type="text" [(ngModel)]="anonData.usu_telefono" placeholder="Telefono / WhatsApp" class="form-control mb-2">
-    <input type="text" [(ngModel)]="anonData.usu_documento" placeholder="Numero de documento" class="form-control mb-2">
-    <input type="text" [(ngModel)]="anonData.usu_ciudad" placeholder="Ciudad" class="form-control mb-3">
-    <button type="button" class="btn btn-success btn-lg w-100" (click)="pagarAnonimo()" [disabled]="procesandoCuenta || procesandoPago">
+    <input type="text" required [(ngModel)]="anonData.usu_nombre" placeholder="Nombre completo *" class="form-control mb-2">
+    <input type="email" required [(ngModel)]="anonData.usu_email" placeholder="Correo electronico *" class="form-control mb-2">
+    <input type="text" required [(ngModel)]="anonData.usu_telefono" placeholder="Telefono / WhatsApp *" class="form-control mb-2">
+    <input type="text" required [(ngModel)]="anonData.usu_documento" placeholder="Numero de documento *" class="form-control mb-2">
+    <input type="text" required [(ngModel)]="anonData.usu_ciudad" placeholder="Ciudad *" class="form-control mb-3">
+    <button type="button" class="btn btn-success btn-lg w-100" (click)="pagarAnonimo()"
+        [disabled]="procesandoCuenta || procesandoPago || !anonData.usu_nombre || !anonData.usu_email || !anonData.usu_telefono || !anonData.usu_documento || !anonData.usu_ciudad">
         {{ (procesandoCuenta || procesandoPago) ? 'Procesando...' : 'Continuar al pago' }}
     </button>
 </div>

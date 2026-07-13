@@ -710,25 +710,6 @@ p {
   color: #fff;
 }
 
-.curso-ad__cta {
-  border: none;
-  border-radius: 30px;
-  padding: 12px 28px;
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: #02a0e3;
-  background: #fff;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
-}
-
-.curso-ad__cta:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
-}
-
 @media (max-width: 768px) {
   .curso-ad {
     padding: 28px 20px;
@@ -771,10 +752,6 @@ p {
   .curso-ad__price-row {
     flex-direction: column;
     align-items: center;
-  }
-
-  .curso-ad__cta {
-    width: 100%;
   }
 }
 

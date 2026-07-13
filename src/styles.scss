@@ -1010,3 +1010,32 @@ footer {
   overflow: hidden;
   vertical-align: middle;
 }
+
+// Boton "Suscribirme" del anuncio del curso en /info. Vive en global (no en
+// info.component.scss) porque el <button> real lo renderiza AceleradorCheckoutComponent
+// (un componente hijo distinto) -- el aislamiento de estilos de Angular no deja que el
+// CSS de un componente le llegue al DOM de otro, asi que esta clase necesita ser global.
+.curso-ad__cta {
+  border: none;
+  border-radius: 30px;
+  padding: 12px 28px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #02a0e3;
+  background: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+
+.curso-ad__cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
+}
+
+@media (max-width: 768px) {
+  .curso-ad__cta {
+    width: 100%;
+  }
+}
