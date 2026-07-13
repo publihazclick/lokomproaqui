@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { STORAGES } from 'src/app/interfaces/sotarage';
 import { ToolsService } from 'src/app/services/tools.service';
@@ -41,6 +42,7 @@ export class AceleradorComponent implements OnInit, OnDestroy {
     private _store: Store<STORAGES>,
     private _acelerador: AceleradorService,
     private _usuarios: UsuariosService,
+    private _route: ActivatedRoute,
     public _tools: ToolsService,
   ) {
     this._store.subscribe((store: any) => {
@@ -73,13 +75,19 @@ export class AceleradorComponent implements OnInit, OnDestroy {
       this.listModules = res.data || [];
     });
 
+    // ?checkout=1 llega desde el boton "Suscribirme" de la vitrina principal (/info): abre el
+    // pago de una vez en vez de solo mostrar la vitrina, para no obligar a un segundo click aca.
+    const abrirCheckout = this._route.snapshot.queryParamMap.get('checkout') === '1';
+
     if (!this.dataUser.id) {
       this.verificandoAcceso = false;
+      if (abrirCheckout) this.mostrarFormAnon = true;
       return;
     }
     this._acelerador.hasAccess(this.dataUser.id).subscribe((res: any) => {
       this.tieneAcceso = !!res.data;
       this.verificandoAcceso = false;
+      if (abrirCheckout && !this.tieneAcceso) this.suscribirme();
     });
   }
 
