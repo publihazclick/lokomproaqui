@@ -6,13 +6,13 @@
 
 <div *ngIf="mostrarFormAnon" class="checkout-anon">
     <h5 class="checkout-anon__title">Completa tus datos para continuar</h5>
-    <input type="text" required [(ngModel)]="anonData.usu_nombre" placeholder="Nombre completo *" class="form-control mb-2">
-    <input type="email" required [(ngModel)]="anonData.usu_email" placeholder="Correo electronico *" class="form-control mb-2">
-    <input type="text" required [(ngModel)]="anonData.usu_telefono" placeholder="Telefono / WhatsApp *" class="form-control mb-2">
-    <input type="text" required [(ngModel)]="anonData.usu_documento" placeholder="Numero de documento *" class="form-control mb-2">
-    <input type="text" required [(ngModel)]="anonData.usu_ciudad" placeholder="Ciudad *" class="form-control mb-3">
+    <input type="text" required [ngModel]="anonData.usu_nombre" (ngModelChange)="anonData.usu_nombre = soloLetras($event)" placeholder="Nombre completo *" class="form-control mb-2">
+    <input type="email" required [(ngModel)]="anonData.usu_email" placeholder="Correo electronico (ej: nombre@correo.com) *" class="form-control mb-2">
+    <input type="tel" required [ngModel]="anonData.usu_telefono" (ngModelChange)="anonData.usu_telefono = soloNumeros($event)" placeholder="Telefono / WhatsApp *" class="form-control mb-2">
+    <input type="text" required [ngModel]="anonData.usu_documento" (ngModelChange)="anonData.usu_documento = soloNumeros($event)" placeholder="Numero de documento *" class="form-control mb-2">
+    <input type="text" required [ngModel]="anonData.usu_ciudad" (ngModelChange)="anonData.usu_ciudad = soloLetras($event)" placeholder="Ciudad *" class="form-control mb-3">
     <button type="button" class="btn btn-success btn-lg w-100" (click)="pagarAnonimo()"
-        [disabled]="procesandoCuenta || procesandoPago || !anonData.usu_nombre || !anonData.usu_email || !anonData.usu_telefono || !anonData.usu_documento || !anonData.usu_ciudad">
+        [disabled]="procesandoCuenta || procesandoPago || !formularioValido()">
         {{ (procesandoCuenta || procesandoPago) ? 'Procesando...' : 'Continuar al pago' }}
     </button>
 </div>

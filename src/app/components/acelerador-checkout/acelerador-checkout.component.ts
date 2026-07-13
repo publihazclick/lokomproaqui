@@ -58,11 +58,29 @@ export class AceleradorCheckoutComponent implements OnDestroy {
     else this.mostrarFormAnon = true;
   }
 
+  // Sanitizan mientras se escribe (no solo al enviar), asi el dato nunca queda mal cargado.
+  soloLetras(valor: string): string {
+    return (valor || '').replace(/[^a-zA-ZÀ-ÿñÑ\s]/g, '');
+  }
+
+  soloNumeros(valor: string): string {
+    return (valor || '').replace(/[^0-9]/g, '');
+  }
+
+  emailValido(): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.anonData.usu_email || '');
+  }
+
+  formularioValido(): boolean {
+    const d = this.anonData;
+    return !!(d.usu_nombre && d.usu_telefono && d.usu_documento && d.usu_ciudad) && this.emailValido();
+  }
+
   pagarAnonimo() {
     if (this.procesandoCuenta || this.procesandoPago) return;
     const d = this.anonData;
-    if (!d.usu_nombre || !d.usu_email || !d.usu_telefono || !d.usu_documento || !d.usu_ciudad) {
-      this._tools.tooast('Completa todos los campos para continuar');
+    if (!this.formularioValido()) {
+      this._tools.tooast('Completa todos los campos correctamente para continuar');
       return;
     }
     this.procesandoCuenta = true;
@@ -75,7 +93,11 @@ export class AceleradorCheckoutComponent implements OnDestroy {
     }).subscribe((res: any) => {
       if (!res.success) {
         this.procesandoCuenta = false;
-        this._tools.tooast(res.message || 'No pudimos continuar, intenta de nuevo');
+        this._tools.basicIcons({
+          header: 'No pudimos continuar',
+          subheader: res.message || 'Intenta de nuevo',
+          icon: 'error',
+        });
         return;
       }
       this.dataUser = res.data;

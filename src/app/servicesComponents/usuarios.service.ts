@@ -210,9 +210,9 @@ export class UsuariosService {
       });
 
       if (error) {
-        const msg = error.message.includes('already registered')
-          ? 'Ya existe una cuenta con ese correo'
-          : 'No pudimos crear tu cuenta, intenta de nuevo';
+        let msg = 'No pudimos crear tu cuenta, intenta de nuevo';
+        if (error.message.includes('already registered')) msg = 'Ya existe una cuenta con ese correo';
+        else if (error.message.includes('profiles_phone_key') || error.message.includes('phone')) msg = 'Ya existe una cuenta con ese numero de telefono';
         return { success: false, data: msg, message: msg };
       }
 
