@@ -27,7 +27,10 @@ async function uploadPrivateVideo(form: FormData): Promise<any> {
   const ext = (file.name || 'mp4').split('.').pop();
   const path = `lecciones/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
   const { error } = await supabase.storage.from(PRIVATE_VIDEO_BUCKET).upload(path, file, { upsert: true });
-  if (error) return { success: false, path: null };
+  // Se propaga el mensaje real de Supabase (ej. "The object exceeded the maximum allowed size")
+  // en vez de un "error" generico -- el limite de archivo del proyecto es 50MB y es la causa mas
+  // comun de que falle subir un video de leccion real.
+  if (error) return { success: false, path: null, message: error.message };
   return { success: true, path };
 }
 

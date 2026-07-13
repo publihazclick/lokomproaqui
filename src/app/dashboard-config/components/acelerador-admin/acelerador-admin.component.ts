@@ -52,9 +52,44 @@ export class AceleradorAdminComponent implements OnInit {
   }
 
   eliminarModulo(modulo: any) {
-    this._acelerador.deleteModule(modulo.id).subscribe(() => {
-      this._tools.tooast({ title: 'Eliminado' });
-      this.cargarTodo();
+    this._tools.confirm({
+      title: `¿Eliminar el modulo "${modulo.title}"?`,
+      detalle: `Esto tambien borra sus ${modulo.lessons.length} lecciones (con sus videos) sin poder deshacerlo.`,
+      confir: 'Si, eliminar',
+    }).then((res: any) => {
+      if (!res.isConfirmed) return;
+      this._acelerador.deleteModule(modulo.id).subscribe(() => {
+        this._tools.tooast({ title: 'Eliminado' });
+        this.cargarTodo();
+      });
+    });
+  }
+
+  // Reordenar modulos: intercambia sort_order con el vecino y guarda ambos. Simple (sin
+  // drag&drop) pero suficiente para acomodar el orden real del curso desde cero o corregirlo.
+  moverModulo(index: number, direccion: number) {
+    const vecino = index + direccion;
+    if (vecino < 0 || vecino >= this.listModules.length) return;
+    const actual = this.listModules[index];
+    const otro = this.listModules[vecino];
+    const ordenActual = actual.sort_order;
+    actual.sort_order = otro.sort_order;
+    otro.sort_order = ordenActual;
+    this._acelerador.updateModule(actual).subscribe(() => {
+      this._acelerador.updateModule(otro).subscribe(() => this.cargarTodo());
+    });
+  }
+
+  moverLeccion(modulo: any, index: number, direccion: number) {
+    const vecino = index + direccion;
+    if (vecino < 0 || vecino >= modulo.lessons.length) return;
+    const actual = modulo.lessons[index];
+    const otro = modulo.lessons[vecino];
+    const ordenActual = actual.sort_order;
+    actual.sort_order = otro.sort_order;
+    otro.sort_order = ordenActual;
+    this._acelerador.updateLesson(actual).subscribe(() => {
+      this._acelerador.updateLesson(otro).subscribe(() => this.cargarTodo());
     });
   }
 
@@ -75,9 +110,16 @@ export class AceleradorAdminComponent implements OnInit {
   }
 
   eliminarLeccion(leccion: any) {
-    this._acelerador.deleteLesson(leccion.id).subscribe(() => {
-      this._tools.tooast({ title: 'Eliminado' });
-      this.cargarTodo();
+    this._tools.confirm({
+      title: `¿Eliminar la leccion "${leccion.title}"?`,
+      detalle: 'Esto tambien borra el video subido, sin poder deshacerlo.',
+      confir: 'Si, eliminar',
+    }).then((res: any) => {
+      if (!res.isConfirmed) return;
+      this._acelerador.deleteLesson(leccion.id).subscribe(() => {
+        this._tools.tooast({ title: 'Eliminado' });
+        this.cargarTodo();
+      });
     });
   }
 }

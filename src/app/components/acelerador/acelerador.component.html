@@ -58,6 +58,13 @@
 
         <!-- Suscripcion vigente: "Mi Curso", organizado modulo por modulo -->
         <div *ngIf="dataUser.id && tieneAcceso" class="row py-4">
+            <div class="col-12 mb-3" *ngIf="dataUser.usu_perfil?.prf_descripcion === 'mentor'">
+                <div class="mentor-preview-badge">
+                    <i class="material-icons">visibility</i>
+                    Estas viendo esto en modo vista previa (mentor) — asi lo ve un suscriptor real.
+                </div>
+            </div>
+
             <div class="col-12 mb-4">
                 <div class="mi-curso-header">
                     <i class="material-icons mi-curso-header__icon">workspace_premium</i>

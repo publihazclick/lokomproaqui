@@ -63,6 +63,16 @@ export class AceleradorComponent implements OnInit {
       if (abrirCheckout) setTimeout(() => this.checkout && this.checkout.onClickPrincipal());
       return;
     }
+
+    // El mentor sube y organiza el contenido: tiene que poder ver "Mi Curso" exactamente como lo
+    // ve un suscriptor real (no la vitrina de venta), sin necesitar pagar una suscripcion.
+    const perfil = this.dataUser.usu_perfil;
+    if (perfil && perfil.prf_descripcion === 'mentor') {
+      this.tieneAcceso = true;
+      this.verificandoAcceso = false;
+      return;
+    }
+
     this._acelerador.hasAccess(this.dataUser.id).subscribe((res: any) => {
       this.tieneAcceso = !!res.data;
       this.verificandoAcceso = false;

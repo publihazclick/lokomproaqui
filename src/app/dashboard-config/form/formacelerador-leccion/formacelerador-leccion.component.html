@@ -15,9 +15,13 @@
             <label>Descripcion</label>
             <textarea class="form-control" [(ngModel)]="data.description" rows="3"></textarea>
         </div>
-        <div class="form-group col-12">
+        <div class="form-group col-6">
             <label>Orden</label>
             <input type="number" [(ngModel)]="data.sort_order" class="form-control form-control-sm">
+        </div>
+        <div class="form-group col-6">
+            <label>Duracion (segundos)</label>
+            <input type="number" [(ngModel)]="data.duration_seconds" class="form-control form-control-sm" placeholder="Se completa sola al subir el video">
         </div>
 
         <div class="form-group col-12">

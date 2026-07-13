@@ -36,6 +36,11 @@
             <i class="material-icons">menu_book</i> Contenido del curso
         </button>
 
+        <div class="mentor-preview-badge" *ngIf="dataUser.usu_perfil?.prf_descripcion === 'mentor'">
+            <i class="material-icons">visibility</i>
+            Vista previa (mentor) — asi lo ve un suscriptor real.
+        </div>
+
         <div class="curso-breadcrumb" *ngIf="moduloActual">{{ moduloActual }}</div>
         <h2 class="curso-titulo" *ngIf="leccionActual">{{ leccionActual.title }}</h2>
         <p class="curso-descripcion" *ngIf="leccionActual?.description">{{ leccionActual.description }}</p>
