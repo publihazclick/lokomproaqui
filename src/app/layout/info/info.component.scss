@@ -480,17 +480,41 @@ p {
 .curso-ad {
   position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  text-align: center;
-  gap: 32px;
+  justify-content: center;
+  gap: 48px;
   width: 100%;
   margin: 40px 0;
-  padding: 40px;
+  padding: 48px;
   border-radius: 24px;
   background: linear-gradient(135deg, #581f87 0%, #8e2de2 55%, #c33bd0 100%);
   box-shadow: 0 20px 45px -18px rgba(88, 31, 135, 0.55), 0 4px 14px rgba(0, 0, 0, 0.12);
   overflow: hidden;
+}
+
+// Formas decorativas de fondo para que el espacio ancho de la tarjeta (full-width) no se sienta
+// vacio -- puramente visuales, sin texto ni cifras (para no inventar "prueba social" falsa).
+.curso-ad__decor {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.curso-ad__decor--1 {
+  top: -120px;
+  right: -80px;
+  width: 340px;
+  height: 340px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.14), transparent 70%);
+}
+
+.curso-ad__decor--2 {
+  bottom: -140px;
+  left: 10%;
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1), transparent 70%);
 }
 
 .curso-ad__badge {
@@ -511,9 +535,12 @@ p {
 // Los 2 videos gancho, uno al lado del otro en escritorio (se apilan solos en mobile via
 // flex-wrap, sin necesitar una media query aparte para esto).
 .curso-ad__videos {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  flex: 0 0 auto;
   gap: 24px;
 }
 
@@ -582,7 +609,10 @@ p {
 }
 
 .curso-ad__body {
-  max-width: 560px;
+  position: relative;
+  z-index: 1;
+  flex: 1 1 420px;
+  max-width: 520px;
   min-width: 0;
   color: #fff;
 }
@@ -601,12 +631,12 @@ p {
 .curso-ad__title {
   margin: 0 0 10px;
   font-weight: 800;
-  font-size: 1.6rem;
+  font-size: 1.7rem;
   color: #fff;
 }
 
 .curso-ad__desc {
-  margin: 0 0 20px;
+  margin: 0 0 18px;
   font-size: 0.98rem;
   line-height: 1.55;
   color: #fff;
@@ -614,6 +644,57 @@ p {
 }
 
 .curso-ad__desc strong {
+  color: #fff;
+}
+
+// Beneficios reales del curso, como lista con iconos en vez de texto corrido -- agrega
+// densidad visual sin inventar prueba social (cifras/testimonios) que no tenemos.
+.curso-ad__features {
+  list-style: none;
+  margin: 0 0 22px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.curso-ad__features li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.curso-ad__features i {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 17px;
+  color: #fff;
+}
+
+.curso-ad__price-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.curso-ad__price {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.curso-ad__price strong {
+  font-size: 1.15rem;
   color: #fff;
 }
 
@@ -626,6 +707,7 @@ p {
   color: #581f87;
   background: #fff;
   cursor: pointer;
+  white-space: nowrap;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
 }
@@ -644,6 +726,10 @@ p {
     gap: 20px;
   }
 
+  .curso-ad__body {
+    max-width: 100%;
+  }
+
   .curso-ad__media {
     width: 200px;
     margin: 0 auto;
@@ -657,6 +743,19 @@ p {
 
   .curso-ad__title {
     font-size: 1.3rem;
+  }
+
+  .curso-ad__features {
+    align-items: center;
+  }
+
+  .curso-ad__features li {
+    text-align: left;
+  }
+
+  .curso-ad__price-row {
+    flex-direction: column;
+    align-items: center;
   }
 
   .curso-ad__cta {

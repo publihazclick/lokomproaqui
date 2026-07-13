@@ -38,6 +38,8 @@
 
   <div class="col-12" *ngIf="cursoAdThumbnail1">
     <section class="curso-ad">
+      <div class="curso-ad__decor curso-ad__decor--1"></div>
+      <div class="curso-ad__decor curso-ad__decor--2"></div>
       <span class="curso-ad__badge">🔥 Nuevo</span>
 
       <div class="curso-ad__videos">
@@ -72,10 +74,19 @@
         <span class="curso-ad__tag">Acelerador de Ventas</span>
         <h2 class="curso-ad__title">Aprende a vender como un experto</h2>
         <p class="curso-ad__desc">
-          Clases grabadas + acompañamiento personalizado para llevar tu negocio al siguiente
-          nivel, por tan solo <strong>$35 USD al mes</strong>.
+          Clases grabadas + acompañamiento personalizado para llevar tu negocio al siguiente nivel.
         </p>
-        <button type="button" class="curso-ad__cta" (click)="irAlAcelerador()">Ver el curso</button>
+
+        <ul class="curso-ad__features">
+          <li><i class="material-icons">videocam</i> Clases grabadas, a tu ritmo</li>
+          <li><i class="material-icons">support_agent</i> Acompañamiento personalizado</li>
+          <li><i class="material-icons">bolt</i> Acceso inmediato al pagar</li>
+        </ul>
+
+        <div class="curso-ad__price-row">
+          <span class="curso-ad__price">Tan solo <strong>$35 USD</strong> al mes</span>
+          <button type="button" class="curso-ad__cta" (click)="irAlAcelerador()">Ver el curso</button>
+        </div>
       </div>
     </section>
   </div>
