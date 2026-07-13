@@ -479,10 +479,6 @@ p {
 // tema del marketplace de dropshipping).
 .curso-ad {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 48px;
   width: 100%;
   margin: 40px 0;
   padding: 48px;
@@ -490,6 +486,22 @@ p {
   background: linear-gradient(135deg, #581f87 0%, #8e2de2 55%, #c33bd0 100%);
   box-shadow: 0 20px 45px -18px rgba(88, 31, 135, 0.55), 0 4px 14px rgba(0, 0, 0, 0.12);
   overflow: hidden;
+}
+
+// Videos + texto se centran de verdad con margin:auto (en vez de depender de como flexbox
+// reparte el espacio sobrante entre hermanos con distinto flex-grow/max-width), asi el grupo
+// queda simetrico sin importar que tan ancha sea la tarjeta. La tarjeta en si sigue siendo
+// full-width (el gradiente/las formas decorativas si llegan al borde).
+.curso-ad__inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 48px;
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
 // Formas decorativas de fondo para que el espacio ancho de la tarjeta (full-width) no se sienta
@@ -719,10 +731,13 @@ p {
 
 @media (max-width: 768px) {
   .curso-ad {
-    flex-direction: column;
-    text-align: center;
     padding: 28px 20px;
     margin: 24px auto;
+  }
+
+  .curso-ad__inner {
+    flex-direction: column;
+    text-align: center;
     gap: 20px;
   }
 
