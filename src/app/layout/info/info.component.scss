@@ -481,10 +481,11 @@ p {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 32px;
-  max-width: 960px;
-  margin: 40px auto;
-  padding: 32px;
+  justify-content: center;
+  gap: 40px;
+  width: 100%;
+  margin: 40px 0;
+  padding: 40px;
   border-radius: 24px;
   background: linear-gradient(135deg, #581f87 0%, #8e2de2 55%, #c33bd0 100%);
   box-shadow: 0 20px 45px -18px rgba(88, 31, 135, 0.55), 0 4px 14px rgba(0, 0, 0, 0.12);
@@ -571,7 +572,7 @@ p {
 }
 
 .curso-ad__body {
-  flex: 1;
+  flex: 0 1 560px;
   min-width: 0;
   color: #fff;
 }
