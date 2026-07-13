@@ -159,6 +159,27 @@
 
     </section>
   </div>
+
+  <div class="col-12" *ngIf="videoGanchoCurso">
+    <section class="curso-ad">
+      <span class="curso-ad__badge">🔥 Nuevo</span>
+      <div class="curso-ad__media">
+        <div class="ratio curso-ad__ratio">
+          <iframe [src]="videoGanchoCurso" frameborder="0" allowfullscreen></iframe>
+        </div>
+      </div>
+      <div class="curso-ad__body">
+        <span class="curso-ad__tag">Acelerador de Ventas</span>
+        <h2 class="curso-ad__title">Aprende a vender como un experto</h2>
+        <p class="curso-ad__desc">
+          Clases grabadas + acompañamiento personalizado para llevar tu negocio al siguiente
+          nivel, por tan solo <strong>$35 USD al mes</strong>.
+        </p>
+        <button type="button" class="curso-ad__cta" (click)="irAlAcelerador()">Ver el curso</button>
+      </div>
+    </section>
+  </div>
+
   <div class="col-12 row" style=" margin:  5px;">
 
     <div class="col-12 col-sm-4">

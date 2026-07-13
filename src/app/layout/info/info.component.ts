@@ -5,6 +5,7 @@ import { Store } from '@ngrx/store';
 import { RegistroComponent } from 'src/app/components/registro/registro.component';
 import { OpenIframeComponent } from 'src/app/extra/open-iframe/open-iframe.component';
 import { STORAGES } from 'src/app/interfaces/sotarage';
+import { ToolsService } from 'src/app/services/tools.service';
 
 @Component({
   selector: 'app-info',
@@ -13,10 +14,15 @@ import { STORAGES } from 'src/app/interfaces/sotarage';
 })
 export class InfoComponent implements OnInit {
   numberInf:number = 0;
+  // Anuncio del curso "Acelerador de Ventas" en la vitrina principal (reutiliza el mismo video
+  // gancho 1 que ya se usa en /acelerador -- no un video nuevo, sino el mismo anuncio en 2 lugares).
+  videoGanchoCurso: any = null;
+
   constructor(
     public dialog: MatDialog,
     private _store: Store<STORAGES>,
     private _router: Router,
+    private _tools: ToolsService,
   ) {
     this._store.subscribe((store: any) => {
       store = store.name;
@@ -26,6 +32,10 @@ export class InfoComponent implements OnInit {
       } catch (error) {
         this.numberInf = 3213692393;
       }
+      const config = store.configuracion || {};
+      this.videoGanchoCurso = config.aceleradorVideoGancho1
+        ? this._tools.seguridadIfrane(`https://www.youtube-nocookie.com/embed/${this._tools.extraerIdYoutube(config.aceleradorVideoGancho1)}`)
+        : null;
     });
   }
 
@@ -65,6 +75,10 @@ export class InfoComponent implements OnInit {
   handleInfo(){
     let url = `https://wa.me/57${ this.numberInf }?text=Hola Servicio al cliente`
     window.open( url )
+  }
+
+  irAlAcelerador(){
+    this._router.navigate(['/acelerador']);
   }
 
 }

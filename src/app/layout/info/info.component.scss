@@ -473,7 +473,133 @@ p {
   }
 }
 
+// Anuncio del curso "Acelerador de Ventas" -- misma paleta morada de la pagina del curso
+// (acelerador.component.scss) para que se reconozca como el mismo producto, con tratamiento
+// de "anuncio" (badge + tarjeta destacada) para que resalte del resto de la pagina (azul,
+// tema del marketplace de dropshipping).
+.curso-ad {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  max-width: 960px;
+  margin: 40px auto;
+  padding: 32px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #581f87 0%, #8e2de2 55%, #c33bd0 100%);
+  box-shadow: 0 20px 45px -18px rgba(88, 31, 135, 0.55), 0 4px 14px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
 
+.curso-ad__badge {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  padding: 6px 14px;
+  border-radius: 30px;
+  background: #fff;
+  color: #581f87;
+  font-weight: 800;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+}
+
+.curso-ad__media {
+  flex: 0 0 auto;
+  width: 220px;
+}
+
+.curso-ad__ratio {
+  --bs-aspect-ratio: #{calc(16 / 9 * 100%)}; // 9:16 vertical, formato Shorts
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  border: 3px solid rgba(255, 255, 255, 0.25);
+}
+
+.curso-ad__body {
+  flex: 1;
+  min-width: 0;
+  color: #fff;
+}
+
+.curso-ad__tag {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #fff;
+  opacity: 0.85;
+  margin-bottom: 6px;
+}
+
+.curso-ad__title {
+  margin: 0 0 10px;
+  font-weight: 800;
+  font-size: 1.6rem;
+  color: #fff;
+}
+
+.curso-ad__desc {
+  margin: 0 0 20px;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: #fff;
+  opacity: 0.95;
+}
+
+.curso-ad__desc strong {
+  color: #fff;
+}
+
+.curso-ad__cta {
+  border: none;
+  border-radius: 30px;
+  padding: 12px 28px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #581f87;
+  background: #fff;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+
+.curso-ad__cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
+}
+
+@media (max-width: 768px) {
+  .curso-ad {
+    flex-direction: column;
+    text-align: center;
+    padding: 28px 20px;
+    margin: 24px auto;
+    gap: 20px;
+  }
+
+  .curso-ad__media {
+    width: 180px;
+  }
+
+  .curso-ad__badge {
+    position: static;
+    display: inline-block;
+    margin-bottom: 4px;
+  }
+
+  .curso-ad__title {
+    font-size: 1.3rem;
+  }
+
+  .curso-ad__cta {
+    width: 100%;
+  }
+}
 
 
 
