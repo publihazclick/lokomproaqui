@@ -36,21 +36,38 @@
     </div>
 </section>
 
-  <div class="col-12" *ngIf="cursoAdThumbnail">
+  <div class="col-12" *ngIf="cursoAdThumbnail1">
     <section class="curso-ad">
       <span class="curso-ad__badge">🔥 Nuevo</span>
-      <div class="curso-ad__media">
-        <div class="curso-ad__glow"></div>
-        <div class="ratio curso-ad__ratio">
-          <iframe *ngIf="cursoAdReproduciendo" [src]="videoGanchoCurso" frameborder="0" allowfullscreen allow="autoplay"></iframe>
-          <ng-container *ngIf="!cursoAdReproduciendo">
-            <img class="curso-ad__thumb" [src]="cursoAdThumbnail" alt="Video del curso Acelerador de Ventas" (click)="reproducirCursoAd()">
-            <button type="button" class="curso-ad__play" (click)="reproducirCursoAd()" aria-label="Reproducir video">
-              <i class="material-icons">play_arrow</i>
-            </button>
-          </ng-container>
+
+      <div class="curso-ad__videos">
+        <div class="curso-ad__media">
+          <div class="curso-ad__glow"></div>
+          <div class="ratio curso-ad__ratio">
+            <iframe *ngIf="cursoAdReproduciendo1" [src]="videoGanchoCurso1" frameborder="0" allowfullscreen allow="autoplay"></iframe>
+            <ng-container *ngIf="!cursoAdReproduciendo1">
+              <img class="curso-ad__thumb" [src]="cursoAdThumbnail1" alt="Video 1 del curso Acelerador de Ventas" (click)="reproducirCursoAd(1)">
+              <button type="button" class="curso-ad__play" (click)="reproducirCursoAd(1)" aria-label="Reproducir video 1">
+                <i class="material-icons">play_arrow</i>
+              </button>
+            </ng-container>
+          </div>
+        </div>
+
+        <div class="curso-ad__media" *ngIf="cursoAdThumbnail2">
+          <div class="curso-ad__glow"></div>
+          <div class="ratio curso-ad__ratio">
+            <iframe *ngIf="cursoAdReproduciendo2" [src]="videoGanchoCurso2" frameborder="0" allowfullscreen allow="autoplay"></iframe>
+            <ng-container *ngIf="!cursoAdReproduciendo2">
+              <img class="curso-ad__thumb" [src]="cursoAdThumbnail2" alt="Video 2 del curso Acelerador de Ventas" (click)="reproducirCursoAd(2)">
+              <button type="button" class="curso-ad__play" (click)="reproducirCursoAd(2)" aria-label="Reproducir video 2">
+                <i class="material-icons">play_arrow</i>
+              </button>
+            </ng-container>
+          </div>
         </div>
       </div>
+
       <div class="curso-ad__body">
         <span class="curso-ad__tag">Acelerador de Ventas</span>
         <h2 class="curso-ad__title">Aprende a vender como un experto</h2>

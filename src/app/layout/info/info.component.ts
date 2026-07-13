@@ -14,15 +14,20 @@ import { ToolsService } from 'src/app/services/tools.service';
 })
 export class InfoComponent implements OnInit {
   numberInf:number = 0;
-  // Anuncio del curso "Acelerador de Ventas" en la vitrina principal (reutiliza el mismo video
-  // gancho 1 que ya se usa en /acelerador -- no un video nuevo, sino el mismo anuncio en 2 lugares).
-  // Se muestra primero la miniatura propia (sin el "chrome" de YouTube: nombre de canal, logo,
-  // titulo) con un boton de play a medida; el iframe real (con autoplay) solo se carga al hacer
-  // click, para que la tarjeta se sienta como un anuncio diseñado y no como un video incrustado.
-  aceleradorVideoId: string = null;
-  cursoAdThumbnail: string = null;
-  cursoAdReproduciendo = false;
-  videoGanchoCurso: any = null;
+  // Anuncio del curso "Acelerador de Ventas" en la vitrina principal (reutiliza los mismos 2
+  // videos gancho que ya se usan en /acelerador -- no son videos nuevos, es el mismo anuncio en
+  // 2 lugares). Se muestra primero la miniatura propia (sin el "chrome" de YouTube: nombre de
+  // canal, logo, titulo) con un boton de play a medida; el iframe real (con autoplay) solo se
+  // carga al hacer click, para que la tarjeta se sienta como un anuncio diseñado y no como un
+  // video incrustado. En escritorio los 2 videos se muestran uno al lado del otro.
+  aceleradorVideoId1: string = null;
+  aceleradorVideoId2: string = null;
+  cursoAdThumbnail1: string = null;
+  cursoAdThumbnail2: string = null;
+  cursoAdReproduciendo1 = false;
+  cursoAdReproduciendo2 = false;
+  videoGanchoCurso1: any = null;
+  videoGanchoCurso2: any = null;
 
   constructor(
     public dialog: MatDialog,
@@ -39,21 +44,32 @@ export class InfoComponent implements OnInit {
         this.numberInf = 3213692393;
       }
       const config = store.configuracion || {};
-      this.aceleradorVideoId = config.aceleradorVideoGancho1
+      this.aceleradorVideoId1 = config.aceleradorVideoGancho1
         ? this._tools.extraerIdYoutube(config.aceleradorVideoGancho1)
         : null;
-      this.cursoAdThumbnail = this.aceleradorVideoId
-        ? `https://img.youtube.com/vi/${this.aceleradorVideoId}/hqdefault.jpg`
+      this.aceleradorVideoId2 = config.aceleradorVideoGancho2
+        ? this._tools.extraerIdYoutube(config.aceleradorVideoGancho2)
+        : null;
+      this.cursoAdThumbnail1 = this.aceleradorVideoId1
+        ? `https://img.youtube.com/vi/${this.aceleradorVideoId1}/hqdefault.jpg`
+        : null;
+      this.cursoAdThumbnail2 = this.aceleradorVideoId2
+        ? `https://img.youtube.com/vi/${this.aceleradorVideoId2}/hqdefault.jpg`
         : null;
     });
   }
 
-  reproducirCursoAd(){
-    if(!this.aceleradorVideoId) return;
-    this.cursoAdReproduciendo = true;
-    this.videoGanchoCurso = this._tools.seguridadIfrane(
-      `https://www.youtube-nocookie.com/embed/${this.aceleradorVideoId}?autoplay=1`
-    );
+  reproducirCursoAd(video: number){
+    const id = video === 2 ? this.aceleradorVideoId2 : this.aceleradorVideoId1;
+    if(!id) return;
+    const src = this._tools.seguridadIfrane(`https://www.youtube-nocookie.com/embed/${id}?autoplay=1`);
+    if(video === 2){
+      this.cursoAdReproduciendo2 = true;
+      this.videoGanchoCurso2 = src;
+    } else {
+      this.cursoAdReproduciendo1 = true;
+      this.videoGanchoCurso1 = src;
+    }
   }
 
   ngOnInit(): void {
