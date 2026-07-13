@@ -73,4 +73,11 @@ export class AceleradorComponent implements OnInit {
   onSuscripcionActivada(){
     this.tieneAcceso = true;
   }
+
+  formatDuracion(segundos: number): string {
+    if (!segundos && segundos !== 0) return '';
+    const m = Math.floor(segundos / 60);
+    const s = Math.round(segundos % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
 }

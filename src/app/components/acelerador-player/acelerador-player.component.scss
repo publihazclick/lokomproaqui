@@ -1,5 +1,188 @@
+// Misma paleta morada del resto de "Acelerador de Ventas" (acelerador.component.scss).
+$morado-oscuro: #581f87;
+$morado-medio: #8e2de2;
+$morado-claro: #c33bd0;
+
+.curso-layout {
+  display: flex;
+  align-items: stretch;
+  min-height: calc(100vh - 64px);
+  background: #f6f5fa;
+}
+
+// ── Sidebar ──────────────────────────────────────────────────────────────
+.curso-sidebar {
+  flex: 0 0 300px;
+  width: 300px;
+  background: #fff;
+  border-right: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.curso-sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid #eee;
+  background: linear-gradient(135deg, $morado-oscuro 0%, $morado-medio 100%);
+}
+
+.curso-sidebar__header h5 {
+  margin: 0;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.curso-sidebar__cerrar {
+  display: none;
+  border: none;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.curso-sidebar__cargando {
+  padding: 20px;
+  color: #999;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.curso-modulo {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.curso-modulo__titulo {
+  padding: 14px 20px 8px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: $morado-oscuro;
+}
+
+.curso-leccion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.curso-leccion:hover {
+  background: #faf6fd;
+}
+
+.curso-leccion--activa {
+  background: #f3e9fb;
+  border-left: 3px solid $morado-medio;
+}
+
+.curso-leccion__icono {
+  flex-shrink: 0;
+  font-size: 20px;
+  color: #a879c9;
+}
+
+.curso-leccion--activa .curso-leccion__icono {
+  color: $morado-medio;
+}
+
+.curso-leccion__titulo {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.86rem;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.curso-leccion--activa .curso-leccion__titulo {
+  color: $morado-oscuro;
+  font-weight: 600;
+}
+
+.curso-leccion__duracion {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  color: #999;
+}
+
+.curso-sidebar__overlay {
+  display: none;
+}
+
+// ── Contenido principal ──────────────────────────────────────────────────
+.curso-contenido {
+  flex: 1;
+  min-width: 0;
+  padding: 32px 40px;
+}
+
+.curso-contenido__abrir-sidebar {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 30px;
+  background: #fff;
+  color: $morado-oscuro;
+  font-weight: 600;
+  font-size: 0.85rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+}
+
+.curso-breadcrumb {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: $morado-medio;
+  margin-bottom: 4px;
+}
+
+.curso-titulo {
+  margin: 0 0 8px;
+  font-weight: 800;
+  color: #2b2b3c;
+}
+
+.curso-descripcion {
+  margin: 0 0 20px;
+  color: #666;
+  line-height: 1.55;
+}
+
+.curso-cargando {
+  padding: 60px 0;
+  text-align: center;
+  color: #999;
+}
+
 .video-wrapper {
   position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  background: #000;
+}
+
+.video-wrapper video {
+  display: block;
 }
 
 .marca-agua {
@@ -11,4 +194,99 @@
   pointer-events: none;
   transition: top 1s ease, left 1s ease;
   white-space: nowrap;
+}
+
+.curso-navegacion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.curso-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 48%;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 30px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.curso-nav-btn--anterior {
+  background: #fff;
+  color: $morado-oscuro;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.curso-nav-btn--siguiente {
+  margin-left: auto;
+  background: linear-gradient(135deg, $morado-oscuro 0%, $morado-medio 100%);
+  color: #fff;
+  box-shadow: 0 8px 20px -8px rgba(88, 31, 135, 0.6);
+}
+
+.curso-nav-btn:hover {
+  transform: translateY(-2px);
+}
+
+// ── Mobile: sidebar pasa a ser un panel deslizante ───────────────────────
+@media (max-width: 900px) {
+  .curso-layout {
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  .curso-sidebar {
+    position: fixed;
+    top: 0;
+    left: -320px;
+    height: 100%;
+    z-index: 1100;
+    transition: left 0.25s ease;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .curso-sidebar--abierto {
+    left: 0;
+  }
+
+  .curso-sidebar__cerrar {
+    display: flex;
+  }
+
+  .curso-sidebar__overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1050;
+  }
+
+  .curso-contenido {
+    padding: 20px;
+  }
+
+  .curso-contenido__abrir-sidebar {
+    display: flex;
+  }
+
+  .curso-nav-btn {
+    max-width: 48%;
+    font-size: 0.8rem;
+    padding: 10px 14px;
+  }
+
+  .curso-nav-btn span,
+  .curso-nav-btn {
+    white-space: normal;
+  }
 }

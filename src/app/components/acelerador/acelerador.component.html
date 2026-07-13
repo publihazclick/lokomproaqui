@@ -56,16 +56,30 @@
             </div>
         </div>
 
-        <!-- Suscripcion vigente: lista real de lecciones -->
+        <!-- Suscripcion vigente: "Mi Curso", organizado modulo por modulo -->
         <div *ngIf="dataUser.id && tieneAcceso" class="row py-4">
-            <div class="col-12 col-md-4 mb-4" *ngFor="let modulo of listModules">
-                <div class="card p-3">
-                    <h5>{{ modulo.title }}</h5>
-                    <ul class="list-unstyled">
-                        <li *ngFor="let leccion of modulo.lessons">
-                            <a [routerLink]="['/acelerador/leccion', leccion.id]">{{ leccion.title }}</a>
-                        </li>
-                    </ul>
+            <div class="col-12 mb-4">
+                <div class="mi-curso-header">
+                    <i class="material-icons mi-curso-header__icon">workspace_premium</i>
+                    <div>
+                        <span class="mi-curso-header__tag">Acelerador de Ventas</span>
+                        <h2 class="mi-curso-header__title">Mi curso</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12" *ngIf="listModules.length === 0">
+                <p class="text-center text-muted py-5">Todavia no hay clases cargadas. Muy pronto vas a encontrar aca todo el contenido del curso.</p>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4 mb-4" *ngFor="let modulo of listModules">
+                <div class="mi-curso-modulo">
+                    <h5 class="mi-curso-modulo__titulo">{{ modulo.title }}</h5>
+                    <a class="mi-curso-leccion" *ngFor="let leccion of modulo.lessons" [routerLink]="['/acelerador/leccion', leccion.id]">
+                        <i class="material-icons mi-curso-leccion__icon">play_circle_outline</i>
+                        <span class="mi-curso-leccion__titulo">{{ leccion.title }}</span>
+                        <span class="mi-curso-leccion__duracion" *ngIf="leccion.duration_seconds">{{ formatDuracion(leccion.duration_seconds) }}</span>
+                    </a>
                 </div>
             </div>
         </div>

@@ -88,3 +88,102 @@
     font-size: 1.5rem;
   }
 }
+
+// ── "Mi Curso" (suscripcion vigente): mismo lenguaje visual que el reproductor
+// (acelerador-player.component.scss) para que se sienta un solo producto coherente. ──
+.mi-curso-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 720px;
+  margin: 0 auto 8px;
+  padding: 20px 28px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #581f87 0%, #8e2de2 100%);
+  box-shadow: 0 14px 30px -12px rgba(88, 31, 135, 0.55);
+}
+
+.mi-curso-header__icon {
+  flex-shrink: 0;
+  font-size: 34px;
+  color: #fff;
+}
+
+.mi-curso-header__tag {
+  display: block;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.mi-curso-header__title {
+  margin: 2px 0 0;
+  color: #fff;
+  font-weight: 800;
+}
+
+.mi-curso-modulo {
+  height: 100%;
+  padding: 18px 20px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+}
+
+.mi-curso-modulo__titulo {
+  margin: 0 0 10px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #581f87;
+}
+
+.mi-curso-leccion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 4px;
+  border-radius: 8px;
+  color: #333;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.mi-curso-leccion:hover {
+  background: #faf6fd;
+  color: #333;
+  text-decoration: none;
+}
+
+.mi-curso-leccion__icon {
+  flex-shrink: 0;
+  font-size: 20px;
+  color: #a879c9;
+}
+
+.mi-curso-leccion__titulo {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mi-curso-leccion__duracion {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: #999;
+}
+
+@media (max-width: 576px) {
+  .mi-curso-header {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+}

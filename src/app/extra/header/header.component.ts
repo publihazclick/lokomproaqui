@@ -19,6 +19,7 @@ import { CobrosService } from 'src/app/servicesComponents/cobros.service';
 import { ProductoService } from 'src/app/servicesComponents/producto.service';
 import { ShopifyService } from 'src/app/servicesComponents/shopify.service';
 import { WoocommerceService } from 'src/app/servicesComponents/woocommerce.service';
+import { AceleradorService } from 'src/app/servicesComponents/acelerador.service';
 
 const URLFRON = location.origin;
 
@@ -100,6 +101,7 @@ export class HeaderComponent implements OnInit {
     private _productos: ProductoService,
     private _shopify: ShopifyService,
     private _woocommerce: WoocommerceService,
+    private _acelerador: AceleradorService,
 
   ) {
     this._store.subscribe((store: any) => {
@@ -476,8 +478,23 @@ export class HeaderComponent implements OnInit {
 
   }
 
+  // "Cursos / Ayuda" antes apuntaba al modulo generico de tutoriales (/config/cursos, tabla
+  // `courses`); ahora aloja el curso pago "Acelerador de Ventas" y solo debe verse mientras la
+  // suscripcion siga activa (verificado en vivo contra `acelerador_has_access`, la misma fuente
+  // de verdad que usa AceleradorGuard -- no se cachea ni se asume por rol).
+  private checkAceleradorAccess(): Promise<boolean> {
+    if (!this.dataUser.id) return Promise.resolve(false);
+    return new Promise(resolve => {
+      this._acelerador.hasAccess(this.dataUser.id).subscribe(
+        (res: any) => resolve(!!res.data),
+        () => resolve(false)
+      );
+    });
+  }
+
   async listMenus(){
     let submenus = await this.getCategorias();
+    const tieneCursoActivo = await this.checkAceleradorAccess();
     console.log( submenus );
     this.menus = [
       {
@@ -775,10 +792,10 @@ export class HeaderComponent implements OnInit {
         ]
       },
       {
-        icons: 'help',
+        icons: 'school',
         nombre: 'Cursos / Ayuda',
-        disable: this.dataUser.id,
-        url: '/config/cursos',
+        disable: tieneCursoActivo,
+        url: '/acelerador',
         submenus:[]
       },
       /*{

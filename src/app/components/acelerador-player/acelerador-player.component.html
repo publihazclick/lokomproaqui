@@ -1,18 +1,69 @@
-<div class="container-fluid p-4">
-    <div *ngIf="cargando" class="text-center py-5">Cargando video...</div>
+<div class="curso-layout">
 
-    <div *ngIf="error" class="alert alert-danger text-center">{{ error }}</div>
-
-    <div *ngIf="videoUrl" class="video-wrapper" (contextmenu)="bloquearMenu($event)">
-        <video
-            [src]="videoUrl"
-            controls
-            controlsList="nodownload"
-            disablePictureInPicture
-            style="width: 100%; max-height: 80vh;"
-        ></video>
-        <div class="marca-agua" [style.top.%]="marcaAguaTop" [style.left.%]="marcaAguaLeft">
-            {{ dataUser.usu_nombre }} {{ dataUser.usu_apellido }} · {{ dataUser.usu_telefono }}
+    <!-- Sidebar: modulos/lecciones del curso completo -->
+    <aside class="curso-sidebar" [class.curso-sidebar--abierto]="sidebarAbierto">
+        <div class="curso-sidebar__header">
+            <h5>Contenido del curso</h5>
+            <button type="button" class="curso-sidebar__cerrar" (click)="toggleSidebar()" aria-label="Cerrar">
+                <i class="material-icons">close</i>
+            </button>
         </div>
-    </div>
+
+        <div *ngIf="cargandoContenido" class="curso-sidebar__cargando">Cargando contenido...</div>
+
+        <div class="curso-sidebar__modulos" *ngIf="!cargandoContenido">
+            <div class="curso-modulo" *ngFor="let modulo of listModules">
+                <div class="curso-modulo__titulo">{{ modulo.title }}</div>
+                <div class="curso-leccion"
+                    *ngFor="let leccion of modulo.lessons"
+                    [class.curso-leccion--activa]="leccion.id === leccionActualId"
+                    (click)="irALeccion(leccion.id)">
+                    <i class="material-icons curso-leccion__icono">
+                        {{ leccion.id === leccionActualId ? 'play_circle_filled' : 'play_circle_outline' }}
+                    </i>
+                    <span class="curso-leccion__titulo">{{ leccion.title }}</span>
+                    <span class="curso-leccion__duracion" *ngIf="leccion.duration_seconds">{{ formatDuracion(leccion.duration_seconds) }}</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="curso-sidebar__overlay" *ngIf="sidebarAbierto" (click)="toggleSidebar()"></div>
+
+    <!-- Contenido principal: video + info de la leccion -->
+    <main class="curso-contenido">
+        <button type="button" class="curso-contenido__abrir-sidebar" (click)="toggleSidebar()">
+            <i class="material-icons">menu_book</i> Contenido del curso
+        </button>
+
+        <div class="curso-breadcrumb" *ngIf="moduloActual">{{ moduloActual }}</div>
+        <h2 class="curso-titulo" *ngIf="leccionActual">{{ leccionActual.title }}</h2>
+        <p class="curso-descripcion" *ngIf="leccionActual?.description">{{ leccionActual.description }}</p>
+
+        <div *ngIf="cargando" class="curso-cargando">Cargando video...</div>
+        <div *ngIf="error" class="alert alert-danger text-center">{{ error }}</div>
+
+        <div *ngIf="videoUrl" class="video-wrapper" (contextmenu)="bloquearMenu($event)">
+            <video
+                [src]="videoUrl"
+                controls
+                controlsList="nodownload"
+                disablePictureInPicture
+                style="width: 100%; max-height: 70vh;"
+            ></video>
+            <div class="marca-agua" [style.top.%]="marcaAguaTop" [style.left.%]="marcaAguaLeft">
+                {{ dataUser.usu_nombre }} {{ dataUser.usu_apellido }} · {{ dataUser.usu_telefono }}
+            </div>
+        </div>
+
+        <div class="curso-navegacion">
+            <button type="button" class="curso-nav-btn curso-nav-btn--anterior" *ngIf="leccionAnterior" (click)="irALeccion(leccionAnterior.id)">
+                <i class="material-icons">arrow_back</i> {{ leccionAnterior.title }}
+            </button>
+            <span *ngIf="!leccionAnterior"></span>
+            <button type="button" class="curso-nav-btn curso-nav-btn--siguiente" *ngIf="leccionSiguiente" (click)="irALeccion(leccionSiguiente.id)">
+                {{ leccionSiguiente.title }} <i class="material-icons">arrow_forward</i>
+            </button>
+        </div>
+    </main>
 </div>
