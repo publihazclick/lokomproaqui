@@ -184,7 +184,8 @@ import { FormaceleradorLeccionComponent } from './form/formacelerador-leccion/fo
     FormventasComponent,
     FormcobrosComponent,
     ProductosOrdenarComponent,
-    FormPosiblesVentasComponent
+    FormPosiblesVentasComponent,
+    AceleradorAdminComponent
   ],
   providers: [
   ],

@@ -20,6 +20,11 @@ export class AceleradorGuard implements CanActivate {
       this.router.navigate(['/info']);
       return of(false);
     }
+    // El mentor sube y organiza el contenido: puede previsualizar cualquier leccion sin
+    // necesitar (ni pagar) una suscripcion. La Edge Function acelerador-signed-url tiene
+    // el mismo bypass, sin eso el video igual seria rechazado del lado del servidor.
+    const perfil = this._auth.dataUser.usu_perfil;
+    if (perfil && perfil.prf_descripcion === 'mentor') return of(true);
     return this.checkAccess();
   }
 

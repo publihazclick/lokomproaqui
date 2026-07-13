@@ -36,6 +36,7 @@
                 <li class="list-group-item d-flex justify-content-between align-items-center" *ngFor="let leccion of modulo.lessons">
                     <span>{{ leccion.title }}</span>
                     <span>
+                        <a class="btn btn-sm btn-outline-secondary" [routerLink]="['/acelerador/leccion', leccion.id]" target="_blank">Vista previa</a>
                         <button class="btn btn-sm btn-outline-primary" (click)="editarLeccion(leccion)">Editar</button>
                         <button class="btn btn-sm btn-outline-danger" (click)="eliminarLeccion(leccion)">Eliminar</button>
                     </span>

@@ -43,7 +43,15 @@ Deno.serve(async (req) => {
 
     const { data: hasAccess, error: accessErr } = await admin.rpc('acelerador_has_access', { p_profile_id: profileId });
     if (accessErr) return json({ error: accessErr.message }, 500);
-    if (!hasAccess) return json({ error: 'Suscripcion no vigente' }, 403);
+
+    let autorizado = !!hasAccess;
+    if (!autorizado) {
+      // El mentor sube y organiza el contenido: puede previsualizar cualquier leccion sin
+      // necesitar (ni pagar) una suscripcion.
+      const { data: profile } = await admin.from('profiles').select('roles(name)').eq('id', profileId).single();
+      autorizado = (profile as any)?.roles?.name === 'mentor';
+    }
+    if (!autorizado) return json({ error: 'Suscripcion no vigente' }, 403);
 
     const { data: lesson, error: lessonErr } = await admin
       .from('acelerador_lessons').select('video_path').eq('id', lessonId).single();

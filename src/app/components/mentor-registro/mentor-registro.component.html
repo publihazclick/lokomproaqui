@@ -1,0 +1,15 @@
+<div class="mentor-registro">
+    <div class="mentor-registro__card">
+        <h3>Registro de Mentor</h3>
+        <p class="mentor-registro__sub">Crea la cuenta para subir y organizar el contenido del curso.</p>
+
+        <input type="text" [(ngModel)]="data.usu_nombre" placeholder="Nombre completo" class="form-control mb-2">
+        <input type="email" [(ngModel)]="data.usu_email" placeholder="Correo electronico" class="form-control mb-2">
+        <input type="text" [(ngModel)]="data.usu_telefono" placeholder="Telefono" class="form-control mb-2">
+        <input type="password" [(ngModel)]="data.usu_clave" placeholder="Contraseña (minimo 6 caracteres)" class="form-control mb-3">
+
+        <button type="button" class="btn btn-dark btn-lg w-100" (click)="registrar()" [disabled]="procesando">
+            {{ procesando ? 'Creando cuenta...' : 'Crear cuenta de mentor' }}
+        </button>
+    </div>
+</div>

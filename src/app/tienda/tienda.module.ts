@@ -37,6 +37,8 @@ import { SwiperModule } from "swiper/angular";
 import { AceleradorComponent } from '../components/acelerador/acelerador.component';
 import { AceleradorPlayerComponent } from '../components/acelerador-player/acelerador-player.component';
 import { AceleradorCheckoutComponent } from '../components/acelerador-checkout/acelerador-checkout.component';
+import { MentorRegistroComponent } from '../components/mentor-registro/mentor-registro.component';
+import { MentorPanelComponent } from '../components/mentor-panel/mentor-panel.component';
 
 @NgModule({
   entryComponents:[
@@ -72,7 +74,9 @@ import { AceleradorCheckoutComponent } from '../components/acelerador-checkout/a
     ListArticleComponent,
     AceleradorComponent,
     AceleradorPlayerComponent,
-    AceleradorCheckoutComponent
+    AceleradorCheckoutComponent,
+    MentorRegistroComponent,
+    MentorPanelComponent
 
   ],
   imports: [

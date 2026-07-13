@@ -92,6 +92,12 @@ export class AuthService implements CanActivate {
     canActivate() {
       const identity = this.dataUser || {};
       if (Object.keys(identity).length >0) {
+        // El rol "mentor" solo administra el contenido del curso Acelerador de Ventas -- no debe
+        // ver (ni exponerse a) el resto del panel admin (ventas, usuarios, retiros, etc.).
+        if (identity.usu_perfil && identity.usu_perfil.prf_descripcion === 'mentor') {
+          this.router.navigate(['/mvid8x2qz1/panel']);
+          return false;
+        }
         this.validandoConfig();
         return true;
       } else {

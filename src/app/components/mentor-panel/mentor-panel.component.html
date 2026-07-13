@@ -1,0 +1,9 @@
+<div class="mentor-panel__topbar">
+    <div>
+        <strong>Panel Mentor</strong>
+        <span class="mentor-panel__user" *ngIf="dataUser.usu_nombre">— {{ dataUser.usu_nombre }}</span>
+    </div>
+    <button type="button" class="btn btn-sm btn-outline-light" (click)="salir()">Salir</button>
+</div>
+
+<app-acelerador-admin></app-acelerador-admin>

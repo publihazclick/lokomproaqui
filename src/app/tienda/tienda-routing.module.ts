@@ -16,6 +16,9 @@ import { GuestGuard } from '../services/guest.guard';
 import { AceleradorGuard } from '../services/acelerador.guard';
 import { AceleradorComponent } from '../components/acelerador/acelerador.component';
 import { AceleradorPlayerComponent } from '../components/acelerador-player/acelerador-player.component';
+import { MentorRegistroComponent } from '../components/mentor-registro/mentor-registro.component';
+import { MentorPanelComponent } from '../components/mentor-panel/mentor-panel.component';
+import { MentorGuard } from '../services/mentor.guard';
 
 const routes: Routes = [
   {
@@ -57,6 +60,11 @@ const routes: Routes = [
       loadChildren: () => import('./../dashboard-config/config.module').then(m => m.ConfigModule)
     }]
   },
+  // Ruta secreta del rol "mentor" (subir/organizar el contenido del curso Acelerador de Ventas):
+  // a proposito NO esta anidada bajo TiendaComponent (sin el header/menu del marketplace) ni
+  // enlazada desde ningun menu -- solo se llega sabiendo la URL.
+  { path: 'mvid8x2qz1', component: MentorRegistroComponent },
+  { path: 'mvid8x2qz1/panel', component: MentorPanelComponent, canActivate: [MentorGuard] },
   // Comodin real (2026-07-10): cualquier URL que no matchee NINGUNA ruta de arriba (mal escrita,
   // vieja, borrada) cae aca en vez de pantalla en blanco. Va DESPUES de 'config' a proposito: el
   // primer bloque (path:'') no tiene pathMatch:'full', asi que consume 0 segmentos y prueba sus
