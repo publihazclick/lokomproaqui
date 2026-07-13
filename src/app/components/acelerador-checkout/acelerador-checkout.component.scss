@@ -1,0 +1,23 @@
+// Que el host no agregue una caja propia: el boton o el formulario quedan como si fueran hijos
+// directos del contenedor donde se use (funciona igual dentro de un flex row o de un bloque).
+:host {
+  display: contents;
+}
+
+.checkout-anon {
+  max-width: 380px;
+  margin: 0 auto;
+  padding: 22px;
+  text-align: left;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.09);
+}
+
+.checkout-anon__title {
+  margin: 0 0 14px;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #2b2b3c;
+  text-align: center;
+}

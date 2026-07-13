@@ -110,11 +110,4 @@ export class InfoComponent implements OnInit {
     window.open( url )
   }
 
-  irAlAcelerador(){
-    // ?checkout=1 hace que /acelerador abra de una vez el pago (formulario de datos si no hay
-    // sesion, o el checkout de ePayco directo si ya esta logueado), en vez de solo mostrar la
-    // vitrina y obligar a un segundo click alla.
-    this._router.navigate(['/acelerador'], { queryParams: { checkout: 1 } });
-  }
-
 }

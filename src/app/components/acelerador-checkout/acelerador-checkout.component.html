@@ -1,0 +1,17 @@
+<div *ngIf="!mostrarFormAnon">
+    <button type="button" [class]="buttonClass" (click)="onClickPrincipal()" [disabled]="procesandoPago">
+        {{ procesandoPago ? 'Procesando...' : buttonLabel }}
+    </button>
+</div>
+
+<div *ngIf="mostrarFormAnon" class="checkout-anon">
+    <h5 class="checkout-anon__title">Completa tus datos para continuar</h5>
+    <input type="text" [(ngModel)]="anonData.usu_nombre" placeholder="Nombre completo" class="form-control mb-2">
+    <input type="email" [(ngModel)]="anonData.usu_email" placeholder="Correo electronico" class="form-control mb-2">
+    <input type="text" [(ngModel)]="anonData.usu_telefono" placeholder="Telefono / WhatsApp" class="form-control mb-2">
+    <input type="text" [(ngModel)]="anonData.usu_documento" placeholder="Numero de documento" class="form-control mb-2">
+    <input type="text" [(ngModel)]="anonData.usu_ciudad" placeholder="Ciudad" class="form-control mb-3">
+    <button type="button" class="btn btn-success btn-lg w-100" (click)="pagarAnonimo()" [disabled]="procesandoCuenta || procesandoPago">
+        {{ (procesandoCuenta || procesandoPago) ? 'Procesando...' : 'Continuar al pago' }}
+    </button>
+</div>
