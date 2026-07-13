@@ -507,16 +507,67 @@ p {
 }
 
 .curso-ad__media {
+  position: relative;
   flex: 0 0 auto;
-  width: 220px;
+  width: 240px;
+}
+
+// Decoracion detras del video, mismo recurso ya usado en bank-card__glow (recharge.component.scss)
+.curso-ad__glow {
+  position: absolute;
+  top: -30px;
+  left: -30px;
+  width: calc(100% + 60px);
+  height: calc(100% + 60px);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.22), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .curso-ad__ratio {
+  position: relative;
+  z-index: 1;
   --bs-aspect-ratio: #{calc(16 / 9 * 100%)}; // 9:16 vertical, formato Shorts
   border-radius: 18px;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
   border: 3px solid rgba(255, 255, 255, 0.25);
+}
+
+// Miniatura propia (sin el "chrome" de YouTube: canal, logo, titulo) + boton de play a medida.
+// El iframe real solo se monta al hacer click (ver reproducirCursoAd() en el componente), asi
+// se siente como un anuncio diseñado en vez de un video de YouTube incrustado.
+.curso-ad__thumb {
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.curso-ad__ratio .curso-ad__play {
+  width: 60px;
+  height: 60px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  transition: transform 0.15s ease;
+}
+
+.curso-ad__play i {
+  font-size: 30px;
+  color: #581f87;
+  margin-left: 3px; // centrado optico del triangulo de play
+}
+
+.curso-ad__play:hover {
+  transform: translate(-50%, -50%) scale(1.08);
 }
 
 .curso-ad__body {
@@ -583,7 +634,8 @@ p {
   }
 
   .curso-ad__media {
-    width: 180px;
+    width: 200px;
+    margin: 0 auto;
   }
 
   .curso-ad__badge {

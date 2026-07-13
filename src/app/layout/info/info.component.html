@@ -36,12 +36,19 @@
     </div>
 </section>
 
-  <div class="col-12" *ngIf="videoGanchoCurso">
+  <div class="col-12" *ngIf="cursoAdThumbnail">
     <section class="curso-ad">
       <span class="curso-ad__badge">🔥 Nuevo</span>
       <div class="curso-ad__media">
+        <div class="curso-ad__glow"></div>
         <div class="ratio curso-ad__ratio">
-          <iframe [src]="videoGanchoCurso" frameborder="0" allowfullscreen></iframe>
+          <iframe *ngIf="cursoAdReproduciendo" [src]="videoGanchoCurso" frameborder="0" allowfullscreen allow="autoplay"></iframe>
+          <ng-container *ngIf="!cursoAdReproduciendo">
+            <img class="curso-ad__thumb" [src]="cursoAdThumbnail" alt="Video del curso Acelerador de Ventas" (click)="reproducirCursoAd()">
+            <button type="button" class="curso-ad__play" (click)="reproducirCursoAd()" aria-label="Reproducir video">
+              <i class="material-icons">play_arrow</i>
+            </button>
+          </ng-container>
         </div>
       </div>
       <div class="curso-ad__body">
