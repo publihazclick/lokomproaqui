@@ -37,7 +37,10 @@ export class LoginsComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    if (this._authSrvice.isLoggedIn()) this._router.navigate(['/articulo']);
+    if (this._authSrvice.isLoggedIn()) {
+      const rol = this._authSrvice.dataUser.usu_perfil && this._authSrvice.dataUser.usu_perfil.prf_descripcion;
+      this._router.navigate([rol === 'mentor' ? '/mvid8x2qz1/panel' : '/articulo']);
+    }
     console.log("***", this.activate.snapshot.params )
     if( this.activate.snapshot.paramMap.get('id') ) this.data.usu_email = this.activate.snapshot.paramMap.get('id');
     if( this.activate.snapshot.paramMap.get('cel') ) {this.data.IDL = true; this.data.usu_clave = this.activate.snapshot.paramMap.get('cel');}
@@ -69,6 +72,8 @@ export class LoginsComponent implements OnInit {
         try {
           if( res.data.usu_perfil.prf_descripcion === 'vendedor') this._router.navigate(['/articulo']);
           if( res.data.usu_perfil.prf_descripcion === 'proveedor') this._router.navigate(['/infoSupplier']);
+          // El mentor solo administra el contenido del curso -- nunca debe caer en la tienda.
+          if( res.data.usu_perfil.prf_descripcion === 'mentor') this._router.navigate(['/mvid8x2qz1/panel']);
         } catch (error) {
           this._router.navigate(['/pedido']);
         }
