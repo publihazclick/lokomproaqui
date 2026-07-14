@@ -28,7 +28,7 @@
             <ng-container *ngIf="!cursoAdReproduciendo1">
               <img class="curso-ad__thumb" [src]="cursoAdThumbnail1" alt="Video 1 del curso Acelerador de Ventas" (click)="reproducirCursoAd(1)">
               <button type="button" class="curso-ad__play" (click)="reproducirCursoAd(1)" aria-label="Reproducir video 1">
-                <i class="material-icons">play_arrow</i>
+                <span class="curso-ad__play-triangle"></span>
               </button>
             </ng-container>
           </div>
@@ -41,7 +41,7 @@
             <ng-container *ngIf="!cursoAdReproduciendo2">
               <img class="curso-ad__thumb" [src]="cursoAdThumbnail2" alt="Video 2 del curso Acelerador de Ventas" (click)="reproducirCursoAd(2)">
               <button type="button" class="curso-ad__play" (click)="reproducirCursoAd(2)" aria-label="Reproducir video 2">
-                <i class="material-icons">play_arrow</i>
+                <span class="curso-ad__play-triangle"></span>
               </button>
             </ng-container>
           </div>

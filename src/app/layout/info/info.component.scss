@@ -665,10 +665,16 @@ p {
   transition: transform 0.15s ease;
 }
 
-.curso-ad__play i {
-  font-size: 30px;
-  color: #02a0e3;
-  margin-left: 3px; // centrado optico del triangulo de play
+// Triangulo dibujado en CSS puro (no un glifo de material-icons): si la fuente de iconos tarda
+// o falla en cargar (le paso antes al proyecto, ver lokomproaqui_icons_cache_bug), el boton de
+// play quedaba como un circulo blanco vacio -- esto nunca depende de que cargue ninguna fuente.
+.curso-ad__play-triangle {
+  width: 0;
+  height: 0;
+  margin-left: 4px; // centrado optico del triangulo
+  border-style: solid;
+  border-width: 11px 0 11px 19px;
+  border-color: transparent transparent transparent #02a0e3;
 }
 
 .curso-ad__play:hover {
