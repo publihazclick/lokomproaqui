@@ -158,13 +158,20 @@ li {
 
 .frame-33 {
   background: #1e1e1e;
-  padding: 10px;
+  padding: 12px 28px;
+  border-radius: 30px;
   display: table;
   flex-direction: row;
   align-items: center;
   justify-content: center;
   gap: 10px;
   text-align: center;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.frame-33:hover {
+  transform: translateY(-2px);
 }
 
 .registrate-gratis {
@@ -360,6 +367,48 @@ font-size: 16px;
   height: auto;
 }
 
+// Reemplaza la vieja imagen QUEHACEMOS.png (tenia la tarjeta "Vendedor" tapada por la de
+// "Proveedor", ilegible incluso a tamaño original) por tarjetas reales en HTML -- nunca se
+// vuelven a superponer ni se recortan, sin importar el tamaño de pantalla.
+.quehacemos-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.quehacemos-card {
+  padding: 20px;
+  background: #f4faff;
+  border: 1px solid #dceefc;
+  border-radius: 14px;
+  text-align: left;
+}
+
+.quehacemos-card i {
+  font-size: 30px;
+  color: #02a0e3;
+  margin-bottom: 6px;
+}
+
+.quehacemos-card h4 {
+  margin: 4px 0 6px;
+  font-weight: 800;
+  color: #02a0e3;
+}
+
+.quehacemos-card p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.45;
+}
+
+@media (min-width: 769px) {
+  .quehacemos-cards {
+    flex-direction: row;
+  }
+}
+
 ul{
   width: 60%;
 }
@@ -384,6 +433,12 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 30px;
+  transition: transform 0.15s ease;
+}
+
+.custom-button:hover {
+  transform: translateY(-2px);
 }
 
 /* Media Query para dispositivos móviles */
