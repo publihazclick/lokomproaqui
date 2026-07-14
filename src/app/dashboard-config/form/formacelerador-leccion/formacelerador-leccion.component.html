@@ -9,63 +9,54 @@
         </div>
         <div class="form-group col-12">
             <label>Titulo</label>
-            <input type="text" [(ngModel)]="data.title" class="form-control form-control-sm">
+            <input type="text" [(ngModel)]="data.title" class="form-control form-control-sm" placeholder="Ej: Como cerrar una venta por WhatsApp">
         </div>
         <div class="form-group col-12">
-            <label>Descripcion</label>
-            <textarea class="form-control" [(ngModel)]="data.description" rows="3"></textarea>
-        </div>
-        <div class="form-group col-6">
-            <label>Orden</label>
-            <input type="number" [(ngModel)]="data.sort_order" class="form-control form-control-sm">
-        </div>
-        <div class="form-group col-6">
-            <label>Duracion (segundos)</label>
-            <input type="number" [(ngModel)]="data.duration_seconds" class="form-control form-control-sm" placeholder="Se completa sola al subir el video">
+            <label>Descripcion (opcional)</label>
+            <textarea class="form-control" [(ngModel)]="data.description" rows="2"></textarea>
         </div>
 
         <div class="form-group col-12">
-            <label>Miniatura (publica, solo de vitrina)</label>
-            <div *ngIf="data.thumbnail_url" class="mb-2">
-                <img [src]="data.thumbnail_url" style="width: 120px;">
+            <label>1. Elige el video de esta leccion</label>
+            <div *ngIf="data.video_path" class="upload-ok">
+                &#10003; Video subido{{ duracionLegible ? ' (' + duracionLegible + ')' : '' }}
+                <button type="button" class="btn btn-link btn-sm p-0 ml-2" (click)="onRemoveVideo()">cambiar video</button>
             </div>
-            <div class="row">
-                <label class="col">Subir miniatura</label>
-                <button class="btn btn-primary btn-sm" (click)="subirThumbnail()" *ngIf="thumbnailFiles.length > 0" [disabled]="subiendoThumbnail">
-                    Subir
-                </button>
+
+            <div *ngIf="subiendoVideo" class="upload-progress">
+                <div class="progress-bar-track">
+                    <div class="progress-bar-fill" [style.width.%]="progresoVideo"></div>
+                </div>
+                <div class="progress-label">Subiendo... {{ progresoVideo }}% (no cierres esta ventana)</div>
             </div>
-            <ngx-dropzone (change)="onSelectThumbnail($event)">
-                <ngx-dropzone-label>Abrir archivo</ngx-dropzone-label>
-                <ngx-dropzone-image-preview ngProjectAs="ngx-dropzone-preview" *ngFor="let f of thumbnailFiles" [file]="f"
-                    [removable]="true" (removed)="onRemoveThumbnail()">
-                    <ngx-dropzone-label>{{ f.name }}</ngx-dropzone-label>
-                </ngx-dropzone-image-preview>
+
+            <div *ngIf="videoError" class="upload-error">
+                {{ videoError }}
+                <button type="button" class="btn btn-outline-danger btn-sm ml-2" (click)="reintentarVideo()" *ngIf="puedeReintentar">Reintentar</button>
+            </div>
+
+            <ngx-dropzone *ngIf="!data.video_path && !subiendoVideo" (change)="onSelectVideo($event)">
+                <ngx-dropzone-label>Arrastra el video aqui o haz click para elegirlo<br><small>Videos hasta {{ LIMITE_MB }} MB</small></ngx-dropzone-label>
             </ngx-dropzone>
         </div>
 
         <div class="form-group col-12">
-            <label>Video de la leccion (bucket PRIVADO, nunca queda con link publico)</label>
-            <div *ngIf="data.video_path" class="mb-2 text-success">Video cargado: {{ data.video_path }}</div>
-            <div class="row">
-                <label class="col">Subir video</label>
-                <button class="btn btn-primary btn-sm" (click)="subirVideo()" *ngIf="videoFiles.length > 0" [disabled]="subiendoVideo">
-                    {{ subiendoVideo ? 'Subiendo...' : 'Subir' }}
-                </button>
+            <label>2. Miniatura (opcional, es solo la foto de la vitrina)</label>
+            <div *ngIf="data.thumbnail_url" class="mb-2">
+                <img [src]="data.thumbnail_url" style="width: 120px;">
+                <button type="button" class="btn btn-link btn-sm" (click)="onRemoveThumbnail()">cambiar</button>
             </div>
-            <ngx-dropzone (change)="onSelectVideo($event)">
-                <ngx-dropzone-label>Abrir archivo de video</ngx-dropzone-label>
-                <ngx-dropzone-preview ngProjectAs="ngx-dropzone-preview" *ngFor="let f of videoFiles" [removable]="true" (removed)="onRemoveVideo()">
-                    <ngx-dropzone-label>{{ f.name }}</ngx-dropzone-label>
-                </ngx-dropzone-preview>
+            <div *ngIf="subiendoThumbnail" class="progress-label">Subiendo miniatura...</div>
+            <ngx-dropzone *ngIf="!data.thumbnail_url && !subiendoThumbnail" (change)="onSelectThumbnail($event)">
+                <ngx-dropzone-label>Arrastra una imagen aqui o haz click para elegirla</ngx-dropzone-label>
             </ngx-dropzone>
         </div>
     </div>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
     <button mat-button mat-dialog-close>Cerrar</button>
-    <button mat-button cdkFocusInitial (click)="submit()">
-        <span *ngIf="!id">Guardar</span>
+    <button mat-raised-button color="primary" cdkFocusInitial (click)="submit()" [disabled]="!puedeGuardar">
+        <span *ngIf="!id">3. Guardar leccion</span>
         <span *ngIf="id">Actualizar</span>
     </button>
 </mat-dialog-actions>
