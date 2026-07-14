@@ -384,10 +384,11 @@ font-size: 16px;
   text-align: left;
 }
 
-.quehacemos-card i {
-  font-size: 30px;
-  color: #02a0e3;
+.quehacemos-card__emoji {
+  display: inline-block;
+  font-size: 28px;
   margin-bottom: 6px;
+  font-style: normal;
 }
 
 .quehacemos-card h4 {
@@ -740,17 +741,17 @@ p {
   color: #fff;
 }
 
-.curso-ad__features i {
+.curso-ad__features-emoji {
   flex-shrink: 0;
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.16);
-  font-size: 17px;
-  color: #fff;
+  font-size: 15px;
+  line-height: 1;
 }
 
 .curso-ad__price-row {
