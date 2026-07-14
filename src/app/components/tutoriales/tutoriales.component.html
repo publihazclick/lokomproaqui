@@ -1,0 +1,67 @@
+<div class="tut-page">
+
+    <div class="tut-hero">
+        <h1 class="tut-hero__titulo">Tutoriales</h1>
+        <p class="tut-hero__subtitulo">
+            Aprende a usar LokomproAqui paso a paso: como vender, como comprar, como despachar y mucho mas.
+        </p>
+    </div>
+
+    <div *ngIf="loader" class="tut-cargando">Cargando tutoriales...</div>
+
+    <div *ngIf="!loader && listCategorias.length === 0" class="tut-vacio">
+        Todavia no hay tutoriales publicados. Vuelve pronto.
+    </div>
+
+    <div *ngIf="!loader && listCategorias.length > 0" class="tut-contenido">
+
+        <div class="tut-categorias">
+            <button type="button"
+                class="tut-categoria-pill"
+                *ngFor="let cat of listCategorias"
+                [class.tut-categoria-pill--activa]="cat.id === categoriaActivaId"
+                (click)="seleccionarCategoria(cat.id)">
+                {{ cat.titulo }}
+            </button>
+        </div>
+
+        <div class="tut-grid" *ngIf="categoriaActiva">
+            <div class="tut-card" *ngFor="let video of categoriaActiva.videos" (click)="abrirVideo(video)">
+                <div class="tut-card__miniatura">
+                    <img [src]="thumbnail(video)" [alt]="video.titulo" loading="lazy">
+                    <span class="tut-card__play"><span class="tut-card__play-triangulo"></span></span>
+                </div>
+                <div class="tut-card__cuerpo">
+                    <h3 class="tut-card__titulo">{{ video.titulo }}</h3>
+                    <p class="tut-card__descripcion" *ngIf="video.descripcion">{{ video.descripcion }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox del video -->
+    <div class="tut-lightbox" *ngIf="videoAbierto" (click)="cerrarVideo()">
+        <div class="tut-lightbox__caja" (click)="$event.stopPropagation()">
+            <button type="button" class="tut-lightbox__cerrar" (click)="cerrarVideo()" aria-label="Cerrar">&times;</button>
+
+            <div class="tut-lightbox__video ratio ratio-16x9">
+                <iframe [src]="videoAbiertoUrl" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+            </div>
+
+            <div class="tut-lightbox__info">
+                <h3>{{ videoAbierto.titulo }}</h3>
+                <p *ngIf="videoAbierto.descripcion">{{ videoAbierto.descripcion }}</p>
+            </div>
+
+            <div class="tut-lightbox__nav">
+                <button type="button" class="tut-nav-btn tut-nav-btn--anterior" [disabled]="!hayAnterior" (click)="videoAnterior()">
+                    <span class="tut-nav-arrow tut-nav-arrow--izq"></span> Anterior
+                </button>
+                <button type="button" class="tut-nav-btn tut-nav-btn--siguiente" [disabled]="!haySiguiente" (click)="videoSiguiente()">
+                    Siguiente <span class="tut-nav-arrow tut-nav-arrow--der"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>

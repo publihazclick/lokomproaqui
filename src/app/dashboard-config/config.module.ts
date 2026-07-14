@@ -76,6 +76,7 @@ import { WoocommerceConnectComponent } from './components/woocommerce-connect/wo
 import { WoocommercePendingComponent } from './components/woocommerce-pending/woocommerce-pending.component';
 import { AceleradorAdminComponent } from './components/acelerador-admin/acelerador-admin.component';
 import { FormaceleradorLeccionComponent } from './form/formacelerador-leccion/formacelerador-leccion.component';
+import { FormTutorialComponent } from './form/form-tutorial/form-tutorial.component';
 
 @NgModule({
   entryComponents: [
@@ -96,7 +97,8 @@ import { FormaceleradorLeccionComponent } from './form/formacelerador-leccion/fo
     FormlistventasComponent,
     FormPosiblesVentasComponent,
     FormProductComponent,
-    FormaceleradorLeccionComponent
+    FormaceleradorLeccionComponent,
+    FormTutorialComponent
   ],
   declarations: [
     MainComponent,
@@ -153,7 +155,8 @@ import { FormaceleradorLeccionComponent } from './form/formacelerador-leccion/fo
     WoocommerceConnectComponent,
     WoocommercePendingComponent,
     AceleradorAdminComponent,
-    FormaceleradorLeccionComponent
+    FormaceleradorLeccionComponent,
+    FormTutorialComponent
   ],
   imports: [
     CommonModule,

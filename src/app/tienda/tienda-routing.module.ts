@@ -19,6 +19,7 @@ import { AceleradorPlayerComponent } from '../components/acelerador-player/acele
 import { MentorRegistroComponent } from '../components/mentor-registro/mentor-registro.component';
 import { MentorPanelComponent } from '../components/mentor-panel/mentor-panel.component';
 import { MentorGuard } from '../services/mentor.guard';
+import { TutorialesComponent } from '../components/tutoriales/tutoriales.component';
 
 const routes: Routes = [
   {
@@ -51,6 +52,7 @@ const routes: Routes = [
       // proposito, un visitante sin loguear debe poder ver la vitrina de venta del curso.
       { path: 'acelerador', component: AceleradorComponent },
       { path: 'acelerador/leccion/:id', component: AceleradorPlayerComponent, canActivate: [AceleradorGuard] },
+      { path: 'tutoriales', component: TutorialesComponent },
     ]
   },
   {

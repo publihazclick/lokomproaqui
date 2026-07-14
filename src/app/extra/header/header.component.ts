@@ -784,6 +784,16 @@ export class HeaderComponent implements OnInit {
             nombre: 'Configuracion',
             url: '/config/configuracion',
           },
+          {
+            icons: 'school',
+            nombre: 'Acelerador de Ventas (Admin)',
+            url: '/config/aceleradorAdmin',
+          },
+          {
+            icons: 'video_library',
+            nombre: 'Tutoriales (Admin)',
+            url: '/config/cursos',
+          },
           // {
           //   icons: 'settings',
           //   nombre: 'Configuraciones',

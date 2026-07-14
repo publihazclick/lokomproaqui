@@ -39,6 +39,7 @@ import { AceleradorPlayerComponent } from '../components/acelerador-player/acele
 import { AceleradorCheckoutComponent } from '../components/acelerador-checkout/acelerador-checkout.component';
 import { MentorRegistroComponent } from '../components/mentor-registro/mentor-registro.component';
 import { MentorPanelComponent } from '../components/mentor-panel/mentor-panel.component';
+import { TutorialesComponent } from '../components/tutoriales/tutoriales.component';
 
 @NgModule({
   entryComponents:[
@@ -76,7 +77,8 @@ import { MentorPanelComponent } from '../components/mentor-panel/mentor-panel.co
     AceleradorPlayerComponent,
     AceleradorCheckoutComponent,
     MentorRegistroComponent,
-    MentorPanelComponent
+    MentorPanelComponent,
+    TutorialesComponent
 
   ],
   imports: [

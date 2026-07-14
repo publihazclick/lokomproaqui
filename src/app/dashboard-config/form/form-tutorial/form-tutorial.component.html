@@ -1,0 +1,29 @@
+<h2 mat-dialog-title>{{ titulo }} Tutorial</h2>
+<mat-dialog-content class="mat-typography">
+    <div class="form row">
+        <div class="form-group col-12">
+            <label>Titulo</label>
+            <input type="text" [(ngModel)]="data.titulo" placeholder="Ej: Como registrar mi primera venta" class="form-control form-control-sm">
+        </div>
+        <div class="form-group col-12">
+            <label>Descripcion (de que trata el video)</label>
+            <textarea class="form-control" [(ngModel)]="data.descripcion" rows="3" placeholder="Ej: Aprende paso a paso a publicar tu primer producto y compartir tu tienda."></textarea>
+        </div>
+        <div class="form-group col-12">
+            <label>Link de YouTube</label>
+            <input type="text" [(ngModel)]="data.url" placeholder="Pega el link de YouTube o solo el ID" class="form-control form-control-sm">
+            <small class="text-muted">Se acepta el link completo (youtube.com/watch?v=..., youtu.be/..., shorts/...) o el ID solo. Se convierte solo al guardar.</small>
+        </div>
+        <div class="form-group col-12">
+            <label>Orden</label>
+            <input type="number" [(ngModel)]="data.orden" class="form-control form-control-sm">
+        </div>
+    </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close>Cerrar</button>
+    <button mat-button cdkFocusInitial (click)="submit()">
+        <span *ngIf="!id">Guardar</span>
+        <span *ngIf="id">Actualizar</span>
+    </button>
+</mat-dialog-actions>
