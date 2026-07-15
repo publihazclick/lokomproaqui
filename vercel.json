@@ -11,6 +11,7 @@
     { "source": "/tutoriales", "destination": "https://lokomproaqui-next.vercel.app/tutoriales" },
     { "source": "/infoSupplier", "destination": "https://lokomproaqui-next.vercel.app/infoSupplier" },
     { "source": "/portal", "destination": "https://lokomproaqui-next.vercel.app/portal" },
+    { "source": "/testimonio", "destination": "https://lokomproaqui-next.vercel.app/testimonio" },
     { "source": "/_next/:path*", "destination": "https://lokomproaqui-next.vercel.app/_next/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
