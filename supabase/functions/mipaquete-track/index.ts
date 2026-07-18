@@ -42,6 +42,20 @@ async function fetchTracking(mipaqueteShipmentId: string, apiKey: string) {
   return { ok: true as const, eventos, estadoActual: ultimo?.updateState || null, raw: parsed };
 }
 
+// No hay lista oficial completa de `updateState` de Mipaquete (mismo problema documentado arriba
+// para PALABRAS_TERMINALES en mipaquete-sync-tracking) -- se matchea por palabra clave en vez de un
+// enum cerrado. 'entregad' -> approve_order (paga comisiones multinivel de referidos/proveedores y,
+// en dropshipping/muestra, devuelve el flete prepagado al vendedor). 'devuelt'/'cancelad'/'rechazad'
+// -> reject_order (marca rechazado y, si el pedido tenia el seguro antidevoluciones activo, devuelve
+// el flete). Duplicado a proposito en mipaquete-sync-tracking (ver nota de fetchTracking arriba).
+function resolverAccionAutomatica(estado: string | null): 'approve_order' | 'reject_order' | null {
+  if (!estado) return null;
+  const bajo = estado.toLowerCase();
+  if (bajo.includes('entregad')) return 'approve_order';
+  if (bajo.includes('devuelt') || bajo.includes('cancelad') || bajo.includes('rechazad')) return 'reject_order';
+  return null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -74,7 +88,18 @@ Deno.serve(async (req) => {
       order_id: orderId, profile_id: order.seller_id, data: { tracking: result.eventos }, status: 1,
     });
 
-    return json({ sending_id: order.mipaquete_shipment_id, guia: order.tracking_number, tracking: result.eventos, estado_actual: result.estadoActual, raw: result.raw });
+    // Pedido explicito del usuario 2026-07-18: que el estado real de la guia (Mipaquete) mueva solo
+    // el pedido, sin depender de que alguien entre al panel a cambiarlo a mano. approve_order/
+    // reject_order ya son idempotentes (approve_order no-opea si commission_paid, reject_order no
+    // vuelve a acreditar el flete si prev_status ya era 'rejected'), asi que llamarlas de mas (ej. el
+    // usuario aprieta "Actualizar estado" dos veces sobre un pedido ya entregado) es seguro.
+    const accion = resolverAccionAutomatica(result.estadoActual);
+    if (accion) {
+      const { error: rpcErr } = await admin.rpc(accion, { p_order_id: orderId });
+      if (rpcErr) await admin.from('shipment_settlement_logs').insert({ order_id: orderId, profile_id: order.seller_id, data: { accion, error: rpcErr.message }, status: 0 });
+    }
+
+    return json({ sending_id: order.mipaquete_shipment_id, guia: order.tracking_number, tracking: result.eventos, estado_actual: result.estadoActual, accion_automatica: accion, raw: result.raw });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Error desconocido';
     return json({ error: message }, 500);

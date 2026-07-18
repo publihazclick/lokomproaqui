@@ -44,6 +44,23 @@ function esEstadoTerminal(estado: string | null): boolean {
   return PALABRAS_TERMINALES.some((p) => bajo.includes(p));
 }
 
+// Pedido explicito del usuario 2026-07-18: que el estado real de la guia mueva el pedido solo
+// (pagar comisiones, devolver flete), sin depender de que alguien entre al panel a cambiarlo a
+// mano. 'entregad' -> approve_order (paga comisiones multinivel de referidos/proveedores y, en
+// dropshipping/muestra, devuelve el flete prepagado al vendedor). 'devuelt'/'cancelad'/'rechazad'
+// -> reject_order (marca rechazado y, si el pedido tenia el seguro antidevoluciones activo,
+// devuelve el flete). Ambas RPC son idempotentes (approve_order no-opea si commission_paid ya es
+// true, reject_order no vuelve a acreditar el flete si prev_status ya era 'rejected'), asi que no
+// hay riesgo de pagar/devolver dos veces aunque el cron reprocese el mismo pedido. Duplicado a
+// proposito en mipaquete-track (ver nota de fetchTracking arriba sobre por que no se comparte).
+function resolverAccionAutomatica(estado: string | null): 'approve_order' | 'reject_order' | null {
+  if (!estado) return null;
+  const bajo = estado.toLowerCase();
+  if (bajo.includes('entregad')) return 'approve_order';
+  if (bajo.includes('devuelt') || bajo.includes('cancelad') || bajo.includes('rechazad')) return 'reject_order';
+  return null;
+}
+
 const LIMITE_POR_CORRIDA = 50;
 const DIAS_TOPE = 60; // no seguir consultando pedidos mas viejos que esto, aunque no tengan estado terminal detectado.
 const ESPERA_ENTRE_LLAMADOS_MS = 250;
@@ -77,6 +94,7 @@ Deno.serve(async (req) => {
 
     let actualizados = 0;
     let errores = 0;
+    let accionesAutomaticas = 0;
 
     for (const pedido of pendientes) {
       const result = await fetchTracking(pedido.mipaquete_shipment_id, apiKey);
@@ -89,11 +107,21 @@ Deno.serve(async (req) => {
           tracking_synced_at: new Date().toISOString(),
         }).eq('id', pedido.id);
         actualizados++;
+
+        const accion = resolverAccionAutomatica(result.estadoActual);
+        if (accion) {
+          const { error: rpcErr } = await admin.rpc(accion, { p_order_id: pedido.id });
+          if (rpcErr) {
+            await admin.from('shipment_settlement_logs').insert({ order_id: pedido.id, profile_id: null, data: { accion, error: rpcErr.message }, status: 0 });
+          } else {
+            accionesAutomaticas++;
+          }
+        }
       }
       await sleep(ESPERA_ENTRE_LLAMADOS_MS);
     }
 
-    return json({ procesados: pendientes.length, actualizados, errores });
+    return json({ procesados: pendientes.length, actualizados, errores, acciones_automaticas: accionesAutomaticas });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Error desconocido';
     return json({ error: message }, 500);

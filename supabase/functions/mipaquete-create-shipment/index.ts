@@ -62,29 +62,49 @@ Deno.serve(async (req) => {
     // Ademas faltaba un campo raiz obligatorio segun el ejemplo oficial: adminTransactionData.saleValue
     // ("valor de venta del producto a enviar, aplica para pago contra entrega, si no se coloca 0").
     //
-    // Recaudo contra entrega: en pedidos normales 'contraentrega' nadie prepago nada, asi que el
-    // mensajero recauda producto+flete completo (paymentType 102, Mipaquete descuenta el flete
-    // del recaudo antes de liquidar). En 'dropshipping'/'muestra' el dropshipper ya prepago el
-    // flete desde su billetera (ver dropshipping-checkout), asi que aqui Mipaquete cobra el flete
-    // de nuestro saldo propio en Mipaquete (paymentType 101) y el mensajero solo recauda el valor
-    // del producto (mas el flete si el vendedor eligio "envio aparte", ver shipping_included).
+    // Recaudo contra entrega: en pedidos 'contraentrega' nadie prepago nada, asi que el mensajero
+    // recauda producto+flete completo. En 'dropshipping'/'muestra' el vendedor prepaga el FLETE
+    // desde su billetera de LokomproAqui (ver dropshipping-checkout, confirmarPago -- bloquea la
+    // generacion de guia si no tiene saldo), pero el mensajero SIEMPRE recauda igual el valor del
+    // producto contra entrega al cliente final (o al propio vendedor en 'muestra') -- nunca esta
+    // pagado online. Por eso hay un recaudo real en los 3 casos.
     const isMarketplaceCod = order.order_type === 'contraentrega';
     const isSelfFundedFreight = order.order_type === 'dropshipping' || order.order_type === 'muestra';
-    const paymentType = isMarketplaceCod ? 102 : 101;
     const selfFundedCollection = (Number(order.price_total) || declaredValue)
       + (order.order_type === 'dropshipping' && order.shipping_included === false ? (Number(order.freight_value) || 0) : 0);
     const valueCollection = isMarketplaceCod
       ? declaredValue + (Number(order.freight_value) || 0)
       : (isSelfFundedFreight ? selfFundedCollection : 0);
+    // CAMBIO 2026-07-18 (pedido explicito del usuario): paymentType ya NO depende del tipo de
+    // pedido, depende de si hay recaudo real. Antes 'dropshipping'/'muestra' usaban 101 ("pago con
+    // saldo de mipaquete" -- cobrado de nuestro saldo propio en Mipaquete, exigia tenerlo cargado).
+    // Como el mensajero YA recauda el valor del producto en esos 2 casos (ver arriba), Mipaquete
+    // puede descontar su tarifa de ESE recaudo igual que en 'contraentrega' (paymentType 102) --
+    // el vendedor ya cubrio el flete via wallet, asi que las cuentas cuadran sin que nuestra cuenta
+    // de Mipaquete necesite saldo propio. Solo pedidos SIN ningun recaudo (ya pagados 100% online:
+    // Shopify/WooCommerce, valueCollection=0) siguen necesitando 101, porque ahi no hay plata en la
+    // calle de la que Mipaquete pueda descontar su tarifa.
+    const paymentType = valueCollection > 0 ? 102 : 101;
     // saleValue: "aplica para servicio de pago contra entrega, si no se coloca 0" — en la
     // practica, cualquier caso donde SI hay recaudo (valueCollection > 0) necesita el valor de
     // venta real para la liquidacion de Mipaquete.
     const saleValue = valueCollection > 0 ? (isMarketplaceCod ? declaredValue : selfFundedCollection) : 0;
 
+    // Nombre del remitente (pedido explicito del usuario 2026-07-18, ajustado el mismo dia): fijo
+    // "LOKOMPROAQUI/" + el nombre de la tienda (perfil) del vendedor que hizo la venta -- el mismo
+    // full_name/last_name que identifica su tienda publica cuando comparte su link. Antes era un
+    // nombre 100% fijo sin distincion de tienda; ahora la marca queda siempre visible PERO tambien
+    // se puede saber de un vistazo que vendedor genero cada guia. La direccion de recogida (mas
+    // abajo, pickupAddress) sigue siendo la real de cada proveedor/bodega -- eso no cambia, el
+    // mensajero necesita el lugar correcto, solo el nombre del remitente se compone asi.
+    const storeName = `${sellerProfile.full_name || ''} ${sellerProfile.last_name || ''}`.trim() || 'Vendedor';
+
     const sendingPayload = {
       sender: {
-        name: String(pickup?.first_name || sellerProfile.full_name || 'LokomproAqui'),
-        surname: String(pickup?.last_name || sellerProfile.last_name || 'Vendedor'),
+        name: `LOKOMPROAQUI/${storeName}`,
+        // '.' como respaldo no vacio: mismo patron ya usado mas abajo para el apellido del
+        // comprador (`buyerRest.join(' ') || '.'`) cuando no hay un segundo campo real que mandar.
+        surname: '.',
         cellPhone: String(pickup?.whatsapp || sellerProfile.phone || Deno.env.get('MIPAQUETE_DEFAULT_PHONE') || ''),
         prefix: '+57',
         email: String(pickup?.email || ''),
