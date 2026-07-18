@@ -69,12 +69,23 @@ Deno.serve(async (req) => {
     let raw: any[] = [];
     try { raw = JSON.parse(text); } catch { raw = []; }
 
+    // Margen fijo de LokomproAqui por guia, pedido explicito del usuario 2026-07-18: se suma UNA
+    // sola vez aca, sobre el costo real que devuelve Mipaquete -- de aca en adelante ese numero YA
+    // marcado es "el flete" para todo el resto del sistema (se guarda en orders.freight_value via
+    // actualizarFleteYTransportadora, y de ahi alimenta tanto el recaudo contra entrega como el
+    // debito de la wallet dropshipper), sin tocar ningun otro archivo. Mipaquete nunca ve este
+    // numero, solo cobra su tarifa real -- la diferencia es el margen. El otro lado de la cuenta
+    // (que esos $4.000 nunca se le devuelvan al vendedor) vive en approve_order/reject_order, ver
+    // migracion 038_flete_margen_lokomproaqui.sql -- los 3 archivos deben cambiar juntos si el
+    // monto del margen cambia algun dia.
+    const MARGEN_LOKOMPROAQUI_COP = 4000;
+
     const cotizaciones = (Array.isArray(raw) ? raw : []).map((c) => ({
       quote_id: c.id,
       delivery_company_id: c.deliveryCompanyId,
       delivery_company_name: c.deliveryCompanyName,
       logo_url: c.deliveryCompanyImgUrl ?? null,
-      flete_costo: Number(c.shippingCost),
+      flete_costo: Number(c.shippingCost) + MARGEN_LOKOMPROAQUI_COP,
       tiempo_min: c.shippingTime ?? null,
       pickup_service: !!c.pickupService,
     })).sort((a, b) => a.flete_costo - b.flete_costo);
