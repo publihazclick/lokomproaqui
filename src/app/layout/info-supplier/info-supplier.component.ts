@@ -5,6 +5,7 @@ import * as _ from 'lodash';
 import { RegistroComponent } from 'src/app/components/registro/registro.component';
 import { MatDialog } from '@angular/material';
 import { Router } from '@angular/router';
+import { SeoService } from 'src/app/services/seo.service';
 
 @Component({
   selector: 'app-info-supplier',
@@ -31,9 +32,16 @@ export class InfoSupplierComponent implements OnInit {
     private spinner: NgxSpinnerService,
     public dialog: MatDialog,
     private _router: Router,
+    private _seo: SeoService,
   ) { }
 
   ngOnInit(): void {
+    this._seo.update({
+      title: 'Vende tus Productos como Proveedor Dropshipping | LokomproAqui',
+      description: 'Publica tus productos en LokomproAqui y llega a cientos de vendedores que promocionan por internet. Nosotros gestionamos el envío y el pago contra entrega.',
+      keywords: 'proveedor dropshipping, vender productos por internet, catalogo dropshipping colombia',
+      path: '/infoSupplier',
+    });
     this.getStore();
   }
 

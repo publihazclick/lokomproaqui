@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { environment } from 'src/environments/environment';
 import { TestimoniosService } from 'src/app/servicesComponents/testimonios.service';
 import { NgxSpinnerService } from 'ngx-spinner';
+import { SeoService } from 'src/app/services/seo.service';
 
 
 const URLFRON = environment.urlFront;
@@ -26,11 +27,18 @@ export class TestimoniosComponent implements OnInit {
 
   constructor(
     private _testimonios: TestimoniosService,
-    private spinner: NgxSpinnerService
-  ) { 
+    private spinner: NgxSpinnerService,
+    private _seo: SeoService,
+  ) {
   }
 
   ngOnInit(): void {
+    this._seo.update({
+      title: 'Testimonios: Casos de Éxito Vendiendo por Internet | LokomproAqui',
+      description: 'Historias reales de personas que generan ingresos vendiendo por internet con dropshipping en LokomproAqui, sin invertir en inventario.',
+      keywords: 'testimonios dropshipping, casos de exito ventas por internet',
+      path: '/testimonio',
+    });
     this.getRow();
   }
 

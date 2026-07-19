@@ -6,6 +6,7 @@ import { RegistroComponent } from 'src/app/components/registro/registro.componen
 import { OpenIframeComponent } from 'src/app/extra/open-iframe/open-iframe.component';
 import { STORAGES } from 'src/app/interfaces/sotarage';
 import { ToolsService } from 'src/app/services/tools.service';
+import { SeoService } from 'src/app/services/seo.service';
 
 @Component({
   selector: 'app-info',
@@ -34,6 +35,7 @@ export class InfoComponent implements OnInit {
     private _store: Store<STORAGES>,
     private _router: Router,
     private _tools: ToolsService,
+    private _seo: SeoService,
   ) {
     this._store.subscribe((store: any) => {
       store = store.name;
@@ -73,6 +75,12 @@ export class InfoComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this._seo.update({
+      title: 'LokomproAqui | Dropshipping en Colombia sin Inventario – Vende por Internet',
+      description: 'Vende por internet sin invertir en inventario. Elige productos de nuestro catálogo dropshipping, promociónalos y nosotros empacamos y enviamos a tu cliente con pago contra entrega.',
+      keywords: 'dropshipping, dropshipping colombia, ventas por internet, vender por internet, negocio por internet, tienda online sin inventario, emprender online',
+      path: '/info',
+    });
   }
 
   handleOpenView( url:string ){

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CursosService } from 'src/app/servicesComponents/cursos.service';
 import { ToolsService } from 'src/app/services/tools.service';
+import { SeoService } from 'src/app/services/seo.service';
 
 // Pagina publica de tutoriales en YouTube que enseñan a usar LokomproAqui. El contenido lo
 // organiza el administrador desde /config/cursos (CursosComponent): categorias (courses con
@@ -28,9 +29,16 @@ export class TutorialesComponent implements OnInit {
   constructor(
     private _cursos: CursosService,
     public _tools: ToolsService,
+    private _seo: SeoService,
   ) { }
 
   ngOnInit(): void {
+    this._seo.update({
+      title: 'Tutoriales para Vender por Internet con Dropshipping | LokomproAqui',
+      description: 'Videotutoriales para aprender a usar LokomproAqui: cómo vender por internet, publicar productos, manejar pedidos y hacer crecer tu negocio de dropshipping.',
+      keywords: 'tutoriales dropshipping, como vender por internet, tutorial ventas online',
+      path: '/tutoriales',
+    });
     this.loader = true;
     this._cursos.get({}).subscribe((res: any) => {
       const todos = res.data || [];

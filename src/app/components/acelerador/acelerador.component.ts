@@ -5,6 +5,7 @@ import { STORAGES } from 'src/app/interfaces/sotarage';
 import { ToolsService } from 'src/app/services/tools.service';
 import { AceleradorService } from 'src/app/servicesComponents/acelerador.service';
 import { AceleradorCheckoutComponent } from 'src/app/components/acelerador-checkout/acelerador-checkout.component';
+import { SeoService } from 'src/app/services/seo.service';
 
 @Component({
   selector: 'app-acelerador',
@@ -27,6 +28,7 @@ export class AceleradorComponent implements OnInit {
     private _acelerador: AceleradorService,
     private _route: ActivatedRoute,
     public _tools: ToolsService,
+    private _seo: SeoService,
   ) {
     this._store.subscribe((store: any) => {
       store = store.name;
@@ -46,6 +48,23 @@ export class AceleradorComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this._seo.update({
+      title: 'Acelerador de Ventas: Curso de Marketing Digital y Ventas Online | LokomproAqui',
+      description: 'Aprende a vender por internet con el curso Acelerador de Ventas: marketing digital, publicidad, cierre de ventas y dropshipping paso a paso, con acceso a lecciones en video.',
+      keywords: 'curso de marketing digital, curso de ventas online, aprender a vender por internet, curso dropshipping, marketing digital',
+      path: '/acelerador',
+    });
+    this._seo.setJsonLd('jsonld-acelerador-course', {
+      '@context': 'https://schema.org',
+      '@type': 'Course',
+      name: 'Acelerador de Ventas',
+      description: 'Curso de marketing digital y ventas online: aprende a vender por internet, promocionar productos y cerrar ventas con la metodología de LokomproAqui.',
+      provider: {
+        '@type': 'Organization',
+        name: 'LokomproAqui',
+        sameAs: 'https://www.lokomproaqui.com/',
+      },
+    });
     this.cargar();
   }
 

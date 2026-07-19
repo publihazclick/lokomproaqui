@@ -5,6 +5,7 @@ import { ToolsService } from 'src/app/services/tools.service';
 import { CartAction } from 'src/app/redux/app.actions';
 import { CART } from 'src/app/interfaces/sotarage';
 import { Store } from '@ngrx/store';
+import { SeoService } from 'src/app/services/seo.service';
 
 @Component({
   selector: 'app-producto-view',
@@ -22,6 +23,7 @@ export class ProductoViewComponent implements OnInit {
     private _producto: ProductoService,
     private _tools: ToolsService,
     private _store: Store<CART>,
+    private _seo: SeoService,
   ) { }
 
   ngOnInit() {
@@ -32,7 +34,39 @@ export class ProductoViewComponent implements OnInit {
   }
 
   getProducto(){
-    this._producto.get({ where: { id: this.id}}).subscribe((res:any)=>{ this.data = res.data[0] || {}; this.data.cantidadAdquirir = 1; }, error=> { console.error(error); this._tools.presentToast('Error de servidor'); });
+    this._producto.get({ where: { id: this.id}}).subscribe((res:any)=>{
+      this.data = res.data[0] || {};
+      this.data.cantidadAdquirir = 1;
+      this.actualizarSeo();
+    }, error=> { console.error(error); this._tools.presentToast('Error de servidor'); });
+  }
+
+  private actualizarSeo(){
+    if(!this.data || !this.data.pro_nombre) return;
+    const nombre = this.data.pro_nombre;
+    const precio = this.data.pro_uni_venta;
+    const imagen = this.data.foto;
+    this._seo.update({
+      title: `${nombre} | Vende este Producto por Internet – LokomproAqui`,
+      description: `${nombre} disponible en el catálogo dropshipping de LokomproAqui. Véndelo por internet sin invertir en inventario: nosotros empacamos y enviamos con pago contra entrega.`,
+      image: imagen,
+      type: 'product',
+      path: `/productos/${this.id}`,
+    });
+    if(precio){
+      this._seo.setJsonLd('jsonld-product', {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: nombre,
+        image: imagen ? [imagen] : undefined,
+        offers: {
+          '@type': 'Offer',
+          priceCurrency: 'COP',
+          price: precio,
+          availability: 'https://schema.org/InStock',
+        },
+      });
+    }
   }
 
   descargar(){

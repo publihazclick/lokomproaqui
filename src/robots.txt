@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Disallow: /config/
+Disallow: /mvid8x2qz1
+Disallow: /login
+Disallow: /qz7f3f0888
+Disallow: /registro
+Disallow: /singUp
+Disallow: /pedidos
+Disallow: /realizarventa
+Disallow: /portal
+Disallow: /front
+Disallow: /publico
+
+Sitemap: https://www.lokomproaqui.com/sitemap.xml
