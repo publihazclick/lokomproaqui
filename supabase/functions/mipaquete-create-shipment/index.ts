@@ -62,22 +62,16 @@ Deno.serve(async (req) => {
     // Ademas faltaba un campo raiz obligatorio segun el ejemplo oficial: adminTransactionData.saleValue
     // ("valor de venta del producto a enviar, aplica para pago contra entrega, si no se coloca 0").
     //
-    // Recaudo contra entrega: en pedidos 'contraentrega' nadie prepago nada, asi que el mensajero
-    // recauda producto+flete completo. En 'dropshipping'/'muestra' el vendedor prepaga el FLETE
-    // desde su billetera de LokomproAqui (ver dropshipping-checkout, confirmarPago -- bloquea la
-    // generacion de guia si no tiene saldo), pero el mensajero SIEMPRE recauda igual el valor del
-    // producto contra entrega al cliente final (o al propio vendedor en 'muestra') -- nunca esta
-    // pagado online. Por eso hay un recaudo real en los 3 casos.
-    // Seguro antidevoluciones ahora tambien disponible en 'contraentrega' (pedido explicito del
-    // usuario 2026-07-19, MISMA logica que ya existia en dropshipping/muestra): si el vendedor lo
-    // activa al autorizar el despacho, el flete se prepaga desde su wallet igual que en esos 2
-    // tipos de pedido (ver FormVentaDetalleModal), asi que el mensajero deja de recaudarlo -- se
-    // trata como "autofinanciado" igual que dropshipping/muestra. Sin seguro, 'contraentrega' sigue
-    // igual que siempre (el mensajero recauda producto+flete completo, nadie prepago nada).
-    const isSelfFundedFreight = order.order_type === 'dropshipping' || order.order_type === 'muestra'
-      || (order.order_type === 'contraentrega' && order.insurance_active === true);
-    const isMarketplaceCod = order.order_type === 'contraentrega' && !isSelfFundedFreight;
-    // "Mi cliente ya me pago el producto" (pedido explicito del usuario 2026-07-18, AMPLIADO
+    // CAMBIO 2026-07-19 (pedido explicito del usuario): ya NO existe "contra entrega sin prepago".
+    // TODO pedido -- 'contraentrega' incluido, con o sin seguro -- exige que el vendedor tenga
+    // saldo suficiente en su wallet 'dropshipper' para cubrir el flete ANTES de poder generar la
+    // guia (ver FormVentaDetalleModal, autorizarDespacho -- bloquea con "saldo insuficiente" si no
+    // alcanza). El mensajero entonces NUNCA recauda el flete, solo el producto (salvo que tambien
+    // este prepagado, ver isPrepaidByCustomer abajo) -- por eso 'contraentrega' ahora se trata
+    // exactamente igual que 'dropshipping'/'muestra' para este calculo, ya no hay diferencia real
+    // entre los 3 tipos de pedido en cuanto a quien financia el flete.
+    const isSelfFundedFreight = order.order_type === 'dropshipping' || order.order_type === 'muestra' || order.order_type === 'contraentrega';
+    // "Mi cliente ya me pago el producto" (pedido explicito del usuario 2026-07-18, ampliado
     // 2026-07-19 a cualquier tipo de pedido -- antes solo aplicaba a dropshipping. Ahora el
     // vendedor tambien lo puede marcar manualmente al autorizar una venta normal 'contraentrega'
     // desde FormVentaDetalleModal, si el cliente ya le pago por fuera de la plataforma). El
@@ -90,25 +84,21 @@ Deno.serve(async (req) => {
       ? (order.shipping_included === false ? (Number(order.freight_value) || 0) : 0)
       : (Number(order.price_total) || declaredValue)
         + (order.order_type === 'dropshipping' && order.shipping_included === false ? (Number(order.freight_value) || 0) : 0);
-    const valueCollection = isPrepaidByCustomer
-      ? selfFundedCollection
-      : isMarketplaceCod
-        ? declaredValue + (Number(order.freight_value) || 0)
-        : (isSelfFundedFreight ? selfFundedCollection : 0);
+    const valueCollection = isSelfFundedFreight || isPrepaidByCustomer ? selfFundedCollection : 0;
     // CAMBIO 2026-07-18 (pedido explicito del usuario): paymentType ya NO depende del tipo de
     // pedido, depende de si hay recaudo real. Antes 'dropshipping'/'muestra' usaban 101 ("pago con
     // saldo de mipaquete" -- cobrado de nuestro saldo propio en Mipaquete, exigia tenerlo cargado).
-    // Como el mensajero YA recauda el valor del producto en esos 2 casos (ver arriba), Mipaquete
-    // puede descontar su tarifa de ESE recaudo igual que en 'contraentrega' (paymentType 102) --
-    // el vendedor ya cubrio el flete via wallet, asi que las cuentas cuadran sin que nuestra cuenta
-    // de Mipaquete necesite saldo propio. Solo pedidos SIN ningun recaudo (ya pagados 100% online:
-    // Shopify/WooCommerce, valueCollection=0) siguen necesitando 101, porque ahi no hay plata en la
-    // calle de la que Mipaquete pueda descontar su tarifa.
+    // Como el mensajero YA recauda el valor del producto en esos casos (ver arriba), Mipaquete
+    // puede descontar su tarifa de ESE recaudo (paymentType 102) -- el vendedor ya cubrio el flete
+    // via wallet, asi que las cuentas cuadran sin que nuestra cuenta de Mipaquete necesite saldo
+    // propio. Solo pedidos SIN ningun recaudo (ya pagados 100% online: Shopify/WooCommerce,
+    // valueCollection=0) siguen necesitando 101, porque ahi no hay plata en la calle de la que
+    // Mipaquete pueda descontar su tarifa.
     const paymentType = valueCollection > 0 ? 102 : 101;
     // saleValue: "aplica para servicio de pago contra entrega, si no se coloca 0" — en la
     // practica, cualquier caso donde SI hay recaudo (valueCollection > 0) necesita el valor de
     // venta real para la liquidacion de Mipaquete.
-    const saleValue = valueCollection > 0 ? (isMarketplaceCod && !isPrepaidByCustomer ? declaredValue : selfFundedCollection) : 0;
+    const saleValue = valueCollection > 0 ? selfFundedCollection : 0;
 
     // Nombre del remitente (pedido explicito del usuario 2026-07-18, ajustado el mismo dia): fijo
     // "LOKOMPROAQUI/" + el nombre de la tienda (perfil) del vendedor que hizo la venta -- el mismo
