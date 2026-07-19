@@ -70,19 +70,24 @@ Deno.serve(async (req) => {
     // pagado online. Por eso hay un recaudo real en los 3 casos.
     const isMarketplaceCod = order.order_type === 'contraentrega';
     const isSelfFundedFreight = order.order_type === 'dropshipping' || order.order_type === 'muestra';
-    // "Mi cliente ya me pago el producto" (pedido explicito del usuario 2026-07-18): el producto ya
-    // esta saldado por fuera de la plataforma, asi que el mensajero NUNCA debe recaudarlo -- se
-    // reusa shipping_included con un significado nuevo en este caso especifico: true = tambien le
-    // pagaron el flete (recaudo $0, flete sale de la wallet), false = el flete lo paga aparte al
-    // mensajero (recaudo = solo el flete). Ver customer_prepaid_product en la migracion 039.
-    const isPrepaidByCustomer = order.order_type === 'dropshipping' && order.customer_prepaid_product === true;
+    // "Mi cliente ya me pago el producto" (pedido explicito del usuario 2026-07-18, AMPLIADO
+    // 2026-07-19 a cualquier tipo de pedido -- antes solo aplicaba a dropshipping. Ahora el
+    // vendedor tambien lo puede marcar manualmente al autorizar una venta normal 'contraentrega'
+    // desde FormVentaDetalleModal, si el cliente ya le pago por fuera de la plataforma). El
+    // producto ya esta saldado, asi que el mensajero NUNCA debe recaudarlo -- se reusa
+    // shipping_included con un significado nuevo en este caso especifico: true = tambien le
+    // pagaron el flete (recaudo $0), false = el flete lo paga aparte al mensajero (recaudo = solo
+    // el flete). Ver customer_prepaid_product en la migracion 039.
+    const isPrepaidByCustomer = order.customer_prepaid_product === true;
     const selfFundedCollection = isPrepaidByCustomer
       ? (order.shipping_included === false ? (Number(order.freight_value) || 0) : 0)
       : (Number(order.price_total) || declaredValue)
         + (order.order_type === 'dropshipping' && order.shipping_included === false ? (Number(order.freight_value) || 0) : 0);
-    const valueCollection = isMarketplaceCod
-      ? declaredValue + (Number(order.freight_value) || 0)
-      : (isSelfFundedFreight ? selfFundedCollection : 0);
+    const valueCollection = isPrepaidByCustomer
+      ? selfFundedCollection
+      : isMarketplaceCod
+        ? declaredValue + (Number(order.freight_value) || 0)
+        : (isSelfFundedFreight ? selfFundedCollection : 0);
     // CAMBIO 2026-07-18 (pedido explicito del usuario): paymentType ya NO depende del tipo de
     // pedido, depende de si hay recaudo real. Antes 'dropshipping'/'muestra' usaban 101 ("pago con
     // saldo de mipaquete" -- cobrado de nuestro saldo propio en Mipaquete, exigia tenerlo cargado).
@@ -96,7 +101,7 @@ Deno.serve(async (req) => {
     // saleValue: "aplica para servicio de pago contra entrega, si no se coloca 0" — en la
     // practica, cualquier caso donde SI hay recaudo (valueCollection > 0) necesita el valor de
     // venta real para la liquidacion de Mipaquete.
-    const saleValue = valueCollection > 0 ? (isMarketplaceCod ? declaredValue : selfFundedCollection) : 0;
+    const saleValue = valueCollection > 0 ? (isMarketplaceCod && !isPrepaidByCustomer ? declaredValue : selfFundedCollection) : 0;
 
     // Nombre del remitente (pedido explicito del usuario 2026-07-18, ajustado el mismo dia): fijo
     // "LOKOMPROAQUI/" + el nombre de la tienda (perfil) del vendedor que hizo la venta -- el mismo
