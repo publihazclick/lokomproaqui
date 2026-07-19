@@ -68,8 +68,15 @@ Deno.serve(async (req) => {
     // generacion de guia si no tiene saldo), pero el mensajero SIEMPRE recauda igual el valor del
     // producto contra entrega al cliente final (o al propio vendedor en 'muestra') -- nunca esta
     // pagado online. Por eso hay un recaudo real en los 3 casos.
-    const isMarketplaceCod = order.order_type === 'contraentrega';
-    const isSelfFundedFreight = order.order_type === 'dropshipping' || order.order_type === 'muestra';
+    // Seguro antidevoluciones ahora tambien disponible en 'contraentrega' (pedido explicito del
+    // usuario 2026-07-19, MISMA logica que ya existia en dropshipping/muestra): si el vendedor lo
+    // activa al autorizar el despacho, el flete se prepaga desde su wallet igual que en esos 2
+    // tipos de pedido (ver FormVentaDetalleModal), asi que el mensajero deja de recaudarlo -- se
+    // trata como "autofinanciado" igual que dropshipping/muestra. Sin seguro, 'contraentrega' sigue
+    // igual que siempre (el mensajero recauda producto+flete completo, nadie prepago nada).
+    const isSelfFundedFreight = order.order_type === 'dropshipping' || order.order_type === 'muestra'
+      || (order.order_type === 'contraentrega' && order.insurance_active === true);
+    const isMarketplaceCod = order.order_type === 'contraentrega' && !isSelfFundedFreight;
     // "Mi cliente ya me pago el producto" (pedido explicito del usuario 2026-07-18, AMPLIADO
     // 2026-07-19 a cualquier tipo de pedido -- antes solo aplicaba a dropshipping. Ahora el
     // vendedor tambien lo puede marcar manualmente al autorizar una venta normal 'contraentrega'
