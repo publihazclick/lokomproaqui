@@ -69,6 +69,53 @@ function resolverMotivoDevolucion(estado: string | null): string {
   return 'otro';
 }
 
+// Fase 2 del plan de reduccion de devoluciones: mismo par (palabras clave + envio de plantilla) que
+// mipaquete-sync-tracking -- duplicado a proposito, mismo motivo de siempre.
+const PALABRAS_EN_CAMINO = ['en camino', 'en reparto', 'en ruta', 'transito', 'tránsito'];
+
+function estaEnCamino(estado: string | null): boolean {
+  if (!estado) return false;
+  const bajo = estado.toLowerCase();
+  return PALABRAS_EN_CAMINO.some((p) => bajo.includes(p));
+}
+
+function normalizarTelefono(raw: string | null): string | null {
+  const digitos = (raw || '').replace(/\D/g, '');
+  const ultimos10 = digitos.slice(-10);
+  if (ultimos10.length < 10) return null;
+  return `57${ultimos10}`;
+}
+
+async function notificarEnCamino(pedido: any, accessToken: string, phoneNumberId: string): Promise<string | null> {
+  const telefono = normalizarTelefono(pedido.buyer_phone);
+  if (!telefono) return null;
+  const direccion = `${pedido.buyer_address || ''}, ${pedido.buyer_city || ''}`.trim();
+
+  const resp = await fetch(`https://graph.facebook.com/v20.0/${phoneNumberId}/messages`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      to: telefono,
+      type: 'template',
+      template: {
+        name: 'envio_en_camino_lokomproaqui',
+        language: { code: 'es' },
+        components: [{
+          type: 'body',
+          parameters: [
+            { type: 'text', text: pedido.buyer_name || 'Cliente' },
+            { type: 'text', text: direccion || 'tu dirección' },
+          ],
+        }],
+      },
+    }),
+  });
+  if (!resp.ok) return null;
+  const parsed = await resp.json().catch(() => ({}));
+  return parsed?.messages?.[0]?.id || null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -80,7 +127,10 @@ Deno.serve(async (req) => {
     const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
     const { data: order, error: orderErr } = await admin
-      .from('orders').select('id, seller_id, mipaquete_shipment_id, carrier, tracking_number, tracking_status').eq('id', orderId).single();
+      .from('orders')
+      .select('id, seller_id, mipaquete_shipment_id, carrier, tracking_number, tracking_status, order_type, buyer_name, buyer_phone, buyer_address, buyer_city, delivery_notified_at')
+      .eq('id', orderId)
+      .single();
 
     if (orderErr || !order) return json({ error: 'Pedido no encontrado' }, 404);
     if (!order.mipaquete_shipment_id) return json({ tracking: [], mensaje: 'Guia no generada aun' });
@@ -111,12 +161,22 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Fase 2 del plan de reduccion de devoluciones: mismo guard que mipaquete-sync-tracking, ver
+    // esa nota ampliada.
+    let notificacionEnCaminoId: string | null = null;
+    const waToken = Deno.env.get('WHATSAPP_ACCESS_TOKEN');
+    const waPhoneId = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID');
+    if (!order.delivery_notified_at && order.order_type === 'contraentrega' && estaEnCamino(result.estadoActual) && waToken && waPhoneId) {
+      notificacionEnCaminoId = await notificarEnCamino(order, waToken, waPhoneId);
+    }
+
     await admin.from('orders').update({
       tracking_status: accionOk ? result.estadoActual : order.tracking_status ?? null,
       tracking_history: result.eventos,
       // Fase 0 del plan de reduccion de devoluciones: motivo automatico solo cuando de verdad se
       // rechazo el pedido.
       ...(accionOk && accion === 'reject_order' ? { return_reason: resolverMotivoDevolucion(result.estadoActual) } : {}),
+      ...(notificacionEnCaminoId ? { delivery_notified_at: new Date().toISOString(), delivery_notification_message_id: notificacionEnCaminoId } : {}),
       tracking_synced_at: new Date().toISOString(),
     }).eq('id', orderId);
 

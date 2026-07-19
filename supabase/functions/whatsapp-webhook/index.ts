@@ -60,21 +60,34 @@ Deno.serve(async (req) => {
       for (const change of entry.changes || []) {
         const value = change.value || {};
 
-        // Respuestas de boton (Si/Cancelar).
+        // Respuestas de boton -- pueden ser de la plantilla de confirmacion (Fase 1d: Si/Cancelar) o
+        // de la plantilla "va en camino" (Fase 2: "No puedo recibir hoy"). Se busca primero por
+        // confirmation_message_id y, si no matchea ahi, por delivery_notification_message_id -- cada
+        // pedido solo puede tener un mensaje activo de cada tipo, asi que no hay ambiguedad.
         for (const msg of value.messages || []) {
           if (msg.type !== 'button' || !msg.context?.id) continue;
           const textoBoton = (msg.button?.text || '').toLowerCase();
 
-          const { data: order } = await admin.from('orders').select('id, status').eq('confirmation_message_id', msg.context.id).maybeSingle();
-          if (!order) continue;
+          const { data: ordenConfirmacion } = await admin.from('orders').select('id, status').eq('confirmation_message_id', msg.context.id).maybeSingle();
+          if (ordenConfirmacion) {
+            if (textoBoton.includes('confirmar') || textoBoton.includes('si')) {
+              await admin.from('orders').update({ confirmation_status: 'confirmed' }).eq('id', ordenConfirmacion.id);
+            } else if (textoBoton.includes('cancelar')) {
+              // Pre-guia todavia (nunca se cobro nada de wallet en este punto) -- solo se marca
+              // rechazado + el motivo real, mismo patron que marcarPedidoRechazadoSinReembolso
+              // (no hay nada que reembolsar aca, el flujo de fletes nunca llego a esta etapa).
+              await admin.from('orders').update({ confirmation_status: 'cancelled', status: 'rejected', return_reason: 'se_arrepintio' }).eq('id', ordenConfirmacion.id);
+            }
+            continue;
+          }
 
-          if (textoBoton.includes('confirmar') || textoBoton.includes('si')) {
-            await admin.from('orders').update({ confirmation_status: 'confirmed' }).eq('id', order.id);
-          } else if (textoBoton.includes('cancelar')) {
-            // Pre-guia todavia (nunca se cobro nada de wallet en este punto) -- solo se marca
-            // rechazado + el motivo real, mismo patron que marcarPedidoRechazadoSinReembolso
-            // (no hay nada que reembolsar aca, el flujo de fletes nunca llego a esta etapa).
-            await admin.from('orders').update({ confirmation_status: 'cancelled', status: 'rejected', return_reason: 'se_arrepintio' }).eq('id', order.id);
+          // Fase 2: "No puedo recibir hoy" -- NO se intenta reagendar automatico con Mipaquete (no
+          // hay confirmacion de que su API lo soporte), se marca para que el vendedor/admin coordine
+          // a mano. Mas honesto que fingir una integracion no verificada.
+          const { data: ordenEnvio } = await admin.from('orders').select('id, seller_id').eq('delivery_notification_message_id', msg.context.id).maybeSingle();
+          if (ordenEnvio && textoBoton.includes('no puedo')) {
+            await admin.from('orders').update({ delivery_reschedule_requested: true }).eq('id', ordenEnvio.id);
+            await admin.from('shipment_settlement_logs').insert({ order_id: ordenEnvio.id, profile_id: ordenEnvio.seller_id, data: { evento: 'reagendo_solicitado' }, status: 1 });
           }
         }
 

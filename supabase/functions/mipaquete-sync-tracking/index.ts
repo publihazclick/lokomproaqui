@@ -85,6 +85,57 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Fase 2 del plan de reduccion de devoluciones (pedido explicito del usuario 2026-07-19): palabras
+// clave para detectar que el pedido entro en reparto -- mismo problema de siempre (no hay lista
+// oficial de estados de Mipaquete), matcheo best-effort.
+const PALABRAS_EN_CAMINO = ['en camino', 'en reparto', 'en ruta', 'transito', 'tránsito'];
+
+function estaEnCamino(estado: string | null): boolean {
+  if (!estado) return false;
+  const bajo = estado.toLowerCase();
+  return PALABRAS_EN_CAMINO.some((p) => bajo.includes(p));
+}
+
+function normalizarTelefono(raw: string | null): string | null {
+  const digitos = (raw || '').replace(/\D/g, '');
+  const ultimos10 = digitos.slice(-10);
+  if (ultimos10.length < 10) return null;
+  return `57${ultimos10}`;
+}
+
+// Notifica "tu pedido va en camino" -- plantilla de WhatsApp separada de la confirmacion (categoria
+// Utilidad, nombre 'envio_en_camino_lokomproaqui'). Mismo diseño auto-activable que
+// whatsapp-send-confirmation: si las credenciales de Meta no existen todavia, no hace nada.
+async function notificarEnCamino(pedido: any, accessToken: string, phoneNumberId: string): Promise<string | null> {
+  const telefono = normalizarTelefono(pedido.buyer_phone);
+  if (!telefono) return null;
+  const direccion = `${pedido.buyer_address || ''}, ${pedido.buyer_city || ''}`.trim();
+
+  const resp = await fetch(`https://graph.facebook.com/v20.0/${phoneNumberId}/messages`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      to: telefono,
+      type: 'template',
+      template: {
+        name: 'envio_en_camino_lokomproaqui',
+        language: { code: 'es' },
+        components: [{
+          type: 'body',
+          parameters: [
+            { type: 'text', text: pedido.buyer_name || 'Cliente' },
+            { type: 'text', text: direccion || 'tu dirección' },
+          ],
+        }],
+      },
+    }),
+  });
+  if (!resp.ok) return null;
+  const parsed = await resp.json().catch(() => ({}));
+  return parsed?.messages?.[0]?.id || null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -92,12 +143,14 @@ Deno.serve(async (req) => {
     const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
     const apiKey = Deno.env.get('MIPAQUETE_API_KEY') ?? '';
     if (!apiKey) return json({ error: 'MIPAQUETE_API_KEY no configurada' }, 500);
+    const waToken = Deno.env.get('WHATSAPP_ACCESS_TOKEN');
+    const waPhoneId = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID');
 
     const topeFecha = new Date(Date.now() - DIAS_TOPE * 24 * 60 * 60 * 1000).toISOString();
 
     const { data: pedidos, error: selectErr } = await admin
       .from('orders')
-      .select('id, mipaquete_shipment_id, tracking_status')
+      .select('id, mipaquete_shipment_id, tracking_status, order_type, buyer_name, buyer_phone, buyer_address, buyer_city, delivery_notified_at')
       .not('mipaquete_shipment_id', 'is', null)
       .neq('status', 'deleted')
       .gte('created_at', topeFecha)
@@ -142,6 +195,15 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Fase 2 del plan de reduccion de devoluciones: notifica "va en camino" una sola vez por
+      // pedido (delivery_notified_at como guardia) -- reduce "no contesto"/"no estaba", el cliente
+      // que sabe que llega hoy esta mas atento. Solo 'contraentrega' (mismo alcance que la
+      // confirmacion de Fase 1d).
+      let notificacionEnCaminoId: string | null = null;
+      if (!pedido.delivery_notified_at && pedido.order_type === 'contraentrega' && estaEnCamino(result.estadoActual) && waToken && waPhoneId) {
+        notificacionEnCaminoId = await notificarEnCamino(pedido, waToken, waPhoneId);
+      }
+
       await admin.from('orders').update({
         tracking_status: accionOk ? result.estadoActual : (pedido.tracking_status ?? null),
         tracking_history: result.eventos,
@@ -149,6 +211,7 @@ Deno.serve(async (req) => {
         // Fase 0 del plan de reduccion de devoluciones: motivo automatico solo cuando de verdad se
         // rechazo el pedido (accionOk evita guardar un motivo de una accion que en realidad fallo).
         ...(accionOk && accion === 'reject_order' ? { return_reason: resolverMotivoDevolucion(result.estadoActual) } : {}),
+        ...(notificacionEnCaminoId ? { delivery_notified_at: new Date().toISOString(), delivery_notification_message_id: notificacionEnCaminoId } : {}),
       }).eq('id', pedido.id);
       if (accionOk) actualizados++;
 
