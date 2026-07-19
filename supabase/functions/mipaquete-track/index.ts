@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
     const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
     const { data: order, error: orderErr } = await admin
-      .from('orders').select('id, seller_id, mipaquete_shipment_id, carrier, tracking_number').eq('id', orderId).single();
+      .from('orders').select('id, seller_id, mipaquete_shipment_id, carrier, tracking_number, tracking_status').eq('id', orderId).single();
 
     if (orderErr || !order) return json({ error: 'Pedido no encontrado' }, 404);
     if (!order.mipaquete_shipment_id) return json({ tracking: [], mensaje: 'Guia no generada aun' });
@@ -78,8 +78,28 @@ Deno.serve(async (req) => {
     const result = await fetchTracking(order.mipaquete_shipment_id, apiKey);
     if (!result.ok) return json({ error: 'Error al consultar tracking', status: result.status, detail: result.detail }, 200);
 
+    // Pedido explicito del usuario 2026-07-18: que el estado real de la guia (Mipaquete) mueva solo
+    // el pedido, sin depender de que alguien entre al panel a cambiarlo a mano. approve_order/
+    // reject_order ya son idempotentes (approve_order no-opea si commission_paid, reject_order no
+    // vuelve a acreditar el flete si prev_status ya era 'rejected'), asi que llamarlas de mas (ej. el
+    // usuario aprieta "Actualizar estado" dos veces sobre un pedido ya entregado) es seguro.
+    //
+    // Mismo orden que mipaquete-sync-tracking (bug real corregido 2026-07-19): tracking_status solo
+    // se persiste como terminal si la accion de dinero ya tuvo exito -- si el RPC falla, se deja el
+    // estado anterior para que un reintento (otro clic en "Actualizar estado") lo vuelva a intentar
+    // en vez de quedar marcado como terminal sin que el dinero se haya movido.
+    const accion = resolverAccionAutomatica(result.estadoActual);
+    let accionOk = true;
+    if (accion) {
+      const { error: rpcErr } = await admin.rpc(accion, { p_order_id: orderId });
+      if (rpcErr) {
+        accionOk = false;
+        await admin.from('shipment_settlement_logs').insert({ order_id: orderId, profile_id: order.seller_id, data: { accion, error: rpcErr.message }, status: 0 });
+      }
+    }
+
     await admin.from('orders').update({
-      tracking_status: result.estadoActual,
+      tracking_status: accionOk ? result.estadoActual : order.tracking_status ?? null,
       tracking_history: result.eventos,
       tracking_synced_at: new Date().toISOString(),
     }).eq('id', orderId);
@@ -87,17 +107,6 @@ Deno.serve(async (req) => {
     await admin.from('shipment_settlement_logs').insert({
       order_id: orderId, profile_id: order.seller_id, data: { tracking: result.eventos }, status: 1,
     });
-
-    // Pedido explicito del usuario 2026-07-18: que el estado real de la guia (Mipaquete) mueva solo
-    // el pedido, sin depender de que alguien entre al panel a cambiarlo a mano. approve_order/
-    // reject_order ya son idempotentes (approve_order no-opea si commission_paid, reject_order no
-    // vuelve a acreditar el flete si prev_status ya era 'rejected'), asi que llamarlas de mas (ej. el
-    // usuario aprieta "Actualizar estado" dos veces sobre un pedido ya entregado) es seguro.
-    const accion = resolverAccionAutomatica(result.estadoActual);
-    if (accion) {
-      const { error: rpcErr } = await admin.rpc(accion, { p_order_id: orderId });
-      if (rpcErr) await admin.from('shipment_settlement_logs').insert({ order_id: orderId, profile_id: order.seller_id, data: { accion, error: rpcErr.message }, status: 0 });
-    }
 
     return json({ sending_id: order.mipaquete_shipment_id, guia: order.tracking_number, tracking: result.eventos, estado_actual: result.estadoActual, accion_automatica: accion, raw: result.raw });
   } catch (error: unknown) {

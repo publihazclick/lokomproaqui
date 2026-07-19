@@ -100,24 +100,39 @@ Deno.serve(async (req) => {
       const result = await fetchTracking(pedido.mipaquete_shipment_id, apiKey);
       if (!result.ok) {
         errores++;
-      } else {
-        await admin.from('orders').update({
-          tracking_status: result.estadoActual,
-          tracking_history: result.eventos,
-          tracking_synced_at: new Date().toISOString(),
-        }).eq('id', pedido.id);
-        actualizados++;
+        await sleep(ESPERA_ENTRE_LLAMADOS_MS);
+        continue;
+      }
 
-        const accion = resolverAccionAutomatica(result.estadoActual);
-        if (accion) {
-          const { error: rpcErr } = await admin.rpc(accion, { p_order_id: pedido.id });
-          if (rpcErr) {
-            await admin.from('shipment_settlement_logs').insert({ order_id: pedido.id, profile_id: null, data: { accion, error: rpcErr.message }, status: 0 });
-          } else {
-            accionesAutomaticas++;
-          }
+      // BUG REAL CORREGIDO 2026-07-19: antes se guardaba tracking_status = estado terminal ANTES de
+      // llamar approve_order/reject_order. Si esa llamada fallaba (timeout, blip de red/DB -- pasa
+      // en produccion), el pedido quedaba con un tracking_status terminal PERO sin que el dinero se
+      // hubiera movido -- y como el filtro de arriba (esEstadoTerminal) excluye pedidos terminales de
+      // toda corrida futura, ese pedido quedaba huerfano para siempre: nunca se le pagaban comisiones
+      // ni se le devolvia el flete, y nadie se enteraba salvo que un admin revisara
+      // shipment_settlement_logs a mano. Ahora tracking_status SOLO se persiste como terminal si la
+      // accion de dinero ya tuvo exito (o si no habia ninguna accion que ejecutar) -- si el RPC
+      // falla, tracking_status se deja igual que estaba para que la proxima corrida lo reintente.
+      const accion = resolverAccionAutomatica(result.estadoActual);
+      let accionOk = true;
+      if (accion) {
+        const { error: rpcErr } = await admin.rpc(accion, { p_order_id: pedido.id });
+        if (rpcErr) {
+          accionOk = false;
+          errores++;
+          await admin.from('shipment_settlement_logs').insert({ order_id: pedido.id, profile_id: null, data: { accion, error: rpcErr.message }, status: 0 });
+        } else {
+          accionesAutomaticas++;
         }
       }
+
+      await admin.from('orders').update({
+        tracking_status: accionOk ? result.estadoActual : (pedido.tracking_status ?? null),
+        tracking_history: result.eventos,
+        tracking_synced_at: new Date().toISOString(),
+      }).eq('id', pedido.id);
+      if (accionOk) actualizados++;
+
       await sleep(ESPERA_ENTRE_LLAMADOS_MS);
     }
 
