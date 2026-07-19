@@ -56,6 +56,19 @@ function resolverAccionAutomatica(estado: string | null): 'approve_order' | 'rej
   return null;
 }
 
+// Fase 0 del plan de reduccion de devoluciones (pedido explicito del usuario 2026-07-19): mismo
+// clasificador que mipaquete-sync-tracking (ver esa nota ampliada) -- duplicado a proposito, mismo
+// motivo de siempre (cada Edge Function se despliega sin bundler entre carpetas).
+function resolverMotivoDevolucion(estado: string | null): string {
+  if (!estado) return 'otro';
+  const bajo = estado.toLowerCase();
+  if (bajo.includes('direccion') || bajo.includes('dirección')) return 'direccion_invalida';
+  if (bajo.includes('no contest') || bajo.includes('no responde') || bajo.includes('no contactad')) return 'no_contesto';
+  if (bajo.includes('no encontr') || bajo.includes('ausente') || bajo.includes('no habia nadie') || bajo.includes('no había nadie')) return 'no_encontrado';
+  if (bajo.includes('rechaz') || bajo.includes('no acept') || bajo.includes('no quiso') || bajo.includes('se arrepint')) return 'se_arrepintio';
+  return 'otro';
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -101,6 +114,9 @@ Deno.serve(async (req) => {
     await admin.from('orders').update({
       tracking_status: accionOk ? result.estadoActual : order.tracking_status ?? null,
       tracking_history: result.eventos,
+      // Fase 0 del plan de reduccion de devoluciones: motivo automatico solo cuando de verdad se
+      // rechazo el pedido.
+      ...(accionOk && accion === 'reject_order' ? { return_reason: resolverMotivoDevolucion(result.estadoActual) } : {}),
       tracking_synced_at: new Date().toISOString(),
     }).eq('id', orderId);
 

@@ -61,6 +61,22 @@ function resolverAccionAutomatica(estado: string | null): 'approve_order' | 'rej
   return null;
 }
 
+// Fase 0 del plan de reduccion de devoluciones (pedido explicito del usuario 2026-07-19):
+// clasificacion best-effort del motivo real de devolucion a partir del texto libre que reporta
+// Mipaquete -- no hay una lista oficial cerrada de estados, asi que se matchea por palabra clave
+// (mismo patron que resolverAccionAutomatica arriba). Solo se llama cuando la accion resuelta es
+// 'reject_order'. Si no matchea nada especifico, cae en 'otro' -- mejor un motivo generico que
+// ninguno, para que el dashboard de Fase 4 al menos cuente el volumen real.
+function resolverMotivoDevolucion(estado: string | null): string {
+  if (!estado) return 'otro';
+  const bajo = estado.toLowerCase();
+  if (bajo.includes('direccion') || bajo.includes('dirección')) return 'direccion_invalida';
+  if (bajo.includes('no contest') || bajo.includes('no responde') || bajo.includes('no contactad')) return 'no_contesto';
+  if (bajo.includes('no encontr') || bajo.includes('ausente') || bajo.includes('no habia nadie') || bajo.includes('no había nadie')) return 'no_encontrado';
+  if (bajo.includes('rechaz') || bajo.includes('no acept') || bajo.includes('no quiso') || bajo.includes('se arrepint')) return 'se_arrepintio';
+  return 'otro';
+}
+
 const LIMITE_POR_CORRIDA = 50;
 const DIAS_TOPE = 60; // no seguir consultando pedidos mas viejos que esto, aunque no tengan estado terminal detectado.
 const ESPERA_ENTRE_LLAMADOS_MS = 250;
@@ -130,6 +146,9 @@ Deno.serve(async (req) => {
         tracking_status: accionOk ? result.estadoActual : (pedido.tracking_status ?? null),
         tracking_history: result.eventos,
         tracking_synced_at: new Date().toISOString(),
+        // Fase 0 del plan de reduccion de devoluciones: motivo automatico solo cuando de verdad se
+        // rechazo el pedido (accionOk evita guardar un motivo de una accion que en realidad fallo).
+        ...(accionOk && accion === 'reject_order' ? { return_reason: resolverMotivoDevolucion(result.estadoActual) } : {}),
       }).eq('id', pedido.id);
       if (accionOk) actualizados++;
 
