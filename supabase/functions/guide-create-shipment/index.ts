@@ -105,7 +105,10 @@ Deno.serve(async (req) => {
         declaredValue: Math.max(1, Math.round(Number(guia.declared_value) || 1)),
       },
       locate: {
-        originDaneCode: String(Deno.env.get('MIPAQUETE_ORIGIN_DANE') || '11001000'),
+        // Ciudad real de recogida (migracion 060) -- antes generaba SIEMPRE "desde Bogota" sin
+        // importar la direccion real guardada arriba, lo que podia desalinear precio cobrado vs.
+        // recogida real. Mismo fallback de siempre si el remitente aun no tiene ciudad guardada.
+        originDaneCode: String(pickup?.city_dane_code || Deno.env.get('MIPAQUETE_ORIGIN_DANE') || '11001000'),
         destinyDaneCode: String(guia.destino_dane_code),
       },
       channel: 'LokomproAqui',

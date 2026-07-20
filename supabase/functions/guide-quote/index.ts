@@ -33,8 +33,21 @@ Deno.serve(async (req) => {
     const apiKey = Deno.env.get('MIPAQUETE_API_KEY') ?? '';
     if (!apiKey) return json({ error: 'MIPAQUETE_API_KEY no configurada' }, 500);
 
+    // Ciudad de origen real del vendedor/proveedor (paso "remitente" del wizard, migracion 060) --
+    // antes esto SIEMPRE cotizaba "desde Bogota" sin importar donde estuviera quien despacha. Si
+    // todavia no guardo su direccion de recogida (primera vez usando "Cotizar Envio"), cae al
+    // fallback de siempre.
+    const { data: pickup } = await admin
+      .from('pickup_addresses')
+      .select('city_name, city_dane_code')
+      .eq('profile_id', profileId)
+      .order('id', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const origenDaneCode = pickup?.city_dane_code || Deno.env.get('MIPAQUETE_ORIGIN_DANE') || '11001000';
+
     const payload = {
-      originLocationCode: Deno.env.get('MIPAQUETE_ORIGIN_DANE') || '11001000',
+      originLocationCode: origenDaneCode,
       destinyLocationCode: destinoCode,
       height,
       width,
@@ -86,6 +99,8 @@ Deno.serve(async (req) => {
       weight_kg: weightKg,
       cotizaciones,
       insurance_forced: insuranceForced,
+      origen_dane_code: origenDaneCode,
+      origen_city_name: pickup?.city_name || null,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Error desconocido';
