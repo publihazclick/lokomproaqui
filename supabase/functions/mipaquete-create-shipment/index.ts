@@ -185,6 +185,7 @@ Deno.serve(async (req) => {
       mipaquete_shipment_id: sendingId,
       tracking_number: guia,
       carrier: body.delivery_company_name || deliveryCompanyId,
+      carrier_logo_url: body.delivery_company_logo_url || null,
     }).eq('id', orderId);
 
     return json({ status: 'ok', sending_id: sendingId, guia, mipaquete_response: parsed });
