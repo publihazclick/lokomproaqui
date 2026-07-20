@@ -61,6 +61,18 @@ function resolverAccionAutomatica(estado: string | null): 'approve_order' | 'rej
   return null;
 }
 
+// Modulo "Generacion de Guias" (pedido explicito del usuario 2026-07-20): mismo mapeo de arriba
+// pero para standalone_shipments -- 'entregad' -> deliver_standalone_shipment (sin comisiones, no
+// hay cadena de referidos en una guia suelta), 'devuelt'/'cancelad'/'rechazad' ->
+// reject_standalone_shipment (devuelve el flete SOLO si insurance_active, ver migracion 059).
+function resolverAccionAutomaticaGuia(estado: string | null): 'deliver_standalone_shipment' | 'reject_standalone_shipment' | null {
+  if (!estado) return null;
+  const bajo = estado.toLowerCase();
+  if (bajo.includes('entregad')) return 'deliver_standalone_shipment';
+  if (bajo.includes('devuelt') || bajo.includes('cancelad') || bajo.includes('rechazad')) return 'reject_standalone_shipment';
+  return null;
+}
+
 // Fase 0 del plan de reduccion de devoluciones (pedido explicito del usuario 2026-07-19):
 // clasificacion best-effort del motivo real de devolucion a partir del texto libre que reporta
 // Mipaquete -- no hay una lista oficial cerrada de estados, asi que se matchea por palabra clave
@@ -218,7 +230,70 @@ Deno.serve(async (req) => {
       await sleep(ESPERA_ENTRE_LLAMADOS_MS);
     }
 
-    return json({ procesados: pendientes.length, actualizados, errores, acciones_automaticas: accionesAutomaticas });
+    // Modulo "Generacion de Guias": mismo recorrido, mismo `fetchTracking`/`esEstadoTerminal`, pero
+    // sobre standalone_shipments (guias sueltas sin pedido detras). Corre en la misma invocacion del
+    // cron -- no hace falta un pg_cron aparte, es el mismo trabajo operativo (sincronizar tracking +
+    // clasificar automaticamente) sobre una segunda tabla.
+    const { data: guias, error: guiasSelectErr } = await admin
+      .from('standalone_shipments')
+      .select('id, profile_id, mipaquete_shipment_id, tracking_status, insurance_active, freight_cost')
+      .not('mipaquete_shipment_id', 'is', null)
+      .not('status', 'in', '(returned,cancelled)')
+      .order('tracking_synced_at', { ascending: true, nullsFirst: true })
+      .limit(LIMITE_POR_CORRIDA * 2);
+
+    let guiasActualizadas = 0;
+    let guiasErrores = 0;
+    let guiasAccionesAutomaticas = 0;
+
+    if (!guiasSelectErr) {
+      const guiasPendientes = (guias || []).filter((g) => !esEstadoTerminal(g.tracking_status)).slice(0, LIMITE_POR_CORRIDA);
+
+      for (const guia of guiasPendientes) {
+        const result = await fetchTracking(guia.mipaquete_shipment_id, apiKey);
+        if (!result.ok) {
+          guiasErrores++;
+          await sleep(ESPERA_ENTRE_LLAMADOS_MS);
+          continue;
+        }
+
+        // Mismo criterio que arriba: solo persiste tracking_status como terminal si la accion de
+        // dinero (devolver flete asegurado) ya tuvo exito -- si el RPC falla, se reintenta en la
+        // proxima corrida en vez de quedar huerfana.
+        const accion = resolverAccionAutomaticaGuia(result.estadoActual);
+        let accionOk = true;
+        if (accion) {
+          const { error: rpcErr } = await admin.rpc(accion, { p_shipment_id: guia.id });
+          if (rpcErr) {
+            accionOk = false;
+            guiasErrores++;
+          } else {
+            guiasAccionesAutomaticas++;
+          }
+        }
+
+        await admin.from('standalone_shipments').update({
+          tracking_status: accionOk ? result.estadoActual : (guia.tracking_status ?? null),
+          tracking_synced_at: new Date().toISOString(),
+          ...(accionOk && accion === 'reject_standalone_shipment' ? { return_reason: resolverMotivoDevolucion(result.estadoActual) } : {}),
+          ...(accionOk && accion === 'deliver_standalone_shipment' ? { status: 'delivered' } : {}),
+        }).eq('id', guia.id);
+        if (accionOk) guiasActualizadas++;
+
+        await sleep(ESPERA_ENTRE_LLAMADOS_MS);
+      }
+    }
+
+    return json({
+      procesados: pendientes.length,
+      actualizados,
+      errores,
+      acciones_automaticas: accionesAutomaticas,
+      guias_procesadas: (guias || []).length,
+      guias_actualizadas: guiasActualizadas,
+      guias_errores: guiasErrores,
+      guias_acciones_automaticas: guiasAccionesAutomaticas,
+    });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Error desconocido';
     return json({ error: message }, 500);
