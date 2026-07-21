@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
 
     const { data: order, error: orderErr } = await admin
       .from('orders')
-      .select('*, order_items(quantity, products(width, height, length, weight, client_sale_price, name)), profiles:seller_id(full_name, last_name, phone)')
+      .select('*, order_items(quantity, products(width, height, length, weight, client_sale_price, name))')
       .eq('id', orderId)
       .single();
 
@@ -28,10 +28,14 @@ Deno.serve(async (req) => {
     if (order.mipaquete_shipment_id) return json({ error: 'Este pedido ya tiene guia generada', sending_id: order.mipaquete_shipment_id }, 409);
     if (!order.destino_dane_code) return json({ error: 'Pedido sin destino DANE, cotiza primero' }, 400);
 
-    // Direccion de recogida: la del vendedor si la tiene guardada, si no un fallback generico.
+    // Fase 3 del plan de aislamiento proveedor<->vendedor (pedido explicito del usuario 2026-07-20):
+    // la direccion de recogida es la del PROVEEDOR, no la del vendedor -- es quien tiene el producto
+    // fisico y quien de verdad va a despachar. Antes se buscaba por order.seller_id, lo que en la
+    // practica exigia que vendedor y proveedor ya se hubieran coordinado por fuera de la plataforma
+    // para que el paquete llegara a manos del vendedor -- exactamente lo que este plan busca evitar.
     let pickup: any = null;
-    if (order.seller_id) {
-      const { data } = await admin.from('pickup_addresses').select('*').eq('profile_id', order.seller_id).order('id', { ascending: false }).limit(1).maybeSingle();
+    if (order.supplier_id) {
+      const { data } = await admin.from('pickup_addresses').select('*').eq('profile_id', order.supplier_id).order('id', { ascending: false }).limit(1).maybeSingle();
       pickup = data;
     }
 
@@ -49,7 +53,6 @@ Deno.serve(async (req) => {
     declaredValue = Math.max(1, Math.round(declaredValue || order.price_total || 1));
 
     const [buyerFirst, ...buyerRest] = (order.buyer_name || 'Cliente').trim().split(/\s+/);
-    const sellerProfile: any = (order as any).profiles || {};
 
     // BUG RESUELTO (2026-07-10): la coleccion Postman OFICIAL de Mipaquete
     // (https://api.documentacion.mipaquete.com/, request "createSending" con ejemplo real
@@ -100,24 +103,24 @@ Deno.serve(async (req) => {
     // venta real para la liquidacion de Mipaquete.
     const saleValue = valueCollection > 0 ? selfFundedCollection : 0;
 
-    // Nombre del remitente (pedido explicito del usuario 2026-07-18, ajustado el mismo dia): fijo
-    // "LOKOMPROAQUI/" + el nombre de la tienda (perfil) del vendedor que hizo la venta -- el mismo
-    // full_name/last_name que identifica su tienda publica cuando comparte su link. Antes era un
-    // nombre 100% fijo sin distincion de tienda; ahora la marca queda siempre visible PERO tambien
-    // se puede saber de un vistazo que vendedor genero cada guia. La direccion de recogida (mas
-    // abajo, pickupAddress) sigue siendo la real de cada proveedor/bodega -- eso no cambia, el
-    // mensajero necesita el lugar correcto, solo el nombre del remitente se compone asi.
-    const storeName = `${sellerProfile.full_name || ''} ${sellerProfile.last_name || ''}`.trim() || 'Vendedor';
-
+    // Remitente NEUTRO (Fase 3 del plan de aislamiento proveedor<->vendedor, pedido explicito del
+    // usuario 2026-07-20): antes era "LOKOMPROAQUI/" + el nombre real del vendedor, con su telefono
+    // real como contacto -- el comprador final que recibe el paquete podia ver esos datos en la
+    // etiqueta fisica e identificar/contactar directo al vendedor (y, si se buscaba la direccion de
+    // recogida, tambien al proveedor), saltandose la plataforma por completo. Ahora el remitente es
+    // siempre "LOKOMPROAQUI", sin nombre de nadie, con telefono/correo de soporte genericos (no el
+    // WhatsApp real del proveedor) -- la direccion de recogida SI sigue siendo la real (el mensajero
+    // necesita saber donde recoger fisicamente), pero eso no queda expuesto en ningun dato visible
+    // para el comprador mas alla de la ciudad de origen.
     const sendingPayload = {
       sender: {
-        name: `LOKOMPROAQUI/${storeName}`,
+        name: 'LOKOMPROAQUI',
         // '.' como respaldo no vacio: mismo patron ya usado mas abajo para el apellido del
         // comprador (`buyerRest.join(' ') || '.'`) cuando no hay un segundo campo real que mandar.
         surname: '.',
-        cellPhone: String(pickup?.whatsapp || sellerProfile.phone || Deno.env.get('MIPAQUETE_DEFAULT_PHONE') || ''),
+        cellPhone: String(Deno.env.get('MIPAQUETE_DEFAULT_PHONE') || ''),
         prefix: '+57',
-        email: String(pickup?.email || ''),
+        email: String(Deno.env.get('MIPAQUETE_DEFAULT_EMAIL') || 'pedidos@lokomproaqui.com'),
         pickupAddress: String(pickup?.address || Deno.env.get('MIPAQUETE_DEFAULT_ADDRESS') || ''),
         nit: String(pickup?.id_document || ''),
         nitType: 'CC',
@@ -147,7 +150,9 @@ Deno.serve(async (req) => {
         declaredValue,
       },
       locate: {
-        originDaneCode: String(order.origen_dane_code || Deno.env.get('MIPAQUETE_ORIGIN_DANE') || '11001000'),
+        // Ciudad real de recogida del proveedor (ver pickup arriba) -- order.origen_dane_code nunca
+        // se poblaba (columna muerta desde la migracion 013), por eso caia siempre al fallback fijo.
+        originDaneCode: String(pickup?.city_dane_code || Deno.env.get('MIPAQUETE_ORIGIN_DANE') || '11001000'),
         destinyDaneCode: String(order.destino_dane_code),
       },
       channel: 'LokomproAqui',

@@ -21,11 +21,26 @@ Deno.serve(async (req) => {
 
     const { data: order, error: orderErr } = await admin
       .from('orders')
-      .select('id, price_total, order_items(quantity, total_cost, products(width, height, length, weight, client_sale_price))')
+      .select('id, price_total, supplier_id, order_items(quantity, total_cost, products(width, height, length, weight, client_sale_price))')
       .eq('id', orderId)
       .single();
 
     if (orderErr || !order) return json({ error: 'Pedido no encontrado' }, 404);
+
+    // Ciudad de origen real del PROVEEDOR (Fase 3 del plan de aislamiento proveedor<->vendedor,
+    // migracion 059/060 -- misma pickup_addresses ya usada por "Generacion de Guias"): antes esto
+    // SIEMPRE cotizaba "desde Bogota" sin importar donde estuviera el proveedor que va a despachar.
+    let origenDaneCode = Deno.env.get('MIPAQUETE_ORIGIN_DANE') || '11001000';
+    if (order.supplier_id) {
+      const { data: pickup } = await admin
+        .from('pickup_addresses')
+        .select('city_dane_code')
+        .eq('profile_id', order.supplier_id)
+        .order('id', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (pickup?.city_dane_code) origenDaneCode = pickup.city_dane_code;
+    }
 
     const items = (order as any).order_items || [];
     let totalWeight = 0;
@@ -46,7 +61,7 @@ Deno.serve(async (req) => {
     if (!apiKey) return json({ error: 'MIPAQUETE_API_KEY no configurada' }, 500);
 
     const payload = {
-      originLocationCode: Deno.env.get('MIPAQUETE_ORIGIN_DANE') || '11001000',
+      originLocationCode: origenDaneCode,
       destinyLocationCode: destinoCode,
       height: maxHeight,
       width: maxWidth,
