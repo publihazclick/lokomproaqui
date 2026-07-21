@@ -44,9 +44,12 @@ Deno.serve(async (req) => {
     const order = JSON.parse(rawBody);
     const shopifyOrderId = String(order.id);
 
-    // Idempotencia: Shopify puede reenviar el mismo webhook mas de una vez.
-    const { data: alreadyCreated } = await admin.from('orders').select('id').eq('shopify_order_id', shopifyOrderId).maybeSingle();
-    if (alreadyCreated) return new Response('ok', { status: 200 });
+    // Idempotencia: Shopify puede reenviar el mismo webhook mas de una vez. Desde que un pedido
+    // puede dividirse en varias filas (Fase 2 del plan de aislamiento proveedor<->vendedor,
+    // migracion 065/066 -- ya no hay restriccion unique aca porque un mismo shopify_order_id puede
+    // repetirse en varias filas de orders), no se puede usar maybeSingle (fallaria con 2+ filas).
+    const { data: alreadyCreated } = await admin.from('orders').select('id').eq('shopify_order_id', shopifyOrderId).limit(1);
+    if (alreadyCreated && alreadyCreated.length > 0) return new Response('ok', { status: 200 });
 
     const shippingAddress = order.shipping_address || order.billing_address || {};
     const customer = order.customer || {};
@@ -146,7 +149,10 @@ Deno.serve(async (req) => {
 
     const orderType = order.financial_status === 'paid' ? 'shopify' : 'contraentrega';
 
-    const { data: orderId, error: createErr } = await admin.rpc('create_order', {
+    // create_order (migracion 065) agrupa los items por proveedor y devuelve bigint[] -- un pedido
+    // de Shopify con productos de proveedores distintos se divide en varias filas de orders, todas
+    // con el mismo shopify_order_id.
+    const { data: orderIds, error: createErr } = await admin.rpc('create_order', {
       order_data: {
         seller_id: connection.profile_id,
         buyer_name: buyerName,
@@ -160,12 +166,12 @@ Deno.serve(async (req) => {
       items: resolvedItems,
     });
 
-    if (createErr || !orderId) {
+    if (createErr || !orderIds || !orderIds.length) {
       console.error('create_order fallo para pedido Shopify', shopifyOrderId, createErr);
       return new Response('ok', { status: 200 }); // Shopify no debe reintentar por un error de negocio (ej. sin stock)
     }
 
-    await admin.from('orders').update({ shopify_order_id: shopifyOrderId }).eq('id', orderId);
+    await admin.from('orders').update({ shopify_order_id: shopifyOrderId }).in('id', orderIds);
 
     return new Response('ok', { status: 200 });
   } catch (error: unknown) {
