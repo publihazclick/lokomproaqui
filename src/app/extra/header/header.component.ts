@@ -882,6 +882,15 @@ export class HeaderComponent implements OnInit {
     this._tools.openSnack('Copiado:' + ' ' + this.urlTienda, 'completado', false);
   }
 
+  // Rutas migradas a lokomproaqui-next (Next.js) que vercel.json redirige por afuera del SPA de
+  // Angular -- pero esa redirección solo aplica a una navegación REAL de browser (URL nueva /
+  // recarga), nunca a router.navigate() de Angular (que es 100% client-side y ni siquiera pasa por
+  // el edge de Vercel). Angular todavia tiene sus propios componentes viejos registrados en estas
+  // mismas rutas (ProductosComponent, PerfilComponent), asi que sin este caso especial el sidebar
+  // seguia mostrando la version vieja para siempre pese al rewrite. Pedido explicito del usuario
+  // 2026-07-24 ("nos pasamos a next.js para mejorar").
+  private RUTAS_NEXT = ['/config/productos', '/config/perfil'];
+
   navegar( item:any, obj:any = null ){
     console.log("*", item, item.url[1])
     const yaAbierto = item.check;
@@ -891,6 +900,7 @@ export class HeaderComponent implements OnInit {
     if( item.url == 'handleShop()' ) return this.handleShop();
     if( item.url == 'handleRechargeNalance()' ) return this.handleRechargeNalance();
     if( item.submenus ) if( item.submenus.length >0 ) return false;
+    if( this.RUTAS_NEXT.includes( item.url ) ) { window.location.href = item.url; return; }
     if( item.opt ) this.router.navigate(item.url);
     else this.router.navigate([ item.url ]);
     this.sidenav.close();

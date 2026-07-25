@@ -7,6 +7,7 @@
     }
   },
   "rewrites": [
+    { "source": "/s/:code", "destination": "https://btkdmdhzouzvzgyuzgbh.supabase.co/functions/v1/sms-link-redirect/:code" },
     { "source": "/mfe-ping", "destination": "https://lokomproaqui-next.vercel.app/mfe-ping" },
     { "source": "/tutoriales", "destination": "https://lokomproaqui-next.vercel.app/tutoriales" },
     { "source": "/infoSupplier", "destination": "https://lokomproaqui-next.vercel.app/infoSupplier" },
@@ -19,6 +20,8 @@
     { "source": "/mvid8x2qz1", "destination": "https://lokomproaqui-next.vercel.app/mvid8x2qz1" },
     { "source": "/mvid8x2qz1/panel", "destination": "https://lokomproaqui-next.vercel.app/mvid8x2qz1/panel" },
     { "source": "/registro", "destination": "https://lokomproaqui-next.vercel.app/registro" },
+    { "source": "/config/productos", "destination": "https://lokomproaqui-next.vercel.app/config/productos" },
+    { "source": "/config/perfil", "destination": "https://lokomproaqui-next.vercel.app/config/perfil" },
     { "source": "/_next/:path*", "destination": "https://lokomproaqui-next.vercel.app/_next/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
