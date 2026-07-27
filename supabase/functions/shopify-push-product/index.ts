@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
           const detail = await resp.text().catch(() => '');
           return json({ ok: false, error: 'shopify_fallo', detalle: detail.slice(0, 300) }, 200);
         }
-        await admin.from('price_overrides').update({ shopify_product_id: null, shopify_variant_map: {} }).eq('id', overrideRow.id);
+        await admin.from('price_overrides').update({ shopify_product_id: null, shopify_variant_map: {}, shopify_handle: null }).eq('id', overrideRow.id);
         await admin.from('shopify_sku_map').delete().eq('profile_id', profileId).eq('product_id', productId);
       }
       return json({ ok: true }, 200);
@@ -171,7 +171,7 @@ Deno.serve(async (req) => {
 
     await admin
       .from('price_overrides')
-      .update({ shopify_product_id: String(shopifyProduct.id), shopify_variant_map: nuevoVariantMap })
+      .update({ shopify_product_id: String(shopifyProduct.id), shopify_variant_map: nuevoVariantMap, shopify_handle: shopifyProduct.handle || null })
       .eq('profile_id', profileId)
       .eq('product_id', productId);
 
