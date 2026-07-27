@@ -10,7 +10,10 @@ export class ShopifyService {
   // Trae la conexion de Shopify del vendedor (null si no ha conectado ninguna tienda).
   getConnection(profileId: string) {
     const run = async (): Promise<any> => {
-      const { data, error } = await supabase.from('shopify_connections').select('*').eq('profile_id', profileId).maybeSingle();
+      // Solo columnas no sensibles -- access_token/api_secret ya no son legibles con la clave anon
+      // desde 2026-07-27 (hallazgo de seguridad, ver migracion 083), y esta pantalla nunca los
+      // necesito (solo muestra shop_domain/connected_at).
+      const { data, error } = await supabase.from('shopify_connections').select('shop_domain, connected_at, active').eq('profile_id', profileId).maybeSingle();
       if (error) return { success: false, data: null };
       return { success: true, data };
     };
