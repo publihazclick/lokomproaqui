@@ -3,61 +3,68 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Pedido explicito del usuario 2026-07-27 (segunda vuelta): el admin escribe el contenido como
+// TEXTO PLANO normal en /config/configuracion (saltos de linea reales, links pegados tal cual), sin
+// tener que saber HTML -- esta funcion es la unica responsable de convertirlo a HTML bien formado.
 const DEFAULT_ASUNTO_VENDEDOR = '¡Bienvenido a LokomproAqui! Ya puedes empezar a vender';
-const DEFAULT_HTML_VENDEDOR = `<p>Hola {{nombre}},</p>
-<p>Tu cuenta de <strong>vendedor</strong> en LokomproAqui ya está activa.</p>
-<p>Ahora puedes:</p>
-<ul>
-  <li>Explorar el catálogo de productos de nuestros proveedores</li>
-  <li>Elegir los productos que quieres vender y armar tu tienda</li>
-  <li>Empezar a recibir pedidos y ganar comisiones por cada venta</li>
-</ul>
-<p>Entra a tu catálogo aquí: <a href="https://lokomproaqui.com/articulo">https://lokomproaqui.com/articulo</a></p>
-<p>Si tienes dudas, escríbenos por WhatsApp desde el sitio y con gusto te ayudamos.</p>
-<p style="color: #6b7280; font-size: 12px; margin-top: 24px;">LokomproAqui · lokomproaqui.com</p>`;
+const DEFAULT_TEXTO_VENDEDOR = `Hola {{nombre}},
+
+Tu cuenta de vendedor en LokomproAqui ya está activa.
+
+Ahora puedes:
+- Explorar el catálogo de productos de nuestros proveedores
+- Elegir los productos que quieres vender y armar tu tienda
+- Empezar a recibir pedidos y ganar comisiones por cada venta
+
+Entra a tu catálogo aquí: https://lokomproaqui.com/articulo
+
+Si tienes dudas, escríbenos por WhatsApp desde el sitio y con gusto te ayudamos.
+
+LokomproAqui · lokomproaqui.com`;
 
 const DEFAULT_ASUNTO_PROVEEDOR = '¡Bienvenido a LokomproAqui! Activa tu bodega en 3 pasos';
-const DEFAULT_HTML_PROVEEDOR = `<p>Hola {{nombre}},</p>
-<p>Tu cuenta de <strong>proveedor</strong> (bodega) en LokomproAqui ya está creada.</p>
-<p>Para que miles de vendedores puedan encontrar y vender tus productos, te falta:</p>
-<ol>
-  <li>Subir mínimo <strong>3 productos</strong> a tu catálogo</li>
-  <li>Enviar tu bodega a revisión</li>
-  <li>Esperar la aprobación de nuestro equipo (usualmente rápida)</li>
-</ol>
-<p>Sube tus productos aquí: <a href="https://lokomproaqui.com/config/productos">https://lokomproaqui.com/config/productos</a></p>
-<p>Si tienes dudas, escríbenos por WhatsApp desde el sitio y con gusto te ayudamos.</p>
-<p style="color: #6b7280; font-size: 12px; margin-top: 24px;">LokomproAqui · lokomproaqui.com</p>`;
+const DEFAULT_TEXTO_PROVEEDOR = `Hola {{nombre}},
+
+Tu cuenta de proveedor (bodega) en LokomproAqui ya está creada.
+
+Para que miles de vendedores puedan encontrar y vender tus productos, te falta:
+1. Subir mínimo 3 productos a tu catálogo
+2. Enviar tu bodega a revisión
+3. Esperar la aprobación de nuestro equipo (usualmente rápida)
+
+Sube tus productos aquí: https://lokomproaqui.com/config/productos
+
+Si tienes dudas, escríbenos por WhatsApp desde el sitio y con gusto te ayudamos.
+
+LokomproAqui · lokomproaqui.com`;
 
 const HTML_WRAP = (inner: string) =>
   `<div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #1f2937; line-height: 1.5;">${inner}</div>`;
 
-// Version texto plano generada a partir del HTML (propio o el que el admin haya editado en
-// /config/configuracion) -- solo un respaldo de compatibilidad para clientes de correo viejos, no
-// necesita ser perfecta. Reemplaza <br>/cierres de bloque por saltos de linea antes de quitar el
-// resto de etiquetas, y "desescapa" las entidades HTML mas comunes.
-function htmlATexto(html: string): string {
-  return html
-    .replace(/<(br|\/p|\/div|\/li|\/h[1-6])\s*\/?>/gi, '\n')
-    .replace(/<li[^>]*>/gi, '- ')
-    .replace(/<a[^>]+href="([^"]+)"[^>]*>(.*?)<\/a>/gi, '$2 ($1)')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
+// Convierte el texto plano que escribe el admin a HTML: escapa caracteres especiales (para que un
+// "<" o "&" que alguien escriba por error no rompa el correo), convierte lineas en blanco en
+// parrafos separados y saltos de linea sueltos en <br>, y vuelve clicable cualquier link que
+// empiece por http(s):// tal cual como lo pego el admin.
+function textoAHtml(texto: string): string {
+  const escapado = texto
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1">$1</a>');
+  return escapado
+    .split(/\n\s*\n/)
+    .map((parrafo) => `<p>${parrafo.replace(/\n/g, '<br>')}</p>`)
+    .join('\n');
 }
 
 // Trae la plantilla configurada por el admin en /config/configuracion (site_config.info_text), con
 // respaldo a la plantilla de fabrica si el admin nunca la toco o si la consulta falla por cualquier
 // motivo -- el correo de bienvenida nunca debe dejar de enviarse por un problema al leer site_config.
-async function fetchPlantilla(rol: 'vendedor' | 'proveedor'): Promise<{ subject: string; html: string }> {
+async function fetchPlantilla(rol: 'vendedor' | 'proveedor'): Promise<{ subject: string; texto: string }> {
   const defaults =
     rol === 'proveedor'
-      ? { subject: DEFAULT_ASUNTO_PROVEEDOR, html: DEFAULT_HTML_PROVEEDOR }
-      : { subject: DEFAULT_ASUNTO_VENDEDOR, html: DEFAULT_HTML_VENDEDOR };
+      ? { subject: DEFAULT_ASUNTO_PROVEEDOR, texto: DEFAULT_TEXTO_PROVEEDOR }
+      : { subject: DEFAULT_ASUNTO_VENDEDOR, texto: DEFAULT_TEXTO_VENDEDOR };
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
@@ -71,10 +78,12 @@ async function fetchPlantilla(rol: 'vendedor' | 'proveedor'): Promise<{ subject:
     const rows = await resp.json();
     const info = rows?.[0]?.info_text || {};
     const subjectKey = rol === 'proveedor' ? 'emailAsuntoProveedor' : 'emailAsuntoVendedor';
-    const htmlKey = rol === 'proveedor' ? 'emailHtmlProveedor' : 'emailHtmlVendedor';
+    // OJO: la clave en site_config sigue llamandose "emailHtml..." por continuidad con el schema
+    // existente, pero desde este cambio guarda TEXTO PLANO, no HTML.
+    const textoKey = rol === 'proveedor' ? 'emailHtmlProveedor' : 'emailHtmlVendedor';
     return {
       subject: info[subjectKey] || defaults.subject,
-      html: info[htmlKey] || defaults.html,
+      texto: info[textoKey] || defaults.texto,
     };
   } catch {
     return defaults;
@@ -99,9 +108,8 @@ Deno.serve(async (req) => {
     }
 
     const plantilla = await fetchPlantilla(rol);
-    const htmlConNombre = plantilla.html.replaceAll('{{nombre}}', nombre);
-    const html = HTML_WRAP(htmlConNombre);
-    const text = htmlATexto(htmlConNombre);
+    const textoConNombre = plantilla.texto.replaceAll('{{nombre}}', nombre);
+    const html = HTML_WRAP(textoAHtml(textoConNombre));
 
     const resp = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -109,7 +117,7 @@ Deno.serve(async (req) => {
         Authorization: `Bearer ${resendApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ from: resendFrom, to: email, subject: plantilla.subject, html, text }),
+      body: JSON.stringify({ from: resendFrom, to: email, subject: plantilla.subject, html, text: textoConNombre }),
     });
 
     if (!resp.ok) {
