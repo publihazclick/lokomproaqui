@@ -1,11 +1,140 @@
 // Genera la guia real de envio en Mipaquete para un pedido ya cotizado.
 // Entrada: { order_id, delivery_company_id, delivery_company_name, request_pickup? }
+//
+// CAMBIO 2026-07-29 (pedido explicito del usuario): se migro de la API publica de pago
+// (api.mipaquete.com + MIPAQUETE_API_KEY) a la API interna login-based (core.mipaquete.com) --
+// mismo cambio y mismos detalles que mipaquete-quote/index.ts, ver ese archivo y la memoria
+// mipaquete_internal_api_lokomproaqui para el contexto completo (bug del countryCode "170" vs
+// "CO", customer-keys extraidos del bundle real de app.mipaquete.com).
+//
+// BUG REAL RESUELTO 2026-08-10 -- esta era la causa raiz real del 500 "Cannot read properties of
+// undefined (reading 'details')" que se arrastraba desde 2026-07-29, no ninguno de los campos del
+// payload (esos SI tenian bugs reales tambien, ya corregidos aparte, pero no eran la causa
+// bloqueante). Confirmado con pruebas en vivo bisectando el payload completo campo por campo hasta
+// dejar SOLO el customer-key como variable: `/sendings/createSendings` exige el MISMO customer-key
+// que `/users/loginUser` (LOGIN_CUSTOMER_KEY, "b0c6d2aa-...") -- NO el de cotizar/getLocations
+// (QUOTE_CUSTOMER_KEY, "74390816-..."). Reproducido el crash exacto tomando un payload 100%
+// funcional y cambiando UNICAMENTE el customer-key al de cotizar. Una nota de una sesion anterior
+// decia "el customer-key de cotizar SI sirve tambien para createSendings" -- esa conclusion era
+// incorrecta, se baso en una prueba que fallaba de todas formas por otros bugs del payload (ya
+// corregidos) sin llegar a aislar el customer-key como variable.
+//
+// Payload reconstruido leyendo la invocacion REAL de createSendings en el bundle JS de
+// app.mipaquete.com (no adivinado): reveló varios campos que la integracion vieja de
+// api.mipaquete.com no necesitaba pero esta si exige/usa -- `user` (el _id de la cuenta
+// logueada, ver dataUserlogin en el docx de referencia -- SI es un requisito real, no una
+// decision de negocio de un tercero como se penso al principio), `price`/`deliveryTime`/
+// `pickupTime`/`productInformation.realWeight` (salen de la cotizacion ya elegida, por eso aca
+// se vuelve a cotizar justo antes de crear la guia para tener esos datos frescos), y el
+// `prefix` va SIN el "+" ("57", no "+57", tabla real: it={170:"57",...}). Campo
+// `collectionService` visto en la llamada real pero de significado no confirmado (variable de
+// estado de UI no rastreable desde el bundle) -- se omite a proposito, no se pudo confirmar si
+// Mipaquete lo exige de verdad.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const LOGIN_CUSTOMER_KEY = 'b0c6d2aa-4d53-11eb-ae93-0242ac130002';
+const QUOTE_CUSTOMER_KEY = '74390816-b8bd-4c38-8c5d-4453256c110e';
+// Confirmado en vivo 2026-08-10 (ver comentario arriba): createSendings usa el MISMO customer-key
+// que loginUser, no el de cotizar. Se deja configurable por env var igual que antes por si Mipaquete
+// llega a cambiar esto, pero el fallback correcto ahora es LOGIN_CUSTOMER_KEY.
+const SENDING_CUSTOMER_KEY = Deno.env.get('MIPAQUETE_SENDING_CUSTOMER_KEY') || LOGIN_CUSTOMER_KEY;
+const MIPAQUETE_COUNTRY_CODE = '170';
+// Tabla real de prefijos telefonicos de Mipaquete (bundle: it={170:"57",...}) -- SIN el "+".
+const MIPAQUETE_PHONE_PREFIX = '57';
+
+let cachedToken: string | null = null;
+let cachedUserId: string | null = null;
+let cachedDocumentNumber: string | null = null;
+let cachedDocumentType: string | null = null;
+let cachedTokenAt = 0;
+const TOKEN_CACHE_TTL_MS = 1000 * 60 * 20;
+
+// BUG REAL RESUELTO 2026-08-10 (pedido explicito del usuario, confirmado con pruebas reales en
+// vivo): `sender.nit`/`nitType` SIEMPRE deben ser la cedula de la cuenta de Mipaquete logueada
+// (el convenio/tarifa esta negociado con ESA cuenta, no con cada bodega individual), sin importar
+// que bodega despache el pedido -- exactamente igual que `sender.name`/`cellPhone`/`email`, que ya
+// eran fijos por plataforma desde antes (Fase 3, anonimato proveedor<->vendedor). Antes se mandaba
+// `pickup.id_document` (lo que cada proveedor haya escrito en su perfil, sin validacion real) --
+// una bodega con una cedula mal escrita (9 digitos, formato invalido) rompia createSendings con un
+// 500 dificil de diagnosticar del lado de Mipaquete. Se saca del mismo login (`user.documentNumber`/
+// `documentType`), no de una nueva env var, para que sea SIEMPRE la cuenta real que esta autenticada
+// -- si el email/password de la cuenta cambia algun dia, esto se actualiza solo. Solo
+// `pickupAddress` sigue siendo dinamico por proveedor (el mensajero SI necesita la ubicacion fisica
+// real para recoger).
+async function getMipaqueteSession(): Promise<{ token: string; userId: string; documentNumber: string; documentType: string }> {
+  const now = Date.now();
+  if (cachedToken && cachedUserId && cachedDocumentNumber && cachedDocumentType && now - cachedTokenAt < TOKEN_CACHE_TTL_MS) {
+    return { token: cachedToken, userId: cachedUserId, documentNumber: cachedDocumentNumber, documentType: cachedDocumentType };
+  }
+
+  const email = Deno.env.get('MIPAQUETE_WEB_EMAIL');
+  const password = Deno.env.get('MIPAQUETE_WEB_PASSWORD');
+  if (!email || !password) throw new Error('MIPAQUETE_WEB_EMAIL/MIPAQUETE_WEB_PASSWORD no configuradas');
+
+  const resp = await fetch('https://core.mipaquete.com/users/loginUser', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'customer-key': LOGIN_CUSTOMER_KEY,
+      'session-tracker': crypto.randomUUID(),
+    },
+    body: JSON.stringify({ email, password }),
+  });
+  const text = await resp.text();
+  if (!resp.ok) throw new Error('Mipaquete rechazo el login: ' + text.slice(0, 300));
+
+  let data: any;
+  try { data = JSON.parse(text); } catch { data = null; }
+  const token = data?.token;
+  const userId = data?.user?._id;
+  const documentNumber = data?.user?.documentNumber;
+  const documentType = data?.user?.documentType;
+  if (!token || !userId) throw new Error('Mipaquete no devolvio token/user._id en el login');
+  if (!documentNumber || !documentType) throw new Error('Mipaquete no devolvio documentNumber/documentType de la cuenta en el login');
+
+  cachedToken = token;
+  cachedUserId = userId;
+  cachedDocumentNumber = documentNumber;
+  cachedDocumentType = documentType;
+  cachedTokenAt = now;
+  return { token, userId, documentNumber, documentType };
+}
+
+async function quoteShipping(token: string, params: {
+  originDaneCode: string; destinyDaneCode: string;
+  height: number; width: number; length: number; weight: number; declaredValue: number;
+}): Promise<any[]> {
+  const resp = await fetch('https://core.mipaquete.com/routes/quoteShipping', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'customer-key': QUOTE_CUSTOMER_KEY,
+      'session-tracker': crypto.randomUUID(),
+      token,
+    },
+    body: JSON.stringify({
+      originCountryCode: MIPAQUETE_COUNTRY_CODE,
+      originLocationCode: params.originDaneCode,
+      destinyCountryCode: MIPAQUETE_COUNTRY_CODE,
+      destinyLocationCode: params.destinyDaneCode,
+      height: params.height,
+      width: params.width,
+      length: params.length,
+      weight: params.weight,
+      quantity: 1,
+      declaredValue: params.declaredValue,
+      saleValue: 0,
+    }),
+  });
+  const text = await resp.text();
+  if (!resp.ok) throw new Error('Mipaquete rechazo la re-cotizacion: ' + text.slice(0, 300));
+  try { return JSON.parse(text); } catch { return []; }
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -37,6 +166,14 @@ Deno.serve(async (req) => {
     if (order.supplier_id) {
       const { data } = await admin.from('pickup_addresses').select('*').eq('profile_id', order.supplier_id).order('id', { ascending: false }).limit(1).maybeSingle();
       pickup = data;
+    }
+    // Bug real encontrado 2026-07-29: sin direccion de recogida, sender.nit/pickupAddress quedaban
+    // vacios y Mipaquete rechazaba con un error cripico en ingles ("sender,nit is required or its
+    // format is not valid") sin decir cual era el problema real. Se corta antes con un mensaje claro
+    // -- este pedido no es el unico afectado, bloquea TODOS los pedidos de un proveedor que nunca
+    // completo su direccion de recogida.
+    if (order.supplier_id && !pickup) {
+      return json({ error: 'El proveedor de este pedido no tiene registrada su dirección de recogida. Pídele que la complete en su perfil antes de generar la guía.' }, 400);
     }
 
     const items = (order as any).order_items || [];
@@ -112,6 +249,24 @@ Deno.serve(async (req) => {
     // WhatsApp real del proveedor) -- la direccion de recogida SI sigue siendo la real (el mensajero
     // necesita saber donde recoger fisicamente), pero eso no queda expuesto en ningun dato visible
     // para el comprador mas alla de la ciudad de origen.
+    const originDaneCode = String(pickup?.city_dane_code || Deno.env.get('MIPAQUETE_ORIGIN_DANE') || '11001000');
+    const destinyDaneCode = String(order.destino_dane_code);
+
+    const { token, userId, documentNumber, documentType } = await getMipaqueteSession();
+
+    // Se vuelve a cotizar justo antes de crear la guia: createSendings real exige price/
+    // deliveryTime/pickupTime/productInformation.realWeight (ver comentario arriba), datos que
+    // solo salen de una cotizacion fresca -- mipaquete-quote solo persiste destino_dane_code en
+    // el pedido, no guarda la cotizacion completa elegida.
+    const quotes = await quoteShipping(token, {
+      originDaneCode, destinyDaneCode,
+      height: maxHeight, width: maxWidth, length: maxLength, weight: weightKg, declaredValue,
+    });
+    const selectedQuote = quotes.find((q: any) => String(q.deliveryCompanyId) === String(deliveryCompanyId));
+    if (!selectedQuote) {
+      return json({ error: 'La transportadora elegida ya no esta disponible para esta ruta, vuelve a cotizar.' }, 409);
+    }
+
     const sendingPayload = {
       sender: {
         name: 'LOKOMPROAQUI',
@@ -119,25 +274,36 @@ Deno.serve(async (req) => {
         // comprador (`buyerRest.join(' ') || '.'`) cuando no hay un segundo campo real que mandar.
         surname: '.',
         cellPhone: String(Deno.env.get('MIPAQUETE_DEFAULT_PHONE') || ''),
-        prefix: '+57',
+        prefix: MIPAQUETE_PHONE_PREFIX,
         email: String(Deno.env.get('MIPAQUETE_DEFAULT_EMAIL') || 'pedidos@lokomproaqui.com'),
         pickupAddress: String(pickup?.address || Deno.env.get('MIPAQUETE_DEFAULT_ADDRESS') || ''),
-        nit: String(pickup?.id_document || ''),
-        nitType: 'CC',
+        // Pedido explicito del usuario 2026-08-10: la cedula del remitente SIEMPRE es la de la
+        // cuenta de Mipaquete (el convenio/tarifa es con esa cuenta), nunca la del proveedor/bodega
+        // -- ver comentario en getMipaqueteSession(). pickupAddress arriba SI sigue siendo dinamico.
+        nit: documentNumber,
+        nitType: documentType,
       },
       receiver: {
         name: buyerFirst || 'Cliente',
         surname: buyerRest.join(' ') || '.',
-        // Mipaquete exige un email con formato valido; orders no tiene columna de email del
-        // comprador, asi que se usa un valor de respaldo generico cuando no hay uno real.
-        email: String((order as any).buyer_email || 'pedidos@lokomproaqui.com'),
-        prefix: '+57',
+        // BUG REAL RESUELTO 2026-08-10: `orders` no tiene columna de email del comprador (columna
+        // inexistente, `(order as any).buyer_email` siempre fue `undefined`), asi que el respaldo
+        // caia SIEMPRE al mismo valor fijo -- y como el `sender.email` de arriba TAMBIEN cae a un
+        // valor fijo cuando no hay env var, en la practica sender.email === receiver.email en TODO
+        // pedido creado por esta funcion. Confirmado con pruebas reales en vivo que esto es lo que
+        // rompia createSendings (500 "Cannot read properties of undefined (reading 'details')")
+        // incluso con el resto del payload ya corregido -- Mipaquete no acepta enviarse un paquete
+        // a si mismo. El respaldo ahora incluye el id del pedido para que sea unico Y distinto del
+        // de sender en todos los casos, no solo "distinto por casualidad".
+        email: String((order as any).buyer_email || `pedido${orderId}@lokomproaqui.com`),
+        prefix: MIPAQUETE_PHONE_PREFIX,
         cellPhone: String(order.buyer_phone || ''),
         destinationAddress: String(order.buyer_address || ''),
-        // orders no tiene columna de documento del comprador; se usa el telefono como respaldo
-        // (igual que el email, Mipaquete solo exige formato valido, no que sea la cedula real).
-        nit: String((order as any).buyer_document || order.buyer_phone || '0000000000'),
-        nitType: 'CC',
+        // CORREGIDO 2026-08-10: se habia intentado antes con nitType "N/A" (en vez de "CC" con
+        // un telefono, que si crasheaba a Mipaquete) pensando que el campo era obligatorio -- pero
+        // comparado campo por campo contra guias reales YA CREADAS con exito con esta misma cuenta
+        // (via getShipments, no una suposicion), el receiver de la app real NUNCA manda nit/nitType
+        // en absoluto. Se quita el campo por completo en vez de intentar adivinar un valor valido.
       },
       productInformation: {
         quantity: 1,
@@ -145,40 +311,67 @@ Deno.serve(async (req) => {
         large: maxLength,
         height: maxHeight,
         weight: weightKg,
-        forbiddenProduct: false,
+        // El "peso real" ya calculado por la transportadora al cotizar (puede diferir del fisico
+        // por volumetria) -- campo del payload real que la integracion vieja no mandaba.
+        realWeight: Number(selectedQuote.realWeightVolume) || weightKg,
+        // CORREGIDO 2026-08-10: estaba en `false` por suponer que significaba "es un producto
+        // prohibido" -- confirmado contra multiples guias reales ya creadas con exito (via
+        // getShipments) que la app real SIEMPRE manda `true` aca, sin excepcion, sin importar el
+        // producto. El nombre del campo es enganoso; el valor real esperado es `true`.
+        forbiddenProduct: true,
         productReference: String(items[0]?.products?.name || 'Producto'),
         declaredValue,
       },
       locate: {
-        // Ciudad real de recogida del proveedor (ver pickup arriba) -- order.origen_dane_code nunca
-        // se poblaba (columna muerta desde la migracion 013), por eso caia siempre al fallback fijo.
-        originDaneCode: String(pickup?.city_dane_code || Deno.env.get('MIPAQUETE_ORIGIN_DANE') || '11001000'),
-        destinyDaneCode: String(order.destino_dane_code),
+        originDaneCode,
+        destinyDaneCode,
+        originCountryCode: MIPAQUETE_COUNTRY_CODE,
+        destinyCountryCode: MIPAQUETE_COUNTRY_CODE,
       },
       channel: 'LokomproAqui',
+      // `user`: el _id de la cuenta Mipaquete logueada -- campo raiz obligatorio confirmado
+      // leyendo la llamada real de createSendings en el bundle de app.mipaquete.com (`user:t._id`).
+      user: userId,
+      price: Number(selectedQuote.shippingCost) || 0,
+      deliveryTime: selectedQuote.shippingTime ?? null,
+      pickupTime: selectedQuote.pickupTime ?? null,
+      deliveryCompanyName: body.delivery_company_name || selectedQuote.deliveryCompanyName || deliveryCompanyId,
       deliveryCompany: String(deliveryCompanyId),
-      criteria: 'price',
       description: String(items[0]?.products?.name || 'Producto'),
       comments: 'Pedido LokomproAqui #' + orderId,
       paymentType,
       valueCollection,
+      // AGREGADO 2026-08-10: los 3 campos de aca abajo (collectionService, isExpressService,
+      // activeNotifications) faltaban por completo en el payload -- se habian omitido a proposito
+      // en 2026-07-29 por no poder confirmar su formato/significado real, y son la causa mas
+      // probable del 500 "Cannot read properties of undefined (reading 'details')" que veniamos
+      // arrastrando (algun codigo de Mipaquete intentando leer una propiedad anidada de un campo
+      // que nunca llegaba). Confirmados los 3 comparando campo por campo contra multiples guias
+      // reales YA CREADAS con exito con esta misma cuenta (via getShipments) -- no son una
+      // suposicion nueva, son literalmente lo que la app real siempre manda.
+      collectionService: paymentType === 102,
       requestPickup: !!body.request_pickup,
+      shippingTime: selectedQuote.shippingTime ?? null,
       adminTransactionData: {
         saleValue,
       },
+      isExpressService: false,
+      activeNotifications: [220],
     };
 
-    const apiKey = Deno.env.get('MIPAQUETE_API_KEY') ?? '';
-    if (!apiKey) return json({ error: 'MIPAQUETE_API_KEY no configurada' }, 500);
-
-    const resp = await fetch('https://api.mipaquete.com/createSending', {
+    const resp = await fetch('https://core.mipaquete.com/sendings/createSendings', {
       method: 'POST',
-      headers: { apikey: apiKey, 'session-tracker': crypto.randomUUID(), 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'customer-key': SENDING_CUSTOMER_KEY,
+        'session-tracker': crypto.randomUUID(),
+        token,
+      },
       body: JSON.stringify(sendingPayload),
     });
 
     const text = await resp.text();
-    if (!resp.ok) return json({ error: 'Error al crear guia en Mipaquete', status: resp.status, detail: text.slice(0, 500) }, 502);
+    if (!resp.ok) return json({ error: 'Error al crear guia en Mipaquete', status: resp.status, detail: text.slice(0, 500), payload_sent: sendingPayload }, 502);
 
     let parsed: any;
     try { parsed = JSON.parse(text); } catch { parsed = { raw: text }; }
