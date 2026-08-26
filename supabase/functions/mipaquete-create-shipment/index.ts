@@ -105,6 +105,39 @@ async function getMipaqueteSession(): Promise<{ token: string; userId: string; d
   return { token, userId, documentNumber, documentType };
 }
 
+// AGREGADO 2026-08-10 (pedido explicito del usuario, "etiqueta para impresion"): createSendings NO
+// devuelve la etiqueta oficial del transportador (codigo de barras) en su respuesta -- solo mpCode/
+// message. Confirmado en vivo que Mipaquete SI la genera y la deja lista casi de inmediato, pero hay
+// que pedirla aparte via getShipments (campo pdfGuide, un array de URLs S3 publicas: la primera es
+// la etiqueta, la segunda un "relation" auxiliar). Se reintenta 3 veces con espera corta por si el
+// PDF todavia no esta listo justo al momento de crear la guia -- si tras los reintentos sigue sin
+// llegar, no se bloquea la respuesta (la guia YA es real y valida), simplemente queda sin etiqueta
+// guardada por ahora.
+async function fetchLabelUrl(token: string, mpCode: number): Promise<string | null> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) await new Promise((r) => setTimeout(r, 1500));
+    try {
+      const resp = await fetch('https://core.mipaquete.com/sendings/getShipments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'customer-key': LOGIN_CUSTOMER_KEY,
+          'session-tracker': crypto.randomUUID(),
+          token,
+        },
+        body: JSON.stringify({ filters: { mpCode } }),
+      });
+      if (!resp.ok) continue;
+      const data = await resp.json();
+      const pdfGuide = data?.shipments?.[0]?.pdfGuide;
+      if (Array.isArray(pdfGuide) && pdfGuide[0]) return String(pdfGuide[0]);
+    } catch {
+      // se ignora, se reintenta
+    }
+  }
+  return null;
+}
+
 async function quoteShipping(token: string, params: {
   originDaneCode: string; destinyDaneCode: string;
   height: number; width: number; length: number; weight: number; declaredValue: number;
@@ -378,15 +411,17 @@ Deno.serve(async (req) => {
 
     const sendingId = parsed?.mpCode ?? parsed?._id ?? parsed?.id ?? null;
     const guia = parsed?.guideNumber ?? parsed?.guide ?? parsed?.trackingNumber ?? sendingId;
+    const labelUrl = sendingId ? await fetchLabelUrl(token, Number(sendingId)) : null;
 
     await admin.from('orders').update({
       mipaquete_shipment_id: sendingId,
       tracking_number: guia,
       carrier: body.delivery_company_name || deliveryCompanyId,
       carrier_logo_url: body.delivery_company_logo_url || null,
+      mipaquete_label_url: labelUrl,
     }).eq('id', orderId);
 
-    return json({ status: 'ok', sending_id: sendingId, guia, mipaquete_response: parsed });
+    return json({ status: 'ok', sending_id: sendingId, guia, label_url: labelUrl, mipaquete_response: parsed });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Error desconocido';
     return json({ error: message }, 500);
