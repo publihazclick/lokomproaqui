@@ -1,0 +1,228 @@
+# Configuracion de Netlify para lokomproaqui (Angular 9) -- la app que tiene el dominio.
+#
+# COMO FUNCIONA EL SITIO: son DOS aplicaciones trabajando juntas.
+#   - Esta (Angular) atiende el dominio y sirve la mayor parte del sitio.
+#   - lokomproaqui-next (Next.js) atiende 14 rutas concretas (login, registro, info,
+#     portal, config/perfil, config/productos, etc.).
+# Esta app hace de portero: cuando llega una peticion a una de esas 14 rutas, se la pasa al
+# Next.js por proxy, de forma invisible para el visitante (la URL sigue siendo
+# lokomproaqui.com/login, no la del otro sitio). Es la migracion por fases que quedo a medias.
+#
+# IMPORTANTE -- por que Netlify y no Cloudflare Pages:
+# Cloudflare Pages NO permite reescrituras hacia otro dominio, solo redirecciones visibles
+# (verificado el 2026-09-02 al migrar Movi). Con Cloudflare, un visitante que entrara a
+# lokomproaqui.com/login terminaria viendo la URL del otro sitio en la barra de direcciones.
+# Netlify si soporta proxy real a un dominio externo con status 200, que es lo que estas
+# reglas necesitan.
+#
+# AL CAMBIAR DE HOSTING: las 14 reglas de abajo apuntan a la URL del sitio Next.js. Si esa
+# URL cambia, hay que actualizarlas TODAS o el login, el registro y el panel del proveedor
+# dejan de funcionar aunque el resto del sitio se vea bien.
+
+[build]
+  command = "npm run build"
+  publish = "dist/locomproAqui/browser"
+
+[build.environment]
+  # Angular 9 con webpack 4 no arranca en Node moderno sin este flag: usa APIs de OpenSSL
+  # que Node 17+ retiro por defecto. Sin esto el build muere con
+  # "error:0308010C:digital envelope routines::unsupported".
+  NODE_OPTIONS = "--openssl-legacy-provider --max-old-space-size=6144"
+  NODE_VERSION = "18"
+
+# ─── Las 14 rutas que atiende el Next.js ────────────────────────────────────────
+# status 200 = proxy invisible (el visitante no ve el cambio de sitio).
+# force = true es necesario porque Netlify da prioridad a los archivos reales, y sin el
+# la regla comodin del final se comeria estas rutas.
+
+[[redirects]]
+  from = "/mfe-ping"
+  to = "https://lokomproaqui-next.netlify.app/mfe-ping"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/tutoriales"
+  to = "https://lokomproaqui-next.netlify.app/tutoriales"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/infoSupplier"
+  to = "https://lokomproaqui-next.netlify.app/infoSupplier"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/portal"
+  to = "https://lokomproaqui-next.netlify.app/portal"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/testimonio"
+  to = "https://lokomproaqui-next.netlify.app/testimonio"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/info"
+  to = "https://lokomproaqui-next.netlify.app/info"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/login"
+  to = "https://lokomproaqui-next.netlify.app/login"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/singUp"
+  to = "https://lokomproaqui-next.netlify.app/singUp"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/singUp/*"
+  to = "https://lokomproaqui-next.netlify.app/singUp/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/registro"
+  to = "https://lokomproaqui-next.netlify.app/registro"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/mvid8x2qz1"
+  to = "https://lokomproaqui-next.netlify.app/mvid8x2qz1"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/mvid8x2qz1/panel"
+  to = "https://lokomproaqui-next.netlify.app/mvid8x2qz1/panel"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/config/productos"
+  to = "https://lokomproaqui-next.netlify.app/config/productos"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/config/perfil"
+  to = "https://lokomproaqui-next.netlify.app/config/perfil"
+  status = 200
+  force = true
+
+# ─── /p/:id/:telefono -- landing de producto para campañas ──────────────────────
+# ESTA REGLA NO EXISTIA EN VERCEL Y SE AGREGA A PROPOSITO (2026-09-03).
+# El boton "compartir producto" arma el link con window.location.origin, o sea
+# https://www.lokomproaqui.com/p/<id>/<telefono>. Pero vercel.json nunca tuvo una regla
+# para /p/, asi que esa URL caia en el comodin de Angular, Angular no conoce la ruta y su
+# comodin la mandaba a /info (ver tienda-routing.module.ts). Resultado: todo link de
+# producto compartido aterrizaba en la pagina de informacion en vez del producto.
+# Es seguro: /p/* solo matchea el segmento exacto "p", no "publico" ni "productos".
+[[redirects]]
+  from = "/p/*"
+  to = "https://lokomproaqui-next.netlify.app/p/:splat"
+  status = 200
+  force = true
+
+# Los archivos internos de Next.js (JavaScript, CSS, imagenes optimizadas). Sin esta regla
+# las 14 paginas de arriba cargarian el HTML pero sin estilos ni funcionamiento.
+[[redirects]]
+  from = "/_next/*"
+  to = "https://lokomproaqui-next.netlify.app/_next/:splat"
+  status = 200
+  force = true
+
+# Enlace corto de los SMS -> Edge Function de Supabase.
+[[redirects]]
+  from = "/s/*"
+  to = "https://btkdmdhzouzvzgyuzgbh.supabase.co/functions/v1/sms-link-redirect/:splat"
+  status = 200
+  force = true
+
+# ─── Comodin de la app Angular ──────────────────────────────────────────────────
+# VA DE ULTIMO A PROPOSITO: Netlify aplica la primera regla que coincide, asi que si
+# estuviera arriba se tragaria las 16 anteriores. Cualquier ruta que no sea un archivo real
+# ni una de las rutas del Next.js sirve el index.html para que Angular resuelva la navegacion.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# ─── Cabeceras ──────────────────────────────────────────────────────────────────
+# En Vercel la primera regla ponia no-store a TODO y la segunda daba cache de un año a los
+# archivos por extension. Netlify NO documenta que pasa cuando dos reglas coinciden con la
+# misma ruta (se pisan o se suman?), y en Cloudflare ese mismo detalle rompio Movi: las dos
+# reglas se sumaron y los .js salieron con "no-store" e "immutable" a la vez.
+# Por eso aqui las reglas se disenaron para NO solaparse, y ademas se verifica con curl
+# despues de desplegar, antes de mover el dominio.
+
+# El comodin lleva SOLO cabeceras de seguridad. El no-store va aparte, sobre el index,
+# para no chocar con el cache de los archivos.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# El index.html es el que NUNCA se debe cachear: es el que sabe cuales son los nombres
+# nuevos de los bundles. Si el navegador sirve uno viejo, la app queda congelada en la
+# version anterior aunque el resto ya este actualizado.
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+# Bundles de Angular: el nombre lleva una huella que cambia con el contenido, asi que
+# cachearlos para siempre no puede servir una version vieja. Se listan por prefijo real del
+# build en vez de un glob por extension, que Netlify no garantiza para subcarpetas.
+[[headers]]
+  for = "/runtime*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/polyfills*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/main*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/styles*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/scripts*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/common*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Imagenes, fuentes y librerias sueltas. Ojo: estos NO llevan huella en el nombre, asi que
+# si se reemplaza una imagen conservando el nombre el navegador puede seguir mostrando la
+# vieja. Ya era el comportamiento en Vercel; se mantiene igual para no cambiar nada.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
